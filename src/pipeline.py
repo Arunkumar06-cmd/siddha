@@ -34,20 +34,27 @@ MAX_AUDIO_BYTES = 8 * 1024 * 1024     # 8 MB ~ 50 s opus
 MAX_TTS_CHARS = 600                    # Timbre input cap (voice-safe length)
 MAX_WAV_SECONDS = 30                   # Prisma hard limit
 
+# Resolved once at import: a missing decoder is a deployment fault, not a
+# per-request surprise. The route layer turns it into a typed 503.
+FFMPEG_BIN = shutil.which('ffmpeg')
+if not FFMPEG_BIN:
+    logger.error('ffmpeg_not_found: audio uploads will fail with 503 until it is installed')
+
 STT_BREAKER = CircuitBreaker('stt', threshold=5, cooldown_s=60)
 TTS_BREAKER = CircuitBreaker('tts', threshold=5, cooldown_s=60)
 
 def to_wav(raw: bytes, suffix: str) -> pathlib.Path:
     """Decode to 16 kHz mono WAV for Prisma; always remove the source temp file."""
+    if not FFMPEG_BIN:
+        raise HTTPException(503, 'Audio decoding unavailable on this server')
     f_src = None
     with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as f:
         f.write(raw)
         f_src = f.name
     dst = f_src + '.wav'
     try:
-        FFMPEG = shutil.which('ffmpeg') or '/usr/local/bin/ffmpeg'
-        subprocess.run(  # noqa: S603 - FFMPEG is which-resolved absolute path; ffmpeg input is user's own uploaded file
-            [FFMPEG, '-y', '-loglevel', 'error', '-i', f_src,
+        subprocess.run(  # noqa: S603 - FFMPEG_BIN is an absolute which-resolved path
+            [FFMPEG_BIN, '-y', '-loglevel', 'error', '-i', f_src,
              '-ar', '16000', '-ac', '1', dst],
             check=True, timeout=20, shell=False)
         return pathlib.Path(dst)

@@ -17,6 +17,7 @@ from pydantic import BaseModel, Field
 
 from config import GNANI_API_KEY, logger
 from pipeline import (
+    FFMPEG_BIN,
     STT_BREAKER,
     TTS_BREAKER,
     rag_answer,
@@ -25,6 +26,7 @@ from pipeline import (
     transcribe,
 )
 
+BASE_DIR = pathlib.Path(__file__).parent
 RATE_LIMIT = int(os.getenv('SAATHI_RATE_LIMIT', '30'))
 _metrics = collections.Counter()
 _lock = threading.Lock()
@@ -74,11 +76,16 @@ def index():
 
 @app.get('/api/health')
 def health():
-    ok = all([pathlib.Path('data/scholarships.jsonl').exists(),
-              pathlib.Path('data/scholarships.faiss').exists(),
-              bool(GNANI_API_KEY)])
-    if not ok:
-        raise HTTPException(503, 'Health check failed: corpus or key missing')
+    missing = [
+        name for name, present in (
+            ('corpus', (BASE_DIR / 'data/scholarships.jsonl').exists()),
+            ('index', (BASE_DIR / 'data/scholarships.faiss').exists()),
+            ('api_key', bool(GNANI_API_KEY)),
+            ('ffmpeg', bool(FFMPEG_BIN)),
+        ) if not present
+    ]
+    if missing:
+        raise HTTPException(503, f'Health check failed: missing {", ".join(missing)}')
     return {'status': 'ok', 'version': '2.1.0'}
 
 @app.get('/api/metrics')

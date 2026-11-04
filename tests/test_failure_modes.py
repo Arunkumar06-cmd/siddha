@@ -3,7 +3,9 @@ import concurrent.futures as cf
 import io
 import wave
 
+import pytest
 import requests
+from fastapi import HTTPException
 from fastapi.testclient import TestClient
 
 FAKE_HITS = [
@@ -117,3 +119,31 @@ def test_rate_limit(monkeypatch):
     codes = [client.post('/api/ask_text', json={'text': 'test'}).status_code for _ in range(4)]
     assert codes[:3] == [200, 200, 200]
     assert codes[3] == 429
+
+
+def test_to_wav_without_ffmpeg_raises_typed_503(monkeypatch):
+    import pipeline
+
+    monkeypatch.setattr(pipeline, 'FFMPEG_BIN', None)
+    with pytest.raises(HTTPException) as exc:
+        pipeline.to_wav(b'not really audio', '.wav')
+    assert exc.value.status_code == 503
+    assert 'unavailable' in exc.value.detail
+
+
+def test_health_reports_missing_ffmpeg(monkeypatch):
+    import server
+
+    monkeypatch.setattr(server, 'FFMPEG_BIN', None)
+    r = TestClient(server.app).get('/api/health')
+    assert r.status_code == 503
+    assert 'ffmpeg' in r.json()['error']
+
+
+def test_health_is_independent_of_working_directory(tmp_path, monkeypatch):
+    import server
+
+    monkeypatch.chdir(tmp_path)
+    r = TestClient(server.app).get('/api/health')
+    assert r.status_code == 200
+    assert r.json()['status'] == 'ok'
