@@ -13,6 +13,9 @@ All notable changes to Saathi. Format: [Keep a Changelog](https://keepachangelog
 - Multi-stage Dockerfile (build/runtime separation, non-root `saathi` user)
 
 ### Fixed
+- CI failed on a clean runner: `config.py` assumed a developer `~/.env` — key now resolves env → `~/.env` → `./.env` with an actionable error
+- Chromium runner had no `ffmpeg`; missing decoder now returns typed **503** and is surfaced by `/api/health` instead of a raw 500
+- `/api/health` resolved `data/` relative to CWD — now anchored to the source directory, so it works from any launch dir
 - TTS read raw government text (slashes, brackets, ₹) — now voice-safe `<pauses>` rendering via Timbre v3
 - Temp WAVs leaked after each STT call — now always `finally`-deleted
 - Raw provider 5xx accepted as success — now trips breaker via `ConnectionError` conversion

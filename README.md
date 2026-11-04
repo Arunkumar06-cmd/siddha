@@ -1,7 +1,7 @@
 # Saathi
 **Voice-first scholarship guide for India — ask in Hinglish, Hindi or Tamil, get the exact NSP scheme, documents and dates, spoken back to you. Powered end-to-end by Gnani's own voice models.**
 
-[![CI](https://img.shields.io/github/actions/workflow/status/Arunkumar06-cmd/saathi/ci.yml?branch=main&style=for-the-badge)](https://github.com/Arunkumar06-cmd/saathi/actions) [![Coverage](https://img.shields.io/badge/coverage-84%25-22c1a0?style=for-the-badge)](https://github.com/Arunkumar06-cmd/saathi) [![Python](https://img.shields.io/badge/python-3.11%2B-ffb84d?style=for-the-badge)](https://www.python.org/) [![License](https://img.shields.io/github/license/Arunkumar06-cmd/saathi?style=for-the-badge)](./LICENSE) [![Version](https://img.shields.io/badge/version-2.1.0-ff8a00?style=for-the-badge)](#roadmap)
+[![CI](https://img.shields.io/github/actions/workflow/status/Arunkumar06-cmd/saathi/ci.yml?branch=main&style=for-the-badge)](https://github.com/Arunkumar06-cmd/saathi/actions) [![Coverage](https://img.shields.io/badge/coverage-85%25-22c1a0?style=for-the-badge)](https://github.com/Arunkumar06-cmd/saathi) [![Python](https://img.shields.io/badge/python-3.11%2B-ffb84d?style=for-the-badge)](https://www.python.org/) [![License](https://img.shields.io/github/license/Arunkumar06-cmd/saathi?style=for-the-badge)](./LICENSE) [![Version](https://img.shields.io/badge/version-2.1.0-ff8a00?style=for-the-badge)](#roadmap)
 
 ![Saathi pipeline](docs/architecture.svg)
 
@@ -96,7 +96,7 @@ curl -s -X POST http://127.0.0.1:8765/api/ask_audio \
 ├── data/scholarships.jsonl   # 1,142 schemes (extracted from myScheme)
 ├── data/scholarships.faiss   # prebuilt FAISS index
 ├── specs/NFR.md         # non-functional requirements (explicit)
-├── tests/               # 20 tests, 84% coverage
+├── tests/               # 30 tests, 85% coverage
 ├── docs/                # architecture, ADRs, API
 └── .github/workflows/   # CI + security
 ```
