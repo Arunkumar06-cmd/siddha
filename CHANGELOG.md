@@ -5,6 +5,8 @@ All notable changes to Siddha. Format: [Keep a Changelog](https://keepachangelog
 ### Changed
 - Product renamed **Saathi → Siddha** across app, docs, env vars (`SIDDHA_*`), Docker user, and repo
 - README now shows a real UI screenshot instead of the hand-drawn SVG diagram
+- README hero: centred title and positioning line, logo badges with `logoColor=white`, native GitHub alerts, Mermaid architecture in a collapsible block
+- Demo screenshot converted to a 95 KB WebP (under the 200 KB README asset budget)
 
 ### Fixed
 - `LICENSE` contained only a header line, so GitHub reported "license not identified" — now the full MIT text

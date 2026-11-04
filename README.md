@@ -1,11 +1,25 @@
-# Siddha
-**Voice-first scholarship guide for India — ask in Hinglish, Hindi or Tamil, get the exact NSP scheme, documents and dates, spoken back to you. Powered end-to-end by Gnani's own voice models.**
+<h1 align="center">Siddha</h1>
 
-[![CI](https://img.shields.io/github/actions/workflow/status/Arunkumar06-cmd/siddha/ci.yml?branch=main&style=for-the-badge)](https://github.com/Arunkumar06-cmd/siddha/actions) [![Coverage](https://img.shields.io/badge/coverage-85%25-22c1a0?style=for-the-badge)](https://github.com/Arunkumar06-cmd/siddha) [![Python](https://img.shields.io/badge/python-3.11%2B-ffb84d?style=for-the-badge)](https://www.python.org/) [![License](https://img.shields.io/github/license/Arunkumar06-cmd/siddha?style=for-the-badge)](./LICENSE) [![Version](https://img.shields.io/badge/version-2.2.0-ff8a00?style=for-the-badge)](#roadmap)
+<p align="center">
+  <b>Voice-first scholarship guide for India.</b><br/>
+  Ask in Hinglish, Hindi or Tamil — get the exact scheme, documents and deadline, spoken back by Gnani's own voice models.
+</p>
 
-![Siddha — ask by voice, get a grounded scholarship answer](docs/demo.png)
+<p align="center">
+  <a href="https://github.com/Arunkumar06-cmd/siddha/actions"><img src="https://img.shields.io/github/actions/workflow/status/Arunkumar06-cmd/siddha/ci.yml?branch=main&style=for-the-badge&logo=githubactions&logoColor=white" alt="CI status"></a>
+  <a href="https://github.com/Arunkumar06-cmd/siddha"><img src="https://img.shields.io/badge/tests-36%20passing-22c1a0?style=for-the-badge&logo=pytest&logoColor=white" alt="36 tests passing"></a>
+  <a href="https://github.com/Arunkumar06-cmd/siddha"><img src="https://img.shields.io/badge/coverage-85%25-22c1a0?style=for-the-badge&logo=codecov&logoColor=white" alt="Coverage 85%"></a>
+  <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.11%2B-ffb84d?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.11+"></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/github/license/Arunkumar06-cmd/siddha?style=for-the-badge&logo=opensourceinitiative&logoColor=white" alt="MIT license"></a>
+  <a href="#roadmap"><img src="https://img.shields.io/badge/version-2.2.0-ff8a00?style=for-the-badge&logo=git&logoColor=white" alt="Version 2.2.0"></a>
+</p>
 
-<sub>Real UI, real Gnani Prisma + Timbre call. Architecture diagram: [docs/architecture.md](./docs/architecture.md).</sub>
+> [!IMPORTANT]
+> **No hallucinated eligibility.** Every answer is assembled from 1,142 official myScheme scholarship records. Siddha never invents a deadline, amount, or required document.
+
+![Siddha — ask by voice, get a grounded scholarship answer](docs/demo.webp)
+
+<p align="center"><sub>Real UI, real Gnani Prisma + Timbre turn, captured from the running app. <a href="./docs/architecture.md">Architecture details</a>.</sub></p>
 
 ## Table of contents
 - [Features](#features)
@@ -35,6 +49,9 @@ pip install -r requirements.txt   # ~10 min on CPU torch
 python -m uvicorn server:app --host 127.0.0.1 --port 8765
 ```
 Open http://127.0.0.1:8765 — tap the mic, ask in Hinglish.
+
+> [!NOTE]
+> `GNANI_API_KEY` must exist in `~/.env` or the environment before startup. It never ships in the repo or the Docker image.
 
 ## Installation
 **Prerequisites:** Python 3.11+, macOS/Linux, ffmpeg on PATH, ~2 GB free disk (CPU torch), a valid `GNANI_API_KEY` from [app.gnani.ai](https://app.gnani.ai/).
@@ -73,6 +90,9 @@ curl -s -X POST http://127.0.0.1:8765/api/ask_audio \
 + The response contains transcript, reply, sources[], and audio_wav_b64 (base64 WAV).
 ```
 
+> [!TIP]
+> No microphone? `/api/ask_text` runs the same retrieval and voice synthesis path without STT.
+
 ## API reference
 
 | Endpoint | Method | Purpose | Body |
@@ -102,6 +122,23 @@ curl -s -X POST http://127.0.0.1:8765/api/ask_audio \
 ├── docs/                # screenshot, architecture, ADRs, API
 └── .github/workflows/   # CI + security
 ```
+
+<details>
+<summary><b>Architecture</b> — one voice turn, end to end</summary>
+
+```mermaid
+flowchart LR
+    A["Mic<br/>MediaRecorder"] -->|webm/opus| B["FastAPI<br/>/api/ask_audio"]
+    B --> C["ffmpeg<br/>16 kHz mono WAV"]
+    C --> D["Prisma v3.0<br/>indic-auto · codemix"]
+    D --> E["Hybrid retrieval<br/>FAISS + BM25 → RRF"]
+    F[("1,142 myScheme<br/>schemes")] --> E
+    E --> G["Grounded responder<br/>templates, no generation"]
+    G --> H["Timbre v3.0<br/>Shivani · hi-en"]
+    H --> I["JSON + base64 WAV"]
+```
+
+</details>
 
 <details><summary>Advanced: self-host a public demo</summary>
 
