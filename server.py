@@ -1,4 +1,4 @@
-"""Saathi — routes layer (Gnani 2026). Business logic lives in src/pipeline.py.
+"""Siddha — routes layer (Gnani 2026). Business logic lives in src/pipeline.py.
 NFR: specs/NFR.md — rate limit, circuit breakers, typed errors, no secrets logged."""
 import base64
 import collections
@@ -27,13 +27,13 @@ from pipeline import (
 )
 
 BASE_DIR = pathlib.Path(__file__).parent
-RATE_LIMIT = int(os.getenv('SAATHI_RATE_LIMIT', '30'))
+RATE_LIMIT = int(os.getenv('SIDDHA_RATE_LIMIT', '30'))
 _metrics = collections.Counter()
 _lock = threading.Lock()
 _ip_calls = collections.defaultdict(list)
 _ip_lock = threading.Lock()
 
-app = FastAPI(title='Saathi', version='2.1.0', docs_url=None, redoc_url=None)
+app = FastAPI(title='Siddha', version='2.2.0', docs_url=None, redoc_url=None)
 STATIC = pathlib.Path(__file__).parent / 'static'
 app.mount('/static', StaticFiles(directory=STATIC), name='static')
 
@@ -86,7 +86,7 @@ def health():
     ]
     if missing:
         raise HTTPException(503, f'Health check failed: missing {", ".join(missing)}')
-    return {'status': 'ok', 'version': '2.1.0'}
+    return {'status': 'ok', 'version': '2.2.0'}
 
 @app.get('/api/metrics')
 def metrics():

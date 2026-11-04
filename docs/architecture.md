@@ -4,16 +4,35 @@
 Single-process FastAPI service. The browser owns the microphone; everything beyond MediaRecorder happens server-side.
 
 ```mermaid
-flowchart LR
-    A[Browser mic<br/>MediaRecorder] -->|webm/opus| B[FastAPI /api/ask_audio]
-    B -->|ffmpeg| C[16 kHz mono WAV]
-    C -->|multipart| D[Gnani Prisma v3.0<br/>indic-auto · codemix]
-    D -->|transcript + detected_language| E[RAG retriever]
-    E -->|Top-5 chunk| F[Responder<br/>grounded composition]
-    F -->|answer + <pauses>| G[Gnani Timbre TTS]
-    G -->|WAV| H[/api/ask_audio response<br/>audio_wav_b64 |
-    E <--> I[(FAISS index<br/>+ BM25 + RRF)]
-    I <--> J[(scholarships.jsonl<br/>1,142 schemes)]
+flowchart TB
+    subgraph client["Browser"]
+        MIC["Mic · MediaRecorder<br/>webm / opus"]
+    end
+
+    subgraph api["FastAPI · one process"]
+        ROUTE["POST /api/ask_audio"]
+        FF["ffmpeg<br/>16 kHz mono WAV"]
+        RAG["Hybrid retrieval<br/>FAISS + BM25 → RRF"]
+        RESP["Grounded responder<br/>templates from scheme records"]
+        GUARD["Guardrails<br/>rate limit · retry + jitter<br/>circuit breakers · typed errors"]
+    end
+
+    subgraph gnani["Gnani voice models"]
+        STT["Prisma v3.0<br/>indic-auto · codemix"]
+        TTS["Timbre v3.0<br/>Shivani · hi-en"]
+    end
+
+    DATA[("1,142 myScheme<br/>scholarship records")]
+    OUT["JSON + base64 WAV"]
+
+    MIC -->|"webm/opus"| ROUTE
+    ROUTE --> FF --> STT
+    STT -->|"transcript + language"| RAG
+    DATA --> RAG
+    RAG --> RESP --> TTS
+    TTS --> OUT
+    ROUTE -.-> GUARD
+    RAG -.-> GUARD
 ```
 
 ## Data flow

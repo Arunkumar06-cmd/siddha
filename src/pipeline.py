@@ -1,4 +1,4 @@
-"""Saathi pipeline: mic -> ffmpeg -> Prisma STT -> RAG -> Timbre TTS.
+"""Siddha pipeline: mic -> ffmpeg -> Prisma STT -> RAG -> Timbre TTS.
 All external calls: timeout -> retry(backoff+jitter) -> circuit breaker -> typed error."""
 import contextlib
 import os

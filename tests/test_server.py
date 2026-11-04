@@ -1,4 +1,4 @@
-"""HTTP integration tests for Saathi's routes, with provider HTTP calls mocked."""
+"""HTTP integration tests for Siddha's routes, with provider HTTP calls mocked."""
 import base64
 import unittest.mock as mock
 

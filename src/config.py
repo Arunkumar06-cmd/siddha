@@ -12,7 +12,7 @@ import sys
 
 LOG_FORMAT = '%(asctime)s %(levelname)s [%(name)s] %(message)s'
 logging.basicConfig(level=logging.INFO, format=LOG_FORMAT, stream=sys.stdout)
-logger = logging.getLogger('saathi')
+logger = logging.getLogger('siddha')
 
 
 def _load_env_file(path: pathlib.Path) -> dict:
@@ -63,5 +63,5 @@ TTS_VOICE = os.getenv('TTS_VOICE', 'Shivani')
 TTS_LANG = os.getenv('TTS_LANG', 'hi-en')
 TTS_SPEED = 1.0
 
-HOST = os.getenv('SAATHI_HOST', '127.0.0.1')  # secure default; set SAATHI_HOST=0.0.0.0 to expose LAN
-PORT = int(os.getenv('SAATHI_PORT', '8765'))
+HOST = os.getenv('SIDDHA_HOST', '127.0.0.1')  # secure default; set SIDDHA_HOST=0.0.0.0 to expose LAN
+PORT = int(os.getenv('SIDDHA_PORT', '8765'))

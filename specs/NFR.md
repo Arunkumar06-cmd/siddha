@@ -1,4 +1,4 @@
-# Saathi — Non-Functional Requirements (explicit, executable)
+# Siddha — Non-Functional Requirements (explicit, executable)
 
 ## Reliability
 - Gnani calls (STT, TTS): timeout 60/90 s, ≤2 retries w/ backoff+jitter, circuit breaker (5 consecutive failures → 60 s cooldown) → fail fast 502.

@@ -20,6 +20,6 @@ def test_sentences_are_short():
         assert len(s) <= 130  # word-boundary tolerance
 
 def test_render_adds_pauses_and_finishes():
-    out = render('Hello world. This is Saathi testing.', use_tags=True)
+    out = render('Hello world. This is Siddha testing.', use_tags=True)
     assert '<pauses>' in out
     assert out.rstrip().endswith('.')

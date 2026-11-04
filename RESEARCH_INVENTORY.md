@@ -57,7 +57,7 @@ As of 2026-11-04 | Goal: strongest problem → strongest solution, with papers &
 - Multilingual answers: generate Hindi/Tamil/… templates OR translate myScheme fields with IndicTrans2 (Apache open model) or LLM translation
 
 **Product layer**
-- Voice persona: "Sathi/Saathi" (friend) — warm, Hinglish-first, then Hindi/Tamil/English
+- Voice persona: "Sathi/Siddha" (friend) — warm, Hinglish-first, then Hindi/Tamil/English
 - Auto keyterms: inject `["OTR","NSP","Aadhaar","DBT","PFMS","SC","ST","OBC","affidavit"]` to Prisma
 - Demo script — enrollment state: user speaks "meraa haath mein scholarship ka form hai..." → bot reads eligibility, tells documents, warns about Aadhaar-bank link, opens application link
 

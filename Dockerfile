@@ -1,4 +1,4 @@
-# Saathi — production image (build stage + slim runtime)
+# Siddha — production image (build stage + slim runtime)
 # syntax=docker/dockerfile:1
 
 FROM python:3.11-slim AS build
@@ -15,14 +15,14 @@ RUN /opt/venv/bin/python -c "from sentence_transformers import SentenceTransform
     SentenceTransformer('sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2')"
 
 FROM python:3.11-slim AS runtime
-ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PATH=/opt/venv/bin:$PATH SAATHI_HOST=0.0.0.0
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PATH=/opt/venv/bin:$PATH SIDDHA_HOST=0.0.0.0
 WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg curl \
     && rm -rf /var/lib/apt/lists/* \
-    && useradd --create-home --shell /usr/sbin/nologin saathi
+    && useradd --create-home --shell /usr/sbin/nologin siddha
 COPY --from=build /opt/venv /opt/venv
 COPY . .
-USER saathi
+USER siddha
 EXPOSE 7860
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
     CMD curl -fsS http://localhost:7860/api/health || exit 1

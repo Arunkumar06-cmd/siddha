@@ -1,9 +1,11 @@
-# Saathi
+# Siddha
 **Voice-first scholarship guide for India — ask in Hinglish, Hindi or Tamil, get the exact NSP scheme, documents and dates, spoken back to you. Powered end-to-end by Gnani's own voice models.**
 
-[![CI](https://img.shields.io/github/actions/workflow/status/Arunkumar06-cmd/saathi/ci.yml?branch=main&style=for-the-badge)](https://github.com/Arunkumar06-cmd/saathi/actions) [![Coverage](https://img.shields.io/badge/coverage-85%25-22c1a0?style=for-the-badge)](https://github.com/Arunkumar06-cmd/saathi) [![Python](https://img.shields.io/badge/python-3.11%2B-ffb84d?style=for-the-badge)](https://www.python.org/) [![License](https://img.shields.io/github/license/Arunkumar06-cmd/saathi?style=for-the-badge)](./LICENSE) [![Version](https://img.shields.io/badge/version-2.1.0-ff8a00?style=for-the-badge)](#roadmap)
+[![CI](https://img.shields.io/github/actions/workflow/status/Arunkumar06-cmd/siddha/ci.yml?branch=main&style=for-the-badge)](https://github.com/Arunkumar06-cmd/siddha/actions) [![Coverage](https://img.shields.io/badge/coverage-85%25-22c1a0?style=for-the-badge)](https://github.com/Arunkumar06-cmd/siddha) [![Python](https://img.shields.io/badge/python-3.11%2B-ffb84d?style=for-the-badge)](https://www.python.org/) [![License](https://img.shields.io/github/license/Arunkumar06-cmd/siddha?style=for-the-badge)](./LICENSE) [![Version](https://img.shields.io/badge/version-2.2.0-ff8a00?style=for-the-badge)](#roadmap)
 
-![Saathi pipeline](docs/architecture.svg)
+![Siddha — ask by voice, get a grounded scholarship answer](docs/demo.png)
+
+<sub>Real UI, real Gnani Prisma + Timbre call. Architecture diagram: [docs/architecture.md](./docs/architecture.md).</sub>
 
 ## Table of contents
 - [Features](#features)
@@ -26,8 +28,8 @@
 
 ## Quick start
 ```bash
-git clone https://github.com/Arunkumar06-cmd/saathi.git
-cd saathi
+git clone https://github.com/Arunkumar06-cmd/siddha.git
+cd siddha
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt   # ~10 min on CPU torch
 python -m uvicorn server:app --host 127.0.0.1 --port 8765
@@ -46,9 +48,9 @@ Environment variables (put in `~/.env` locally; never commit):
 | Variable | Required | Description | Default |
 |---|---|---|---|
 | `GNANI_API_KEY` | yes | Key from app.gnani.ai → API keys (scope: `STT`, `TTS`) | — |
-| `SAATHI_HOST` | no | Bind address (`0.0.0.0` exposes the LAN) | `127.0.0.1` |
-| `SAATHI_PORT` | no | Port | `8765` |
-| `SAATHI_RATE_LIMIT` | no | Requests per minute per IP | `30` |
+| `SIDDHA_HOST` | no | Bind address (`0.0.0.0` exposes the LAN) | `127.0.0.1` |
+| `SIDDHA_PORT` | no | Port | `8765` |
+| `SIDDHA_RATE_LIMIT` | no | Requests per minute per IP | `30` |
 
 ## Usage
 
@@ -96,8 +98,8 @@ curl -s -X POST http://127.0.0.1:8765/api/ask_audio \
 ├── data/scholarships.jsonl   # 1,142 schemes (extracted from myScheme)
 ├── data/scholarships.faiss   # prebuilt FAISS index
 ├── specs/NFR.md         # non-functional requirements (explicit)
-├── tests/               # 30 tests, 85% coverage
-├── docs/                # architecture, ADRs, API
+├── tests/               # 36 tests, 85% coverage
+├── docs/                # screenshot, architecture, ADRs, API
 └── .github/workflows/   # CI + security
 ```
 

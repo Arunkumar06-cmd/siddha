@@ -45,7 +45,7 @@
 ## ADR-008: torch 2.12.1 over 2.13.0 (PYSEC-2025-194)
 **Date:** 2026-11-04 · **Status:** accepted-risk
 **Context:** pip-audit flags torch 2.12.1 (fix: 2.13.0). This machine's toolkit hard-pins `torchvision==0.27.1 → torch==2.12.1`; upgrading torch breaks the resolver for the rest of the Anaconda env.
-**Decision:** Pin `torch==2.12.1`. Saathi feeds only a local, trusted corpus through the `MiniLM-L12` encoder; no untrusted tensor/model inputs reach torch ops at request time. Revisit when torchvision releases a 2.13-compatible pin.
+**Decision:** Pin `torch==2.12.1`. Siddha feeds only a local, trusted corpus through the `MiniLM-L12` encoder; no untrusted tensor/model inputs reach torch ops at request time. Revisit when torchvision releases a 2.13-compatible pin.
 **Consequences:** One advisory accepted; re-audit on any torchvision bump.
 
 ## ADR-009: setuptools 81.0.0 (env-level advisory)

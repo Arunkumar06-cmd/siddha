@@ -1,7 +1,14 @@
 # Changelog
-All notable changes to Saathi. Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+All notable changes to Siddha. Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Changed
+- Product renamed **Saathi → Siddha** across app, docs, env vars (`SIDDHA_*`), Docker user, and repo
+- README now shows a real UI screenshot instead of the hand-drawn SVG diagram
+
+### Fixed
+- `LICENSE` contained only a header line, so GitHub reported "license not identified" — now the full MIT text
+
 ### Added
 - CI pipeline (`quality`: ruff, byte-compile, pytest, gitleaks; `docker`: image build) with pip + HF caching, 10-min timeouts, PR + main triggers
 - Security workflow: gitleaks + `pip-audit` advisory scan
@@ -10,7 +17,7 @@ All notable changes to Saathi. Format: [Keep a Changelog](https://keepachangelog
 - Per-IP rate limiting (30 req/min), typed 4xx/5xx error envelope, `/api/health` corpus-aware health check
 - Failure-mode suite: temp-file cleanup, synthetic timeout → circuit opens, concurrency, rate limit (17→20 tests, **84%** coverage)
 - Docs: `architecture.md`, `decisions.md` (ADRs), `api.md`, `specs/NFR.md`, quality gates in `Makefile`
-- Multi-stage Dockerfile (build/runtime separation, non-root `saathi` user)
+- Multi-stage Dockerfile (build/runtime separation, non-root `siddha` user)
 
 ### Fixed
 - CI failed on a clean runner: `config.py` assumed a developer `~/.env` — key now resolves env → `~/.env` → `./.env` with an actionable error
@@ -24,6 +31,6 @@ All notable changes to Saathi. Format: [Keep a Changelog](https://keepachangelog
 
 ## [1.0.0] - 2026-11-04
 ### Added
-- Initial Saathi: mic → Prisma STT → FAISS+BM25/RRF RAG over 1,142 myScheme scholarships → Hinglish Timbre TTS
+- Initial Siddha: mic → Prisma STT → FAISS+BM25/RRF RAG over 1,142 myScheme scholarships → Hinglish Timbre TTS
 - Grounded, template-composed answers (zero hallucination), Hinglish-first
 - Offline corpus tooling: `prepare_corpus.py`, `build_index.py`
