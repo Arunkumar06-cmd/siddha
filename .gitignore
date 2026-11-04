@@ -1,0 +1,13 @@
+.env
+.env.*
+!.env.example
+__pycache__/
+*.pyc
+.venv-check/
+server.log
+backups/
+.DS_Store
+data/updated_data.csv
+myscheme.zip
+.idea/
+.vscode/
