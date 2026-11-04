@@ -1,5 +1,5 @@
-import pytest
-from spoken import speakify, render, split_sentences
+from spoken import render, speakify, split_sentences
+
 
 def test_strips_money_markup():
     out = speakify('Scholarship kaisa hai ₹5,000 har mahina')

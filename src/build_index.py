@@ -1,17 +1,26 @@
 """Encode corpus once and persist FAISS index + embeddings to disk."""
-import json, re, sys, time
-import numpy as np, faiss
+import json
+import logging
+import time
+
+import faiss
+import numpy as np
 from sentence_transformers import SentenceTransformer
-from retriever import doc_text, CORPUS
+
+from retriever import CORPUS, doc_text
+
+logging.basicConfig(level=logging.INFO, format='%(message)s')
+log = logging.getLogger(__name__)
 
 t0 = time.time()
-recs = [json.loads(l) for l in open(CORPUS, encoding='utf-8')]
+with open(CORPUS, encoding='utf-8') as fh:
+    recs = [json.loads(line) for line in fh]
 docs = [doc_text(r) for r in recs]
-print('docs:', len(docs))
+log.info('docs: %d', len(docs))
 model = SentenceTransformer('sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2')
 emb = model.encode(docs, batch_size=64, normalize_embeddings=True, show_progress_bar=True)
 np.save('data/corpus_emb.npy', emb.astype('float32'))
 idx = faiss.IndexFlatIP(emb.shape[1])
 idx.add(np.ascontiguousarray(emb.astype('float32')))
 faiss.write_index(idx, 'data/scholarships.faiss')
-print('saved. embeddings', emb.shape, f'{time.time()-t0:.0f}s')
+log.info('saved embeddings shape=%s sec=%.0f', emb.shape, time.time() - t0)

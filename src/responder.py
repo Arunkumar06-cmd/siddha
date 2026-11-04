@@ -1,7 +1,6 @@
 """Saathi responder - grounded strictly in the myScheme corpus.
 Voice-safe output: short sentences with <pauses> tags for Timbre v3.0."""
 import re
-from spoken import speakify, render
 
 ASPECT_KEYS = {
     'documents': ['document', 'paper', 'kagaz', 'needed', 'proof', 'certificate', 'दस्तावेज़'],
@@ -20,23 +19,27 @@ def classify_aspects(q):
 def _clean(raw, cap=160):
     t = re.sub(r'\s+', ' ', str(raw or '')).strip(' .,')
     t = re.sub(r'^(Documents Required?|Eligibility( Criteria)?|Benefits?|How to Apply|Application|Details)\s*:?\s*',
-               '', t, flags=re.I).strip(' .,')
+               '', t, flags=re.IGNORECASE).strip(' .,')
     return t[:cap]
 
 def compose(rec, aspects):
     out = []
     if 'eligibility' in aspects:
         t = _clean(rec.get('eligibility'), 150)
-        if t: out.append(f"Eligibility sun lo. {t}")
+        if t:
+            out.append(f"Eligibility sun lo. {t}")
     if 'benefit' in aspects:
         t = _clean(rec.get('benefits'), 140)
-        if t: out.append(f"Benefit yeh hai. {t}")
+        if t:
+            out.append(f"Benefit yeh hai. {t}")
     if 'documents' in aspects:
         t = _clean(rec.get('documents'), 170)
-        if t: out.append(f"Documents chahiye. {t}")
+        if t:
+            out.append(f"Documents chahiye. {t}")
     if 'apply' in aspects:
         t = _clean(rec.get('application'), 150)
-        if t: out.append(f"Apply kaise kare. {t}")
+        if t:
+            out.append(f"Apply kaise kare. {t}")
     if not out:
         out.append("Is scheme ke baare mein portal pe poori jaankari milegi.")
     return ' '.join(out)

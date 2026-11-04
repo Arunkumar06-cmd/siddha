@@ -11,3 +11,5 @@ data/updated_data.csv
 myscheme.zip
 .idea/
 .vscode/
+.coverage
+coverage.xml

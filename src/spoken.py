@@ -9,7 +9,7 @@ REPLACEMENTS = [
     (r'scholarships\.gov\.in', 'the National Scholarship Portal'),
     (r'pfms\.nic\.in', 'the PFMS portal'),
     (r'/', ' or '), (r'\(', ', '), (r'\)', ', '), (r'\[|\]', ', '),
-    (r'\|', ' and '), (r'–', ', '), (r'—', ', '),
+    (r'\|', ' and '), (r'–', ', '),  # noqa: RUF001 - maps en-dash to comma for the voice engine (r'—', ', '),
     (r'\*+', ''), (r'`+', ''), (r'#', ''),
     (r'\bSC\b', 'scheduled caste'), (r'\bST\b', 'scheduled tribe'),
     (r'\bNSP\b', 'the National Scholarship Portal'), (r'\bDBT\b', 'D B T'),

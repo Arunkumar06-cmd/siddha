@@ -1,8 +1,10 @@
 """Resilience primitives: retry with backoff+jitter, circuit breaker.
 Deterministic, stdlib-only, thread-safe."""
-import random, threading, time
-from functools import wraps
-from typing import Callable, TypeVar
+import random
+import threading
+import time
+from collections.abc import Callable
+from typing import TypeVar
 
 T = TypeVar('T')
 
@@ -53,10 +55,10 @@ def retry(call: Callable[[], T], *, attempts: int = 2, base_delay: float = 0.4,
     for i in range(attempts):
         try:
             return call()
-        except Exception as e:          # noqa: BLE001 - caller narrows
+        except Exception as e:
             last = e
             if retryable and not retryable(e):
                 raise
             if i + 1 < attempts:
-                time.sleep(base_delay * (2 ** i) + random.uniform(0, 0.15))
+                time.sleep(base_delay * (2 ** i) + random.uniform(0, 0.15))  # noqa: S311 - jitter, not cryptography
     raise last

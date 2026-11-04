@@ -25,5 +25,5 @@ def test_no_hits_returns_safe_fallback():
     assert sources == []
 
 def test_status_canned_flow():
-    spoken, sources, canned = answer('status check kaise kare', [])
+    spoken, _, canned = answer('status check kaise kare', [])
     assert canned and 'PFMS' in spoken

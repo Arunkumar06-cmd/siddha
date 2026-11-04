@@ -63,8 +63,20 @@ function setStatus(msg, isErr=false){
 }
 function renderSources(sources){
   sourcesEl.style.display = 'block';
-  sourcesEl.innerHTML = 'Sources (1,142 schemes): ' + sources.map(s =>
-    `<div class="src"><b>${s.name}</b><span>${s.score ?? 'official'}</span></div>`).join('');
+  sourcesEl.textContent = '';
+  const lbl = document.createElement('div');
+  lbl.textContent = 'Sources (1,142 schemes):';
+  sourcesEl.appendChild(lbl);
+  for (const s of sources) {
+    const row = document.createElement('div');
+    row.className = 'src';
+    const b = document.createElement('b');
+    b.textContent = s.name;
+    const sc = document.createElement('span');
+    sc.textContent = s.score ?? 'official';
+    row.append(b, sc);
+    sourcesEl.appendChild(row);
+  }
 }
 mic.addEventListener('click', async () => {
   if (recorder) { recorder.stop(); return; }
@@ -84,7 +96,13 @@ mic.addEventListener('click', async () => {
         const j = await r.json();
         if (!r.ok) throw new Error(j.error || 'Server error');
         transcriptEl.style.display='block'; transcriptEl.textContent = '🗣️ You: ' + (j.transcript || '(no speech detected)');
-        replyEl.style.display='block'; replyEl.innerHTML = '🎓 <b>Saathi:</b> ' + j.reply;
+        replyEl.style.display='block';
+        replyEl.textContent = '';
+        const strong = document.createElement('strong');
+        strong.textContent = 'Saathi: ';
+        const span = document.createElement('span');
+        span.textContent = j.reply;
+        replyEl.append(strong, span);
         renderSources(j.sources || []);
         if (j.audio_wav_b64) {
           player.src = 'data:audio/wav;base64,' + j.audio_wav_b64;

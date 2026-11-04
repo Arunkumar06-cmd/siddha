@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 360" font-family="monospace">
+  <rect width="900" height="360" fill="#0b1e2d" rx="14"/>
+  <text x="30" y="46" fill="#ffb84d" font-size="22" font-weight="bold">Saathi — Voice Scholarship Concierge (pipeline)</text>
+  <g font-size="15" fill="#eef4f9">
+    <rect x="30" y="80" width="190" height="110" rx="10" fill="#12324a" stroke="#22c1a0"/>
+    <text x="125" y="130" text-anchor="middle" font-weight="bold">Mic (browser)</text>
+    <text x="125" y="155" text-anchor="middle" fill="#8fb0c8">MediaRecorder → webm/opus</text>
+    <rect x="250" y="80" width="170" height="110" rx="10" fill="#12324a"/>
+    <text x="335" y="130" text-anchor="middle" font-weight="bold">ffmpeg</text>
+    <text x="335" y="155" text-anchor="middle" fill="#8fb0c8">→ 16 kHz mono WAV</text>
+    <rect x="450" y="80" width="200" height="110" rx="10" fill="#12324a" stroke="#ff8a00" stroke-width="2"/>
+    <text x="550" y="128" text-anchor="middle" font-weight="bold">Prisma v3.0 STT</text>
+    <text x="550" y="150" text-anchor="middle" fill="#8fb0c8">indic-auto · codemix</text>
+    <text x="550" y="172" text-anchor="middle" fill="#8fb0c8">sentence +lang detect</text>
+    <rect x="30" y="230" width="620" height="95" rx="10" fill="#0f2c3e" stroke="#22c1a0"/>
+    <text x="340" y="270" text-anchor="middle" font-weight="bold">RAG over 1,142 myScheme scholarships</text>
+    <text x="340" y="295" text-anchor="middle" fill="#8fb0c8">MiniLM-L12 multilingual · FAISS IP · BM25 · RRF fusion (k=60)</text>
+    <rect x="690" y="80" width="180" height="110" rx="10" fill="#12324a" stroke="#ff8a00" stroke-width="2"/>
+    <text x="780" y="128" text-anchor="middle" font-weight="bold">Timbre v3 TTS</text>
+    <text x="780" y="150" text-anchor="middle" fill="#8fb0c8">Hinglish voice</text>
+    <text x="780" y="172" text-anchor="middle" fill="#8fb0c8">&lt;pauses&gt; tags</text>
+  </g>
+  <g stroke="#ff8a00" stroke-width="3" fill="none">
+    <path d="M220 135 H250"/><path d="M420 135 H450"/><path d="M650 135 H690"/><path d="M340 190 V230"/><path d="M340 325 H700 V190"/>
+  </g>
+</svg>

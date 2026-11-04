@@ -1,14 +1,14 @@
 """Multilingual RAG retriever over the myScheme scholarship corpus.
 Embeddings: paraphrase-multilingual-MiniLM-L12-v2 (CPU, ~118 MB).
 Fusion: dense FAISS + BM25 via Reciprocal Rank Fusion."""
-import json, re, math
-import numpy as np
+import json
+import re
 from functools import lru_cache
 
 import faiss
+import numpy as np
 from rank_bm25 import BM25Okapi
 from sentence_transformers import SentenceTransformer
-from transformers import AutoTokenizer
 
 CORPUS = 'data/scholarships.jsonl'
 MODEL = 'sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2'
@@ -25,7 +25,8 @@ def doc_text(rec):
 
 @lru_cache(maxsize=1)
 def _load():
-    recs = [json.loads(l) for l in open(CORPUS, encoding='utf-8')]
+    with open(CORPUS, encoding='utf-8') as fh:
+        recs = [json.loads(line) for line in fh]
     docs = [doc_text(r) for r in recs]
     model = SentenceTransformer(MODEL)
     index = faiss.read_index('data/scholarships.faiss')
@@ -35,7 +36,7 @@ def _load():
 def search(query, k=8, dense_k=20, bm25_k=20, rrf_k=60):
     recs, docs, model, index, bm25 = _load()
     q = model.encode([query], normalize_embeddings=True)[0].astype('float32')
-    d_scores, d_ids = index.search(np.expand_dims(q, 0), dense_k)
+    _, d_ids = index.search(np.expand_dims(q, 0), dense_k)
     d_ids = d_ids[0]
     tokenized = re.findall(r'\w+', query.lower())
     b_scores = bm25.get_scores(tokenized)

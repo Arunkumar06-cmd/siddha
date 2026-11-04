@@ -1,52 +1,127 @@
-# Saathi ✦ — Voice Guide to Scholarships for India
+# Saathi
+**Voice-first scholarship guide for India — ask in Hinglish, Hindi or Tamil, get the exact NSP scheme, documents and dates, spoken back to you. Powered end-to-end by Gnani's own voice models.**
 
-A voice-first assistant that tells students **which scholarship they qualify for, what documents they need, and how to apply** — in Hinglish, Hindi, Tamil and more — grounded in the live myScheme corpus (1,142 government schemes).
+[![CI](https://img.shields.io/github/actions/workflow/status/Arunkumar06-cmd/saathi/ci.yml?branch=main&style=for-the-badge)](https://github.com/Arunkumar06-cmd/saathi/actions) [![Coverage](https://img.shields.io/badge/coverage-84%25-22c1a0?style=for-the-badge)](https://github.com/Arunkumar06-cmd/saathi) [![Python](https://img.shields.io/badge/python-3.11%2B-ffb84d?style=for-the-badge)](https://www.python.org/) [![License](https://img.shields.io/github/license/Arunkumar06-cmd/saathi?style=for-the-badge)](./LICENSE) [![Version](https://img.shields.io/badge/version-2.1.0-ff8a00?style=for-the-badge)](#roadmap)
 
-Built for the **Gnani Great Indian AI Internship Challenge** (Nov 2026). Powered end-to-end by Gnani's own models:
+![Saathi pipeline](docs/architecture.svg)
 
-- **Prisma v3.0** (`/stt/v3`, `indic-auto`, `codemix`) — speech to text
-- **Timbre v3.0** (Hinglish voice, `<pauses>` audio tags) — text to speech
+## Table of contents
+- [Features](#features)
+- [Quick start](#quick-start)
+- [Installation](#installation)
+- [Usage](#usage)
+- [API reference](#api-reference)
+- [Project structure](#project-structure)
+- [Contributing](#contributing)
+- [Roadmap](#roadmap)
+- [License](#license)
 
-## Architecture
+## Features
+- **Voice-in, voice-out** — browser mic → Prisma STT (`prisma-v3.0`, `indic-auto`, `codemix`) → RAG → Timbre TTS answers in the same language.
+- **Grounded answers** — every reply is assembled from myScheme's 1,142 scholarship schemes; the LLM never invents eligibility or dates.
+- **Hybrid retrieval** — MiniLM-L12 multilingual embeddings + FAISS + BM25, fused with reciprocal rank fusion (RRF).
+- **Hinglish-first** — answers are shaped for Indian code-mixed speech, not translated English.
+- **Cost-safe** — one turn = exactly 2 Gnani calls (1 STT + 1 TTS); 5,000 programme credits ≈ 2,500 turns.
+- **Crash-safe** — circuit breakers, retry with backoff+jitter, per-IP rate limits, typed errors.
 
+## Quick start
+```bash
+git clone https://github.com/Arunkumar06-cmd/saathi.git
+cd saathi
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt   # ~10 min on CPU torch
+python -m uvicorn server:app --host 127.0.0.1 --port 8765
 ```
-browser mic ─► MediaRecorder (webm/opus)
-            ─► FFmpeg 16 kHz mono WAV
-            ─► Gnani Prisma STT ─► transcript (+ detected language)
-            ─► RAG over myScheme scholarships.jsonl
-                MiniLM-L12 multilingual (384d) + FAISS IP (dense)
-                BM25 + Reciprocal Rank Fusion
-            ─► grounded answer (template-composed, zero hallucination)
-            ─► Timbre TTS (Hinglish, <pauses>) ─► audio reply
-```
+Open http://127.0.0.1:8765 — tap the mic, ask in Hinglish.
 
-## Run locally
+## Installation
+**Prerequisites:** Python 3.11+, macOS/Linux, ffmpeg on PATH, ~2 GB free disk (CPU torch), a valid `GNANI_API_KEY` from [app.gnani.ai](https://app.gnani.ai/).
 
 ```bash
-pip install -r requirements.txt
-# .env: GNANI_API_KEY=...   (from app.gnani.ai → API keys)
-uvicorn server:app --host 0.0.0.0 --port 8765
-# open http://localhost:8765
+pip install --extra-index-url https://download.pytorch.org/whl/cpu -r requirements.txt
 ```
 
-## Tests
+Environment variables (put in `~/.env` locally; never commit):
+
+| Variable | Required | Description | Default |
+|---|---|---|---|
+| `GNANI_API_KEY` | yes | Key from app.gnani.ai → API keys (scope: `STT`, `TTS`) | — |
+| `SAATHI_HOST` | no | Bind address (`0.0.0.0` exposes the LAN) | `127.0.0.1` |
+| `SAATHI_PORT` | no | Port | `8765` |
+| `SAATHI_RATE_LIMIT` | no | Requests per minute per IP | `30` |
+
+## Usage
+
+Text question via curl (no mic needed):
 
 ```bash
-python -m pytest tests/ -q     # 13 tests: unit + HTTP-mocked integration
+curl -s -X POST http://127.0.0.1:8765/api/ask_text \
+  -H 'Content-Type: application/json' \
+  -d '{"text":"scholarship ke liye kaunse documents chahiye"}'
 ```
 
-## Deploy (public demo)
+Voice question via MediaRecorder POST (see `static/index.html`):
 
-Any Docker host works (HF Spaces / Render / Fly.io). Set one secret:
-`GNANI_API_KEY` → `~/.env` injected at runtime (never in the image).
-Never commit `.env`. Health check: `GET /api/health`.
+```bash
+curl -s -X POST http://127.0.0.1:8765/api/ask_audio \
+  -F 'audio=@question.wav;type=audio/wav'
+```
 
-## Anti-slop notes
-- Retrieval-grounded answers; the LLM is **not** allowed to invent facts — every reply quotes scheme-shaped facts.
-- All Gnani calls are logged (status, latency), secrets never logged.
-- Test suite includes unhappy paths (empty audio, validation errors, mocked API failure).
-- Rate of external calls per request: exactly 2 (STT, TTS) + cached embeddings.
+```diff
++ The response contains transcript, reply, sources[], and audio_wav_b64 (base64 WAV).
+```
 
-## Cost & limits
-- ~1 STT + 1 TTS call per turn. 5,000 programme credits ⇒ ~2,500 turns of headroom.
-- No data leaves your server except voice audio to Gnani (the demo data: myScheme is public).
+## API reference
+
+| Endpoint | Method | Purpose | Body |
+|---|---|---|---|
+| `/api/ask_text` | POST | RAG answer | `{"text": "..."}` (2–500 chars) |
+| `/api/ask_audio` | POST | Voice STT→RAG→TTS | multipart `audio` ≤ 8 MB |
+| `/api/health` | GET | Liveness + corpus check (503 if degraded) | — |
+| `/api/metrics` | GET | Counters + circuit state | — |
+
+## Project structure
+```
+.
+├── server.py            # thin routes layer (FastAPI)
+├── src/
+│   ├── pipeline.py      # mic→ffmpeg→Prisma→RAG→Timbre (testable core)
+│   ├── retriever.py     # FAISS + BM25 + RRF over myScheme corpus
+│   ├── responder.py     # grounded answer composition
+│   ├── spoken.py        # voice-safe prose (<pauses> for Timbre v3)
+│   ├── resilience.py    # circuit breakers + retry/backoff
+│   ├── config.py        # typed env config + logging
+│   └── prepare_corpus.py / build_index.py  # offline corpus tools
+├── static/index.html    # mic UI
+├── data/scholarships.jsonl   # 1,142 schemes (extracted from myScheme)
+├── data/scholarships.faiss   # prebuilt FAISS index
+├── specs/NFR.md         # non-functional requirements (explicit)
+├── tests/               # 20 tests, 84% coverage
+├── docs/                # architecture, ADRs, API
+└── .github/workflows/   # CI + security
+```
+
+<details><summary>Advanced: self-host a public demo</summary>
+
+Any Docker host works. For Hugging Face Spaces (free):
+1. Create a Space → SDK: Docker.
+2. Add repo as remote.
+3. Space → Settings → **Secrets**: `GNANI_API_KEY`.
+4. The Space runs on port 7860 (Dockerfile default). `/api/health` must be green.
+
+Everything (model pre-download, healthcheck, non-root user) is baked in — no manual steps beyond the secret.
+</details>
+
+## Contributing
+Fork → branch → `make lint test` → PR → CI green → 1 review. See [CONTRIBUTING.md](./CONTRIBUTING.md).
+
+## Roadmap
+- **v2.2** — LLM-composed phrasing (grounded; opt-in via API key), streaming TTS via SSE/WS
+- **v2.3** — Eligibility-aware ranking (age/income/category parsing from voice)
+- **v2.4** — Multi-turn conversation memory; application progress tracking
+- **v3.0** — Voice-based form filling (auto-populate NSP fields from speech)
+
+## License
+MIT — see [LICENSE](./LICENSE).
+
+*Built with FastAPI, Gnani Prisma/Timbre and FAISS by Arunkumar Karumbayiram.*

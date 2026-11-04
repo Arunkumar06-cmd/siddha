@@ -1,0 +1,22 @@
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E","F","I","B","SIM","S","UP","RUF","PLE","FURB"]
+ignore = ["E501"]          # line length handled by editorconfig
+
+[tool.ruff.lint.per-file-ignores]
+"server.py" = ["B008"]     # FastAPI idiom: File(...) / Depends(...) as default args
+"tests/**" = ["S101"]      # asserts are the point of tests
+"src/pipeline.py" = ["BLE001"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.coverage.run]
+omit = ["src/build_index.py", "src/prepare_corpus.py"]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true

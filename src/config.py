@@ -1,5 +1,9 @@
 """Configuration: typed, validated, single source of truth."""
-import os, pathlib, logging, sys
+import logging
+import os
+import pathlib
+import sys
+
 
 def _env():
     env = {}
@@ -23,7 +27,7 @@ TTS_VOICE = 'Shivani'
 TTS_LANG = 'hi-en'
 TTS_SPEED = 1.0
 
-HOST = os.getenv('SAATHI_HOST', '0.0.0.0')
+HOST = os.getenv('SAATHI_HOST', '127.0.0.1')  # secure default; set SAATHI_HOST=0.0.0.0 to expose LAN
 PORT = int(os.getenv('SAATHI_PORT', '8765'))
 
 LOG_FORMAT = '%(asctime)s %(levelname)s [%(name)s] %(message)s'
