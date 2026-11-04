@@ -93,7 +93,7 @@ Designed and built solo: corpus pipeline, retrieval, grounded responder, voice-s
 
 > Millions of Indian students miss scholarships they qualify for — rules are buried in portals.
 >
-> Siddha: ask in Hinglish, Hindi or Tamil. Hear the exact scheme + documents, grounded in 1,142 records.
+> Siddha: ask in Hinglish, Hindi or Tamil. Hear the scheme + documents, grounded in 1,142 records.
 >
 > Built with @GnaniAi Prisma + Timbre.
 > #GnaniAI #GreatIndianAIInternshipChallenge
