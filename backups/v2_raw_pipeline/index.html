@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Saathi — Voice Scholarship Concierge</title>
+<style>
+  :root { --bg:#0b1e2d; --panel:#122c3f; --accent:#ff7a00; --text:#f5f7fa; --muted:#8ea6bb; }
+  * { box-sizing: border-box; font-family: -apple-system, 'Segoe UI', system-ui, sans-serif; }
+  body { margin:0; background: radial-gradient(1200px 700px at 50% -10%, #16324a, var(--bg)); color:var(--text); min-height:100vh; display:flex; flex-direction:column; align-items:center; }
+  header { padding:18px; text-align:center; }
+  h1 { margin:0; font-size:1.6rem; } h1 span { color:var(--accent); }
+  .tag { color:var(--muted); font-size:.8rem; }
+  main { width:min(680px, 94vw); background:var(--panel); border-radius:20px; padding:22px; box-shadow:0 20px 60px #0008; margin:10px 0 30px; }
+  #mic { width:110px; height:110px; border-radius:50%; background:var(--accent); border:none; font-size:2.4rem; cursor:pointer; transition:transform .15s; }
+  #mic:active, #mic.rec { transform:scale(1.08); box-shadow:0 0 0 12px #ff7a0033; }
+  #status { color:var(--muted); margin:12px 0; min-height:1.4em; }
+  #transcript, #reply { padding:12px 14px; border-radius:12px; margin:8px 0; line-height:1.45; display:none; }
+  #transcript { background:#0e2333; color:#cdd; }
+  #reply { background:#17364c; font-size:1.02rem; border-left:4px solid var(--accent); }
+  #sources { font-size:.75rem; color:var(--muted); margin-top:8px; display:none; }
+  .src { padding:6px 8px; background:#0e2333; border-radius:8px; margin:4px 0; }
+  footer { color:var(--muted); font-size:.7rem; padding:10px; text-align:center; }
+  .chip { display:inline-block; background:#16324a; border-radius:999px; padding:3px 10px; margin:2px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Saathi<span>✦</span> — Voice Scholarship Concierge</h1>
+  <div class="tag">Mic → Prisma STT → RAG over 1,142 myScheme scholarships → Timbre TTS · Built on Gnani</div>
+</header>
+<main>
+  <div style="text-align:center">
+    <button id="mic" aria-label="record">🎙️</button>
+    <div id="status">Tap the mic and ask — in Hinglish, Hindi or Tamil. e.g. “scholarship ke liye kaunse documents chahiye”</div>
+    <audio id="player" autoplay></audio>
+  </div>
+  <div id="transcript"></div>
+  <div id="reply"></div>
+  <div id="sources"></div>
+</main>
+<footer>Demo for Gnani Great Indian AI Internship Challenge 2026 · Data: myScheme.gov.in (public) · Not official govt advice — verify on scholarships.gov.in</footer>
+<script>
+const mic = document.getElementById('mic'), status = document.getElementById('status');
+const transcript = document.getElementById('transcript'), reply = document.getElementById('reply'),
+      sources = document.getElementById('sources'), player = document.getElementById('player');
+let rec = null, chunks = [];
+mic.onclick = async () => {
+  if (rec) { rec.stop(); return; }
+  const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+  chunks = [];
+  rec = new MediaRecorder(stream);
+  rec.ondataavailable = e => chunks.push(e.data);
+  rec.onstop = async () => {
+    stream.getTracks().forEach(t => t.stop());
+    mic.classList.remove('rec'); mic.textContent = '🎙️';
+    status.textContent = 'Thinking with Prisma + RAG…';
+    const blob = new Blob(chunks, {type: 'audio/webm'});
+    const fd = new FormData(); fd.append('audio', blob, 'q.webm');
+    const r = await fetch('/api/ask_audio', {method:'POST', body: fd});
+    const j = await r.json();
+    status.textContent = 'Done. Tap mic to ask again.';
+    transcript.style.display='block'; transcript.textContent = '🗣️ You: ' + (j.transcript || '(no speech)');
+    reply.style.display='block'; reply.innerHTML = '🎓 <b>Saathi:</b> ' + j.reply;
+    sources.style.display='block';
+    sources.innerHTML = 'Sources (rank_score): ' + j.sources.map(s => `<div class="src">• ${s.name} <span class="chip">${s.score}</span></div>`).join('');
+    if (j.audio_wav_b64) { player.src = 'data:audio/wav;base64,' + j.audio_wav_b64; player.play(); }
+  };
+  rec.start(); mic.classList.add('rec'); mic.textContent = '⏹️';
+  status.textContent = 'Listening… tap again to stop.';
+};
+</script>
+</body>
+</html>

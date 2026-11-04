@@ -1,0 +1,47 @@
+2026-11-04 18:22:58,857 INFO [faiss.loader] Loading faiss.
+2026-11-04 18:22:58,870 INFO [faiss.loader] Successfully loaded faiss.
+2026-11-04 18:23:02,160 INFO [numexpr.utils] NumExpr defaulting to 8 threads.
+W1104 18:23:02.556000 7447 site-packages/torch/distributed/elastic/multiprocessing/redirects.py:35] NOTE: Redirects are currently not supported in MacOs.
+INFO:     Started server process [7447]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8765 (Press CTRL+C to quit)
+2026-11-04 18:23:06,596 INFO [sentence_transformers.SentenceTransformer] Use pytorch device_name: mps
+2026-11-04 18:23:06,596 INFO [sentence_transformers.SentenceTransformer] Load pretrained SentenceTransformer: sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+2026-11-04 18:23:06,862 INFO [httpx2] HTTP Request: HEAD https://huggingface.co/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2/resolve/main/modules.json "HTTP/1.1 307 Temporary Redirect"
+2026-11-04 18:23:06,879 INFO [httpx2] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2/e8f8c211226b894fcb81acc59f3b34ba3efd5f42/modules.json?%2Fsentence-transformers%2Fparaphrase-multilingual-MiniLM-L12-v2%2Fresolve%2Fmain%2Fmodules.json=&etag=%22f7640f94e81bb7f4f04daf1668850b38763a13d9%22 "HTTP/1.1 200 OK"
+2026-11-04 18:23:07,108 INFO [httpx2] HTTP Request: HEAD https://huggingface.co/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2/resolve/main/config_sentence_transformers.json "HTTP/1.1 307 Temporary Redirect"
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-11-04 18:23:07,111 WARNING [huggingface_hub.utils._http] Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-11-04 18:23:07,134 INFO [httpx2] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2/e8f8c211226b894fcb81acc59f3b34ba3efd5f42/config_sentence_transformers.json?%2Fsentence-transformers%2Fparaphrase-multilingual-MiniLM-L12-v2%2Fresolve%2Fmain%2Fconfig_sentence_transformers.json=&etag=%22b974b349cb2d419ada11181750a733ff82f291ad%22 "HTTP/1.1 200 OK"
+2026-11-04 18:23:07,383 INFO [httpx2] HTTP Request: HEAD https://huggingface.co/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+2026-11-04 18:23:07,400 INFO [httpx2] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2/e8f8c211226b894fcb81acc59f3b34ba3efd5f42/README.md?%2Fsentence-transformers%2Fparaphrase-multilingual-MiniLM-L12-v2%2Fresolve%2Fmain%2FREADME.md=&etag=%226bedb7f3622d56b7020f33ab93f6996d33242043%22 "HTTP/1.1 200 OK"
+2026-11-04 18:23:07,630 INFO [httpx2] HTTP Request: HEAD https://huggingface.co/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2/resolve/main/modules.json "HTTP/1.1 307 Temporary Redirect"
+2026-11-04 18:23:07,647 INFO [httpx2] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2/e8f8c211226b894fcb81acc59f3b34ba3efd5f42/modules.json?%2Fsentence-transformers%2Fparaphrase-multilingual-MiniLM-L12-v2%2Fresolve%2Fmain%2Fmodules.json=&etag=%22f7640f94e81bb7f4f04daf1668850b38763a13d9%22 "HTTP/1.1 200 OK"
+2026-11-04 18:23:07,908 INFO [httpx2] HTTP Request: HEAD https://huggingface.co/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2/resolve/main/sentence_bert_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-11-04 18:23:07,927 INFO [httpx2] HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2/e8f8c211226b894fcb81acc59f3b34ba3efd5f42/sentence_bert_config.json?%2Fsentence-transformers%2Fparaphrase-multilingual-MiniLM-L12-v2%2Fresolve%2Fmain%2Fsentence_bert_config.json=&etag=%225fd10429389515d3e5cccdeda08cae5fea1ae82e%22 "HTTP/1.1 200 OK"
+2026-11-04 18:23:08,165 INFO [httpx2] HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2 "HTTP/1.1 200 OK"
+2026-11-04 18:23:08,434 INFO [httpx2] HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2 "HTTP/1.1 200 OK"
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights: 100%|██████████| 199/199 [00:00<00:00, 9905.02it/s]
+2026-11-04 18:23:09,023 INFO [httpx2] HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2 "HTTP/1.1 200 OK"
+2026-11-04 18:23:09,277 INFO [httpx2] HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+2026-11-04 18:23:09,513 INFO [httpx2] HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+2026-11-04 18:23:10,352 INFO [httpx2] HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2 "HTTP/1.1 200 OK"
+2026-11-04 18:23:10,864 INFO [httpx2] HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2/revision/main "HTTP/1.1 200 OK"
+2026-11-04 18:23:11,100 INFO [httpx2] HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2 "HTTP/1.1 200 OK"
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00,  1.98it/s]Batches: 100%|██████████| 1/1 [00:00<00:00,  1.98it/s]
+2026-11-04 18:23:12,521 INFO [saathi] rag_answer query_len=44 hits=5 latency_s=5.95 canned=False
+2026-11-04 18:23:17,060 INFO [saathi] tts_call status=200 latency_s=4.54
+INFO:     127.0.0.1:55016 - "POST /api/ask_text HTTP/1.1" 200 OK
+INFO:     ('127.0.0.1', 55053) - "WebSocket /" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed
+2026-11-04 18:23:31,624 INFO [saathi] ask_audio filename=q_test.wav ctype=audio/wav
+2026-11-04 18:23:32,575 INFO [saathi] stt_call status=200 latency_s=0.74
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00,  9.87it/s]Batches: 100%|██████████| 1/1 [00:00<00:00,  9.85it/s]
+2026-11-04 18:23:32,693 INFO [saathi] rag_answer query_len=40 hits=5 latency_s=0.11 canned=False
+2026-11-04 18:23:37,975 INFO [saathi] tts_call status=200 latency_s=5.28
+INFO:     127.0.0.1:55066 - "POST /api/ask_audio HTTP/1.1" 200 OK
+INFO:     ('127.0.0.1', 55184) - "WebSocket /" 403
+INFO:     connection rejected (403 Forbidden)
+INFO:     connection closed

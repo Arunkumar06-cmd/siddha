@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Saathi — Voice Guide for Indian Scholarships</title>
+<style>
+  :root { --bg:#071a26; --panel:#0f2c3e; --accent:#ff8a00; --accent2:#22c1a0; --text:#eef4f9; --muted:#8fb0c8; --danger:#ff5a5a; }
+  * { box-sizing:border-box; }
+  body { margin:0; min-height:100vh; display:flex; flex-direction:column; color:var(--text);
+         background:radial-gradient(900px 500px at 50% -10%, #10314a, var(--bg));
+         font-family:-apple-system,'Segoe UI',system-ui,Roboto,sans-serif; }
+  header { text-align:center; padding:20px 16px 8px; }
+  h1 { margin:0 0 4px; font-size:clamp(1.3rem,4vw,1.8rem); letter-spacing:.2px; }
+  h1 span { color:var(--accent); }
+  .tag { color:var(--muted); font-size:.75rem; }
+  main { width:min(640px,94vw); margin:12px auto 24px; background:var(--panel); border:1px solid #1d3f55;
+         border-radius:18px; padding:20px; box-shadow:0 24px 60px #000a; }
+  .mic-wrap { display:flex; flex-direction:column; align-items:center; gap:12px; padding:8px 0 2px; }
+  #mic { width:104px; height:104px; border-radius:50%; border:none; cursor:pointer; font-size:2.1rem;
+         color:#1a1a1a; background:var(--accent); transition:transform .12s ease; box-shadow:0 0 0 0 #ff8a0066; }
+  #mic:hover { transform:scale(1.05); }
+  #mic[aria-pressed="true"] { animation:pulse 1.2s infinite; background:#ffb84d; }
+  @keyframes pulse { 0%{box-shadow:0 0 0 0 #ff8a0088} 80%{box-shadow:0 0 0 16px transparent} }
+  #status { min-height:1.4em; color:var(--muted); font-size:.85rem; text-align:center; }
+  #status.error { color:var(--danger); }
+  .bubble { border-radius:12px; padding:12px 14px; margin:10px 0 0; line-height:1.5; display:none; font-size:.95rem; }
+  #transcript { background:#0b2230; color:#c7d7e6; }
+  #reply { background:#123b52; border-left:4px solid var(--accent2); }
+  #sources { font-size:.72rem; color:var(--muted); display:none; }
+  .src { display:flex; justify-content:space-between; gap:8px; background:#0b2230; border-radius:8px; padding:5px 8px; margin:4px 0; }
+  .src b { color:#d7e5ef; font-weight:600; }
+  footer { color:var(--muted); font-size:.65rem; text-align:center; padding:6px 12px 18px; }
+  a { color:var(--accent2); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Saathi <span>✦</span> Voice Guide to Scholarships</h1>
+  <div class="tag">Speak naturally — it answers with the exact NSP scholarships, documents and dates</div>
+</header>
+<main>
+  <div class="mic-wrap">
+    <button id="mic" aria-pressed="false" aria-label="Start recording">🎙️</button>
+    <div id="status" role="status">Tap once and ask your question</div>
+    <audio id="player" autoplay></audio>
+  </div>
+  <div id="transcript" class="bubble"></div>
+  <div id="reply" class="bubble"></div>
+  <div id="sources"></div>
+</main>
+<footer>Demo, not legal advice. Verify on <a href="https://www.scholarships.gov.in">scholarships.gov.in</a> · Built on Gnani Prisma/Timbre</footer>
+
+<script>
+const mic = document.getElementById('mic'), statusEl = document.getElementById('status');
+const transcriptEl = document.getElementById('transcript'), replyEl = document.getElementById('reply');
+const sourcesEl = document.getElementById('sources'), player = document.getElementById('player');
+const MIME = ['audio/webm','audio/mp4','audio/wav'].find(m => MediaRecorder.isTypeSupported(m)) || '';
+let recorder = null, chunks = [];
+
+function setStatus(msg, isErr=false){
+  statusEl.textContent = msg; statusEl.classList.toggle('error', isErr);
+}
+function renderSources(sources){
+  sourcesEl.style.display = 'block';
+  sourcesEl.innerHTML = 'Sources (1,142 schemes): ' + sources.map(s =>
+    `<div class="src"><b>${s.name}</b><span>${s.score ?? 'official'}</span></div>`).join('');
+}
+mic.addEventListener('click', async () => {
+  if (recorder) { recorder.stop(); return; }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+    chunks = [];
+    recorder = new MediaRecorder(stream, MIME ? {mimeType: MIME} : undefined);
+    recorder.ondataavailable = e => chunks.push(e.data);
+    recorder.onstop = async () => {
+      stream.getTracks().forEach(t => t.stop());
+      mic.setAttribute('aria-pressed','false'); mic.textContent='🎙️';
+      setStatus('Thinking…');
+      const blob = new Blob(chunks, {type: MIME || 'audio/webm'});
+      const fd = new FormData(); fd.append('audio', blob, 'q.webm');
+      try {
+        const r = await fetch('/api/ask_audio', {method:'POST', body: fd});
+        const j = await r.json();
+        if (!r.ok) throw new Error(j.error || 'Server error');
+        transcriptEl.style.display='block'; transcriptEl.textContent = '🗣️ You: ' + (j.transcript || '(no speech detected)');
+        replyEl.style.display='block'; replyEl.innerHTML = '🎓 <b>Saathi:</b> ' + j.reply;
+        renderSources(j.sources || []);
+        if (j.audio_wav_b64) {
+          player.src = 'data:audio/wav;base64,' + j.audio_wav_b64;
+          await player.play().catch(()=>{});
+        }
+        setStatus('Done — tap the mic and ask again.');
+      } catch (err) {
+        setStatus('Problem: ' + err.message + '. Try again in a quiet place.', true);
+      } finally { recorder = null; }
+    };
+    recorder.start();
+    mic.setAttribute('aria-pressed','true'); mic.textContent='⏹️';
+    setStatus('Listening… tap to stop.');
+  } catch (err) {
+    setStatus('Microphone blocked. Allow mic access in the browser.', true);
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+.git
+.github
+__pycache__
+*.pyc
+tests/
+backups/
+data/updated_data.csv
+myscheme.zip
+*.log
+.env
+.DS_Store
