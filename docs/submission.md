@@ -56,6 +56,7 @@ Designed and built solo: corpus pipeline, retrieval, grounded responder, voice-s
 ## Links
 
 - Repository: https://github.com/Arunkumar06-cmd/siddha
+- Release v2.2.0 + video download: https://github.com/Arunkumar06-cmd/siddha/releases/tag/v2.2.0
 - Demo video: https://github.com/Arunkumar06-cmd/siddha/blob/main/docs/demo.mp4
 - Architecture: https://github.com/Arunkumar06-cmd/siddha/blob/main/docs/architecture.md
 - API reference: https://github.com/Arunkumar06-cmd/siddha/blob/main/docs/api.md
@@ -103,9 +104,23 @@ Designed and built solo: corpus pipeline, retrieval, grounded responder, voice-s
 
 ## Posting checklist
 
+- [ ] Register at https://www.gnani.ai/great-indian-ai-intership-registration-form (name, phone, email, stream, college). The project itself is submitted later in the participant workspace.
 - [ ] Attach `docs/demo.mp4` (1080×1080, 54.7 s, 4.5 MB).
 - [ ] Tag the official account: **gnani.ai** on LinkedIn, **@GnaniAi** on X.
 - [ ] Include both hashtags exactly: `#GnaniAI` `#GreatIndianAIInternshipChallenge`.
-- [ ] Post publicly, then copy both post URLs into the submission form.
+- [ ] Post publicly **as early as possible** — shortlisting verifies reactions, comments and reshares, and only engagement before the cutoff counts.
+- [ ] Copy both post URLs into the workspace submission.
 - [ ] Nominate one post per platform.
 - [ ] Submit before **10 November 2026, 11:59 PM IST** (no extensions).
+
+## Workspace submission fields
+
+From the participation terms, the workspace asks for:
+
+1. The problem the project addresses.
+2. The Gnani AI models or APIs used (Prisma STT, Timbre TTS — see the table above).
+3. Who will use it (students, counsellors, scholarship helpdesks).
+4. Each member's contribution (solo build — all components).
+5. Demo or video link.
+6. Written project explanation.
+7. LinkedIn and/or X post links, with one nominated post per platform.

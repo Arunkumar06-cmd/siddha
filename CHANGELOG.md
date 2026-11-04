@@ -12,6 +12,7 @@ All notable changes to Siddha. Format: [Keep a Changelog](https://keepachangelog
 - `LICENSE` contained only a header line, so GitHub reported "license not identified" — now the full MIT text
 
 ### Added
+- GitHub release **v2.2.0** with the demo video attached: https://github.com/Arunkumar06-cmd/siddha/releases/tag/v2.2.0
 - 54.7 s demo video (`docs/demo.mp4`, 1080×1080): a real Prisma STT → hybrid retrieval → Timbre TTS turn, with Avinash asking the Hinglish question and Shivani answering
 - `docs/submission.md`: project explanation, Gnani model/API list, LinkedIn and X copy, posting checklist
 - README links the demo video beside the screenshot
