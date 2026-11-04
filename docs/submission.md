@@ -1,0 +1,111 @@
+# Submission — Siddha
+
+> Voice-first guide to 1,142 Indian government scholarships. Ask in Hinglish, Hindi or Tamil; hear the exact scheme, the documents you need, and where to check the current deadline.
+
+## The problem
+
+India publishes 1,142 scholarship schemes on myScheme. The students who need them most are often the least served by an English, form-first web portal. Discovery is a language and interface problem, not only a data problem.
+
+## What Siddha does
+
+1. The student taps the mic and asks naturally — “Scheduled Caste student ke liye post matric scholarship ke documents kya chahiye?”
+2. **Gnani Prisma v3.0** transcribes the code-mixed speech (`indic-auto`, `codemix`).
+3. Hybrid retrieval (MiniLM-L12 multilingual embeddings + FAISS + BM25, fused with RRF) finds the most relevant official scheme records.
+4. A grounded responder composes the answer from those records — eligibility, benefit, documents, application route — with no free-form generation.
+5. **Gnani Timbre v3.0** speaks the reply in the student's language, with voice-safe prose (`<pauses>`, no slashes, URLs or currency symbols read literally).
+
+The UI shows the transcript, the spoken answer, and the retrieved sources, so the answer is inspectable.
+
+## Gnani models / APIs used
+
+| Purpose | Model | API | Settings |
+|---|---|---|---|
+| Speech-to-text | **Prisma v3.0** (`prisma-v3.0`) | `POST https://api.vachana.ai/stt/v3` | `language_code=indic-auto`, `format=codemix` |
+| Text-to-speech | **Timbre v3.0** (`timbre-v3.0`) | `POST https://api.vachana.ai/api/v1/tts/inference` | voice `Shivani`, language `hi-en`, 16 kHz mono WAV |
+
+No LLM or third-party model composes the answer. Retrieval is local; the two Gnani calls are the only external inference calls per turn.
+
+## Architecture
+
+- **Serving:** single-process FastAPI, vanilla HTML/JS mic UI.
+- **Audio:** ffmpeg normalises browser webm/opus to 16 kHz mono WAV, deletes the temp file in `finally`.
+- **Retrieval:** prebuilt FAISS index + BM25 over `data/scholarships.jsonl` (1,142 records); RRF fusion; top-5 records.
+- **Answering:** aspect classification (documents / eligibility / benefit / apply / renewal / status) and template composition strictly from retrieved fields.
+- **Voice safety:** number, currency, URL, slash and bracket normalisation; comma-separated document lists; word-boundary truncation; dangling-preposition removal.
+- **Resilience:** retries with backoff + jitter on timeout/connection/5xx, circuit breakers for STT and TTS, per-IP rate limit, typed error envelope, `/api/health` corpus check, `/api/metrics`.
+- **Delivery:** multi-stage Docker image, non-root user, CI (ruff, compile, 36 tests, 85% coverage gate, gitleaks, Docker build) and a security workflow (`gitleaks`, `pip-audit`).
+
+## Why it is not a mockup
+
+- 36 tests, 85.27% coverage, ruff clean.
+- The demo is a screen recording of the running service: the question is played into Chrome as a microphone input, then the real Prisma STT → retrieval → grounded responder → Timbre TTS path produces the transcript and audio in the recording.
+- The demo question is synthesized with Timbre (voice **Avinash**) so the recording is reproducible without a human narrator; the answer uses the product voice **Shivani**. This is disclosed rather than presented as a human caller.
+- The API key is never in the repo or the image; it is resolved from the environment or `~/.env`.
+
+## Solo contribution
+
+Designed and built solo: corpus pipeline, retrieval, grounded responder, voice-safety layer, FastAPI service, mic UI, resilience layer, tests, CI/security, docs, and the demo video.
+
+## What I would build next
+
+- Live deadline/status refresh from official sources instead of pointing to the portal.
+- A public Hugging Face Space (Dockerfile is ready; needs a Space secret).
+- More languages, noisy-telephony evaluation, and a human study with students.
+- An IVR/telephony channel for students without smartphones.
+
+## Links
+
+- Repository: https://github.com/Arunkumar06-cmd/siddha
+- Demo video: https://github.com/Arunkumar06-cmd/siddha/blob/main/docs/demo.mp4
+- Architecture: https://github.com/Arunkumar06-cmd/siddha/blob/main/docs/architecture.md
+- API reference: https://github.com/Arunkumar06-cmd/siddha/blob/main/docs/api.md
+- LinkedIn post: _add after posting_
+- X post: _add after posting_
+
+---
+
+## Post copy
+
+### LinkedIn (attach `docs/demo.mp4`)
+
+> Millions of Indian students never claim scholarships they qualify for. The information exists — buried in government portals, in English, in PDFs.
+>
+> Siddha makes it a conversation. Ask in Hinglish, Hindi or Tamil, and it speaks back the exact scheme, the documents you need, and where to check the current deadline.
+>
+> How it works:
+> • Gnani Prisma v3.0 transcribes code-mixed speech (indic-auto, codemix)
+> • Hybrid FAISS + BM25 retrieval over 1,142 official myScheme records
+> • Grounded composition only — no free-form generation, so no invented deadlines
+> • Gnani Timbre v3.0 speaks the reply in the student's language
+>
+> This is a 54-second recording of the real pipeline, not a mockup.
+>
+> Built solo for the Great Indian AI Internship Challenge. Tagging @gnani.ai.
+>
+> Code + architecture: https://github.com/Arunkumar06-cmd/siddha
+>
+> #GnaniAI #GreatIndianAIInternshipChallenge
+
+**Tagging:** type `@` and select the official **gnani.ai** company page. A plain `@gnani.ai` string may not link.
+
+### X (attach `docs/demo.mp4`; repo link in the first reply)
+
+> Millions of Indian students miss scholarships they qualify for — rules are buried in portals.
+>
+> Siddha: ask in Hinglish, Hindi or Tamil. Hear the exact scheme + documents, grounded in 1,142 records.
+>
+> Built with @GnaniAi Prisma + Timbre.
+> #GnaniAI #GreatIndianAIInternshipChallenge
+
+**Reply:** Full code, architecture and a 54-second walkthrough: https://github.com/Arunkumar06-cmd/siddha
+
+---
+
+## Posting checklist
+
+- [ ] Attach `docs/demo.mp4` (1080×1080, 54.7 s, 4.5 MB).
+- [ ] Tag the official account: **gnani.ai** on LinkedIn, **@GnaniAi** on X.
+- [ ] Include both hashtags exactly: `#GnaniAI` `#GreatIndianAIInternshipChallenge`.
+- [ ] Post publicly, then copy both post URLs into the submission form.
+- [ ] Nominate one post per platform.
+- [ ] Submit before **10 November 2026, 11:59 PM IST** (no extensions).

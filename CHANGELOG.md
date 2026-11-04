@@ -12,6 +12,9 @@ All notable changes to Siddha. Format: [Keep a Changelog](https://keepachangelog
 - `LICENSE` contained only a header line, so GitHub reported "license not identified" — now the full MIT text
 
 ### Added
+- 54.7 s demo video (`docs/demo.mp4`, 1080×1080): a real Prisma STT → hybrid retrieval → Timbre TTS turn, with Avinash asking the Hinglish question and Shivani answering
+- `docs/submission.md`: project explanation, Gnani model/API list, LinkedIn and X copy, posting checklist
+- README links the demo video beside the screenshot
 - CI pipeline (`quality`: ruff, byte-compile, pytest, gitleaks; `docker`: image build) with pip + HF caching, 10-min timeouts, PR + main triggers
 - Security workflow: gitleaks + `pip-audit` advisory scan
 - `/api/metrics` endpoint (counters, circuit state, rate-limit config)

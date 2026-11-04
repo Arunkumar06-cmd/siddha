@@ -19,7 +19,13 @@
 
 ![Siddha — ask by voice, get a grounded scholarship answer](docs/demo.webp)
 
-<p align="center"><sub>Real UI, real Gnani Prisma + Timbre turn, captured from the running app. <a href="./docs/architecture.md">Architecture details</a>.</sub></p>
+<p align="center">
+  <a href="./docs/demo.mp4"><b>▶ Watch the 54-second demo</b></a>
+  &nbsp;·&nbsp;
+  <a href="./docs/architecture.md">Architecture</a>
+  <br/>
+  <sub>Real UI and a real Gnani Prisma + Timbre turn, captured from the running app.</sub>
+</p>
 
 ## Table of contents
 - [Features](#features)
@@ -34,7 +40,7 @@
 
 ## Features
 - **Voice-in, voice-out** — browser mic → Prisma STT (`prisma-v3.0`, `indic-auto`, `codemix`) → RAG → Timbre TTS answers in the same language.
-- **Grounded answers** — every reply is assembled from myScheme's 1,142 scholarship schemes; the LLM never invents eligibility or dates.
+- **Grounded answers** — every reply is assembled from myScheme's 1,142 scholarship schemes; the responder never invents eligibility or dates.
 - **Hybrid retrieval** — MiniLM-L12 multilingual embeddings + FAISS + BM25, fused with reciprocal rank fusion (RRF).
 - **Hinglish-first** — answers are shaped for Indian code-mixed speech, not translated English.
 - **Cost-safe** — one turn = exactly 2 Gnani calls (1 STT + 1 TTS); 5,000 programme credits ≈ 2,500 turns.
@@ -119,7 +125,7 @@ curl -s -X POST http://127.0.0.1:8765/api/ask_audio \
 ├── data/scholarships.faiss   # prebuilt FAISS index
 ├── specs/NFR.md         # non-functional requirements (explicit)
 ├── tests/               # 36 tests, 85% coverage
-├── docs/                # screenshot, architecture, ADRs, API
+├── docs/                # demo video, screenshot, architecture, ADRs, API
 └── .github/workflows/   # CI + security
 ```
 
