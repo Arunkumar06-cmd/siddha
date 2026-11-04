@@ -13,6 +13,10 @@ jobs:
   quality:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      # Tests mock every provider call; the key only needs to exist so config
+      # can resolve without a developer machine's ~/.env (the bug this CI hit).
+      GNANI_API_KEY: ci-test-placeholder
     steps:
       - uses: actions/checkout@v4
 
@@ -29,14 +33,24 @@ jobs:
           python -m pip install --upgrade pip
           pip install --extra-index-url https://download.pytorch.org/whl/cpu -r requirements-dev.txt
 
+      - name: Config resolves without a developer ~/.env
+        run: |
+          python -c "import sys; sys.path.insert(0, 'src'); import config; assert config.GNANI_API_KEY == 'ci-test-placeholder'; print('config OK: key resolved from environment')"
+
+      - name: Cache Hugging Face model
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: hf-${{ runner.os }}-paraphrase-multilingual-MiniLM-L12-v2
+
       - name: Lint (ruff)
         run: ruff check .
 
       - name: Type/byte-compile check
         run: python -m py_compile server.py src/*.py tests/*.py
 
-      - name: Tests
-        run: python -m pytest tests/ -q
+      - name: Tests (coverage gate ≥ 80%)
+        run: python -m pytest tests/ -q --cov=src --cov=server --cov-report=term-missing
 
       - name: Secret scan (gitleaks)
         uses: gitleaks/gitleaks-action@v2
@@ -49,5 +63,11 @@ jobs:
     needs: quality
     steps:
       - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
       - name: Build Docker image (smoke build only)
-        run: docker build -t saathi:ci .
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
