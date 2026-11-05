@@ -19,6 +19,8 @@ jobs:
       GNANI_API_KEY: ci-test-placeholder
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-python@v5
         with:
@@ -56,9 +58,13 @@ jobs:
         run: python -m pytest tests/ -q --cov=src --cov=server --cov-report=term-missing
 
       - name: Secret scan (gitleaks)
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: 'false'
+        # Scan every commit explicitly. The marketplace action derives a
+        # `<base>^..HEAD` range from the push event, which is invalid when the
+        # base is a root commit (e.g. after a history rewrite).
+        run: |
+          curl -sSL https://github.com/gitleaks/gitleaks/releases/download/v8.24.3/gitleaks_8.24.3_linux_x64.tar.gz \
+            | sudo tar -xz -C /usr/local/bin gitleaks
+          gitleaks detect --source . --redact -v --exit-code=2 --log-opts="--all"
 
   docker:
     runs-on: ubuntu-latest
