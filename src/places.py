@@ -98,7 +98,7 @@ def category_boost(query, record_blob):
     and the record clearly doesn't, else 1.0."""
     q = str(query or '').lower()
     blob = str(record_blob or '').lower()
-    for level, words in _CATEGORY_WORDS.items():
+    for _level, words in _CATEGORY_WORDS.items():
         if any(re.search(rf'(?<![a-z]){re.escape(w)}(?![a-z])', q) for w in words):
             return 1.8 if any(re.search(rf'(?<![a-z]){re.escape(w)}(?![a-z])', blob) for w in words) else 0.75
     return 1.0
