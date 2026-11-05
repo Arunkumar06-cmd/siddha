@@ -14,6 +14,7 @@ import re
 
 import llm
 import spoken
+from config import logger
 
 # crude intent check — deliberately loose; false positives just mean "LLM
 # classified eligibility", false negatives mean "grounded responder answered".
@@ -37,6 +38,30 @@ Output ONLY JSON with these keys (null when unknown):
   "girl": true | false | null
 }
 Hindi digits must be converted. 1,50,000 rupees -> 1.5. If the query only implies a field, leave it null. Never invent a value you cannot hear.
+"""
+
+
+
+COMBINED_SYSTEM = """You are Siddha's eligibility engine. Work in two steps inside your reasoning, but output ONLY one JSON object.
+
+Step 1 — extract the student profile JSON (age, income_lakh_pa, category, state, course, marks_percent, girl; null when unknown). Hindi digits must be converted; 1,50,000 rupees -> 1.5.
+
+Step 2 — classify each of the 1-3 records using ONLY the provided record text (never outside knowledge):
+- "eligible": the record's eligibility text clearly covers this student
+- "not":     the record's eligibility text excludes this student (e.g. wrong category)
+- "unsure":  the record is silent on a profile field that matters
+Report the decisive field ("income_lakh_pa" | "category" | "marks_percent" | "state" | "course" | "girl" | "age" | null) and a short verbatim quote from the record in "quote". If not eligible for every record, "best": null.
+
+Output ONLY this JSON shape:
+{
+  "profile": {"age": ..., "income_lakh_pa": ..., "category": ..., "state": ..., "course": ..., "marks_percent": ..., "girl": ...},
+  "verdicts": [
+    {"record": 1, "verdict": "eligible|not|unsure", "decisive": "... or null", "quote": "short verbatim line or null"},
+    {"record": 2, "verdict": "...", "decisive": "...", "quote": "..."},
+    {"record": 3, "verdict": "...", "decisive": "...", "quote": "..."}
+  ],
+  "best": 1 | 2 | 3 | null
+}
 """
 
 VERDICT_SYSTEM = """You are Siddha's eligibility checker. You may ONLY use the scheme
@@ -85,31 +110,42 @@ def extract_profile(query):
          {'role': 'user', 'content': query}],
         max_tokens=300,
     )
-    profile = _parse_json(raw)
-    if not isinstance(profile, dict):
+    payload = _parse_json(raw)
+    if not isinstance(payload, dict):
         return None
+    return _normalize_profile(payload.get('profile') or payload)
+
+
+def _normalize_profile(profile):
+    if not isinstance(profile, dict):
+        return {}
+    out = {k: profile.get(k) for k in _PROFILE_KEYS}
     for key in ('income_lakh_pa', 'marks_percent'):
-        if profile.get(key) is not None:
+        if out[key] is not None:
             try:
-                profile[key] = float(profile[key])
+                out[key] = float(out[key])
             except (TypeError, ValueError):
-                profile[key] = None
-    if profile.get('age') is not None:
+                out[key] = None
+    if out['age'] is not None:
         try:
-            profile['age'] = int(profile['age'])
+            out['age'] = int(out['age'])
         except (TypeError, ValueError):
-            profile['age'] = None
-    return {k: profile.get(k) for k in _PROFILE_KEYS}
+            out['age'] = None
+    return out
 
 
 def advise(query, hits):
     """Return (spoken_reply, sources) when the LLM judges eligibility, else None."""
     if not hits:
         return None
-    profile = extract_profile(query)
-    if not profile:
-        return None
-    top = hits[:3]
+    # For a scholarship-eligibility talk the decision is about education
+    # records; drop labour/agriculture/etc. candidates from the judging pool
+    # when education records are available.
+    def _is_education(h):
+        return 'education' in str(h['record'].get('category', '')).lower()
+
+    edu = [h for h in hits if _is_education(h)]
+    top = (edu + [h for h in hits if h not in edu])[:3]
     records = []
     for i, h in enumerate(top, 1):
         r = h['record']
@@ -120,18 +156,18 @@ def advise(query, hits):
             f"Documents: {(r.get('documents') or '').strip()[:400]}"
         )
     raw = llm.complete(
-        [{'role': 'system', 'content': VERDICT_SYSTEM},
-         {'role': 'user', 'content': f"Query: {query}\nProfile: {json.dumps(profile, ensure_ascii=False)}\n\n" +
-                                       '\n\n'.join(records)}],
-        max_tokens=500,
+        [{'role': 'system', 'content': COMBINED_SYSTEM},
+         {'role': 'user', 'content': f"Query: {query}\n\n" + '\n\n'.join(records)}],
+        max_tokens=1500,
     )
-    verdict = _parse_json(raw)
-    if not isinstance(verdict, dict) or not isinstance(verdict.get('verdicts'), list):
+    payload = _parse_json(raw)
+    if not isinstance(payload, dict) or not isinstance(payload.get('verdicts'), list):
+        logger.info('eligibility_no_result reason=parse_failure')
         return None
-    verdicts = {int(v.get('record') or 0): v for v in verdict['verdicts']}
+    verdicts = {int(v.get('record') or 0): v for v in payload['verdicts']}
 
     def _pick():
-        best = verdict.get('best')
+        best = payload.get('best')
         if isinstance(best, int) and 1 <= best <= len(top):
             return best
         for i in range(1, len(top) + 1):
@@ -151,6 +187,7 @@ def advise(query, hits):
             sources = [{'name': h['record']['name'], 'score': h['rank_score'], 'level': h['record']['level']}
                        for h in top]
             return spoken.speakify(reply), sources
+        logger.info('eligibility_no_result reason=no_eligible_or_not_pick')
         return None
 
     h = top[pick_idx - 1]

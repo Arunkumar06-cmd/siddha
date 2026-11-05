@@ -9,8 +9,11 @@ import llm
 
 def _fake_complete(messages, max_tokens=300, temperature=0.1):
     sysmsg = messages[0]['content']
-    if 'eligibility checker' in sysmsg:
+    if 'eligibility engine' in sysmsg:
         return json.dumps({
+            'profile': {'age': 19, 'income_lakh_pa': 1.5, 'category': 'SC',
+                        'state': 'Bihar', 'course': 'B.Tech',
+                        'marks_percent': 80, 'girl': False},
             'verdicts': [
                 {'record': 1, 'verdict': 'eligible', 'decisive': 'category',
                  'quote': 'SC students, income below 2.5 lakh'},
@@ -64,12 +67,13 @@ def test_advise_happy_path():
 
 def test_advise_negative_case_names_blocker(monkeypatch):
     def all_not(messages, **kw):
-        if 'eligibility checker' in messages[0]['content']:
-            return json.dumps({'verdicts': [
-                {'record': 1, 'verdict': 'not', 'decisive': 'category', 'quote': 'OBC only'},
-                {'record': 2, 'verdict': 'not', 'decisive': 'category', 'quote': 'EBC only'},
-                {'record': 3, 'verdict': 'not', 'decisive': 'category', 'quote': 'minority only'},
-            ], 'best': None})
+        if 'eligibility engine' in messages[0]['content']:
+            return json.dumps({'profile': {'category': 'GEN'},
+                               'verdicts': [
+                                   {'record': 1, 'verdict': 'not', 'decisive': 'category', 'quote': 'OBC only'},
+                                   {'record': 2, 'verdict': 'not', 'decisive': 'category', 'quote': 'EBC only'},
+                                   {'record': 3, 'verdict': 'not', 'decisive': 'category', 'quote': 'minority only'},
+                               ], 'best': None})
         return json.dumps({'category': 'GEN', 'income_lakh_pa': 5.0})
     monkeypatch.setattr(llm, 'complete', all_not)
     out = eligibility.advise('GEN student eligible hai?', _hits())
