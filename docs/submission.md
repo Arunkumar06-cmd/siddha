@@ -33,11 +33,11 @@ No LLM or third-party model composes the answer. Retrieval is local; the two Gna
 - **Answering:** aspect classification (documents / eligibility / benefit / apply / renewal / status) and template composition strictly from retrieved fields.
 - **Voice safety:** number, currency, URL, slash and bracket normalisation; comma-separated document lists; word-boundary truncation; dangling-preposition removal.
 - **Resilience:** retries with backoff + jitter on timeout/connection/5xx, circuit breakers for STT and TTS, per-IP rate limit, typed error envelope, `/api/health` corpus check, `/api/metrics`.
-- **Delivery:** multi-stage Docker image, non-root user, CI (ruff, compile, 36 tests, 85% coverage gate, gitleaks, Docker build) and a security workflow (`gitleaks`, `pip-audit`).
+- **Delivery:** multi-stage Docker image, non-root user, CI (ruff, compile, 40 tests, 86% coverage gate, gitleaks, Docker build) and a security workflow (`gitleaks`, `pip-audit`).
 
 ## Why it is not a mockup
 
-- 36 tests, 85.27% coverage, ruff clean.
+- 40 tests, 86% coverage, ruff clean.
 - The demo is a screen recording of the running service: the question is played into Chrome as a microphone input, then the real Prisma STT → retrieval → grounded responder → Timbre TTS path produces the transcript and audio in the recording.
 - The demo question (“SC students ke liye central government post matric scholarship ke documents kya chahiye?”) is synthesized with Timbre (voice **Avinash**) so the recording is reproducible without a human narrator; the answer uses the product voice **Shivani**. This is disclosed rather than presented as a human caller.
 - The API key is never in the repo or the image; it is resolved from the environment or `~/.env`.
