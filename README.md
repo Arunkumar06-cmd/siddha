@@ -1,4 +1,10 @@
-<h1 align="center">Siddha</h1>
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&section=header&height=180&color=0:22C1A0,100:FF8A00&text=Siddha&fontSize=64&fontAlignY=38&desc=Voice-first%20scholarship%20guide%20for%20India&descSize=17&descAlignY=63&fontColor=071926&animation=fadeIn" alt="Siddha — voice-first scholarship guide for India" width="100%" />
+</p>
+
+<div align="center">
+  <img src="https://readme-typing-svg.demolab.com?font=Inter&weight=600&size=21&pause=1000&color=22C1A0&center=true&vCenter=true&width=760&lines=Ask%20in%20Hinglish%2C%20get%20the%20exact%20scholarship;Grounded%20in%201%2C142%20official%20myScheme%20schemes;Powered%20by%20Gnani%20Prisma%20%2B%20Timbre" alt="Ask in Hinglish, get the exact scholarship — grounded in 1,142 official myScheme schemes — powered by Gnani Prisma + Timbre" />
+</div>
 
 <p align="center">
   <b>Voice-first scholarship guide for India.</b><br/>
@@ -13,6 +19,8 @@
   <a href="./LICENSE"><img src="https://img.shields.io/github/license/Arunkumar06-cmd/siddha?style=for-the-badge&logo=opensourceinitiative&logoColor=white" alt="MIT license"></a>
   <a href="#roadmap"><img src="https://img.shields.io/badge/version-2.2.0-ff8a00?style=for-the-badge&logo=git&logoColor=white" alt="Version 2.2.0"></a>
 </p>
+
+<img src="https://capsule-render.vercel.app/api?type=wave&color=0:22C1A0,100:FF8A00&height=42" width="100%" alt="" />
 
 > [!IMPORTANT]
 > **No hallucinated eligibility.** Every answer is assembled from 1,142 official myScheme scholarship records. Siddha never invents a deadline, amount, or required document.
@@ -171,3 +179,8 @@ Fork → branch → `make lint test` → PR → CI green → 1 review. See [CONT
 MIT — see [LICENSE](./LICENSE).
 
 *Built with FastAPI, Gnani Prisma/Timbre and FAISS by Arunkumar Karumbayiram.*
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://capsule-render.vercel.app/api?type=waving&section=footer&height=150&color=0:071926,55:0B2E3E,100:0C3344&text=Built%20with%20Gnani%20Prisma%20%2B%20Timbre&fontSize=24&fontAlignY=38&desc=Ask%20by%20voice.%20Answer%20from%20official%20data.&descSize=15&descAlignY=64&fontColor=EEF4F9&animation=fadeIn" />
+  <img src="https://capsule-render.vercel.app/api?type=waving&section=footer&height=150&color=0:C7E9DF,55:F5E3CB,100:FFFFFF&text=Built%20with%20Gnani%20Prisma%20%2B%20Timbre&fontSize=24&fontAlignY=38&desc=Ask%20by%20voice.%20Answer%20from%20official%20data.&descSize=15&descAlignY=64&fontColor=071926&animation=fadeIn" width="100%" alt="Built with Gnani Prisma + Timbre — ask by voice, answer from official data" />
+</picture>
