@@ -153,10 +153,31 @@ def synthesize(text: str):
         logger.exception('tts_exc err=%s', e)
         raise HTTPException(502, 'Voice synthesis unavailable') from e
 
+ELIGIBILITY_ENABLED = os.getenv('SIDDHA_ELIGIBILITY', '1').strip().lower() not in {'0', 'false', 'off'}
+
 def rag_answer(query: str):
-    """Retrieval + grounded composition; logs the top match for observability."""
+    """Retrieval + composition. Eligibility intent goes through the opt-in LLM
+    classifier when LLM_API_KEY is configured; any failure falls back to the
+    original grounded responder, unchanged."""
     t0 = time.time()
     hits = retriever.search(query, k=5)
+    if _eligibility_ready():
+        try:
+            import eligibility
+            if eligibility.intended(query):
+                looked = eligibility.advise(query, hits)
+                if looked:
+                    reply, sources = looked
+                    logger.info('rag_answer path=eligibility hits=%d latency_s=%.2f', len(hits), time.time() - t0)
+                    return reply, sources
+        except Exception:
+            logger.exception('eligibility_failed_fallback')
     reply, sources, is_canned = responder.answer(query, hits)
     logger.info('rag_answer hits=%d latency_s=%.2f canned=%s', len(hits), time.time() - t0, is_canned)
     return reply, sources
+
+def _eligibility_ready():
+    if not ELIGIBILITY_ENABLED:
+        return False
+    import llm
+    return llm.configured()
