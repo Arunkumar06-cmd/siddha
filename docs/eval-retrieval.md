@@ -4,12 +4,12 @@ Labeled benchmark: 30 queries against the shipped corpus (`data/scholarships.jso
 
 **Setup:** `BAAI/bge-m3` (1024d) dense FAISS + `rank-bm25` (BM25Okapi) fused with reciprocal rank fusion (RRF k=60), plus state-aware re-ranking (see below). `src/retriever.py`.
 
-| Metric | Value |
-|---|---|
-| recall@1 | 0.67 |
-| recall@5 | 0.77 |
-| MRR | 0.73 |
-| n | 30 |
+| Metric | MiniLM-L12 (8c90316, no state routing) | BGE-M3 + state-aware routing (this commit) |
+|---|---|---|
+| recall@1 | 0.53 | **0.67** |
+| recall@5 | 0.73 | **0.77** |
+| MRR | 0.63 | **0.73** |
+| n | 30 | 30 |
 
 ** State-aware routing (shipped v2.3 content)** — the previous failure mode (a state-less query silently returned another state's post-matric scheme) is fixed in the ranker, not just in the responder's caveat. A query naming a state/UT multiplies that state's schemes by 1.35, other state schemes by 0.75, Central by 1.05; a query containing `central government|central govt|central sector` filters Central-only; a state-less query gives Central schemes a 1.2 multiplier. The Central "Post-Matric Scholarship for SC students" now ranks #1 for the demo question; a Bihar-specific question returns Bihar's post-matric scheme #1.
 
