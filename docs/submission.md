@@ -74,21 +74,21 @@ Designed and built solo: corpus pipeline, retrieval, grounded responder, voice-s
 
 ### LinkedIn (attach `docs/demo.mp4`)
 
-> Lakhs of Indian students never hear about the scholarship they qualify for — the information is buried in English-first portals.
+> India has 1,142 scholarship schemes for students. Almost nobody knows that number — and fewer still know which one fits them.
 >
-> Siddha makes it one conversation. Ask naturally — “SC students ke liye post matric scholarship ke documents kya chahiye?” — and it speaks back the exact scheme, the documents, and where to check the current deadline. It stays intelligible on 8 kHz call-quality audio with traffic noise — Prisma keeps every critical word.
+> The rules aren't hard to find — they're stuck behind English forms, dropdowns and PDFs most students will never open. So I built Siddha.
 >
-> How it works:
-> • Gnani Prisma v3.0 transcribes code-mixed speech (indic-auto, codemix)
-> • Hybrid FAISS + BM25 + RRF over 1,142 official myScheme records (BGE-M3 multilingual embeddings)
-> • Grounded composition only — no free-form generation, so no invented deadlines
-> • Gnani Timbre v3.0 (Shivani) speaks the reply back — in Hindi, Hinglish, or Tamil
+> Ask naturally: “SC students ke liye post matric scholarship ke documents kya chahiye?” Siddha replies with the exact scheme, the documents, and where the current deadline lives. Spoken back in your language — Hinglish, Hindi or Tamil.
 >
-> Built solo for the Great Indian AI Internship Challenge — my lane is Mixed Vibes: code-mixed, both directions. This is a 54-second recording of the real pipeline, not a mockup.
+> What's inside:
+> • Gnani Prisma v3.0 does STT on code-mixed speech (indic-auto, codemix)
+> • FAISS + BM25 over the official myScheme corpus, fused with RRF (BGE-M3 multilingual embeddings underneath)
+> • Every answer is assembled from official records — no invented eligibility, no made-up deadlines
+> • Gnani Timbre v3.0 (Shivani) speaks the answer back
 >
-> Tagging @gnani.ai.
+> Built solo for the Great Indian AI Internship Challenge — I'm in the Mixed Vibes lane: code-mixed both directions. This is a 54-second recording of the real pipeline, not a staged demo.
 >
-> Code + architecture: https://github.com/Arunkumar06-cmd/siddha
+> Tagging @gnani.ai. Code: https://github.com/Arunkumar06-cmd/siddha
 >
 > #GnaniAI #GreatIndianAIInternshipChallenge
 

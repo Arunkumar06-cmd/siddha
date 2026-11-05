@@ -7,8 +7,8 @@
 </div>
 
 <p align="center">
-  <b>Voice-first scholarship guide for India.</b><br/>
-  Ask in Hinglish, Hindi or Tamil — get the exact scheme, documents and deadline, spoken back by Gnani's own voice models.
+  <b>A voice-first scholarship guide for India.</b><br/>
+  Ask in Hinglish, Hindi or Tamil. Get the exact scheme, the documents you need, and where to check the current deadline — spoken back in your language.
 </p>
 
 <p align="center">
@@ -47,15 +47,15 @@
 - [License](#license)
 
 ## Features
-- **Voice-in, voice-out** — browser mic → Prisma STT (`prisma-v3.0`, `indic-auto`, `codemix`) → RAG → Timbre TTS answers in the same language.
-- **Grounded answers** — every reply is assembled from myScheme's 1,142 scholarship schemes; the responder never invents eligibility or dates.
-- **State-honest** — a State scheme is named as such, so a state-less question never silently gets another state's scheme.
-- **Eligibility, answered** — ask "eligible hun kya?" and Siddha classifies your profile against the actual record text (verbatim quotes, never invented eligibility). Opt-in: any OpenAI-compatible endpoint (e.g. a free DeepSeek key) — without one, the original grounded templates answer unchanged.
-- **Call-quality tolerant** — 12 code-mixed utterances on band-passed 8 kHz telephony with traffic/fan noise: Prisma transcribes 100% of them; 11/12 keep every critical term (see `docs/eval-audio.md`).
-- **Tamil-ready** — Timbre voices all speak Tamil and Prisma parses it; a Tamil-script question roundtrips in 0.14 s with `detected_language_code=ta-IN`.
-- **Hybrid retrieval** — BGE-M3 multilingual embeddings + FAISS + BM25, fused with reciprocal rank fusion (RRF).
+- **Voice-in, voice-out.** Browser mic → Prisma STT → retrieval → Timbre TTS. No chat box required.
+- **Grounded answers, not generative ones.** The answer is assembled from 1,142 official myScheme records. If a fact isn't in the corpus, Siddha doesn't invent it. The UI shows the sources it used.
+- **States stay in their lane.** A state-specific question gets that state's schemes first; a national question gets Central schemes. When a State scheme is chosen for a state-less query, it's named as one.
+- **Eligibility questions work too.** Ask "qualify hun kya?" and Siddha checks your profile against the actual record text — the verdict includes the line it matched. Opt-in via any OpenAI-compatible endpoint (e.g. a free DeepSeek key). Without a key the original grounded path answers unchanged.
+- **Survives call-quality audio.** 12 code-mixed utterances on 8 kHz band-passed telephony with traffic and fan noise: Prisma transcribes all 12; 11/12 keep every critical term (`docs/eval-audio.md`).
+- **Tamil is native, not bolted on.** A Tamil-script question roundtrips in 0.14 s with `detected_language_code=ta-IN`.
+- **Retrieval that mixes two signals.** BGE-M3 multilingual embeddings for semantic match, BM25 for exact keywords, fused with reciprocal rank fusion.
 - **Hinglish-first** — answers are shaped for Indian code-mixed speech, not translated English.
-- **Cost-safe** — one turn = exactly 2 Gnani calls (1 STT + 1 TTS); 5,000 programme credits ≈ 2,500 turns.
+- **Cheap to run.** One turn = exactly 2 Gnani calls (one STT, one TTS). Roughly 2,500 full voice turns per 5,000 programme credits.
 - **Crash-safe** — circuit breakers, retry with backoff+jitter, per-IP rate limits, typed errors.
 
 ## Quick start
