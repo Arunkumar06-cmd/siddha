@@ -8,10 +8,10 @@ India publishes 1,142 scholarship schemes on myScheme. The students who need the
 
 ## What Siddha does
 
-1. The student taps the mic and asks naturally — “Scheduled Caste student ke liye post matric scholarship ke documents kya chahiye?”
+1. The student taps the mic and asks naturally — “SC students ke liye central government post matric scholarship ke documents kya chahiye?”
 2. **Gnani Prisma v3.0** transcribes the code-mixed speech (`indic-auto`, `codemix`).
 3. Hybrid retrieval (MiniLM-L12 multilingual embeddings + FAISS + BM25, fused with RRF) finds the most relevant official scheme records.
-4. A grounded responder composes the answer from those records — eligibility, benefit, documents, application route — with no free-form generation.
+4. A grounded responder composes the answer from those records — eligibility, benefit, documents, application route — with no free-form generation. If the chosen scheme belongs to a State and the question named none, the reply says which state it is.
 5. **Gnani Timbre v3.0** speaks the reply in the student's language, with voice-safe prose (`<pauses>`, no slashes, URLs or currency symbols read literally).
 
 The UI shows the transcript, the spoken answer, and the retrieved sources, so the answer is inspectable.
@@ -39,7 +39,7 @@ No LLM or third-party model composes the answer. Retrieval is local; the two Gna
 
 - 36 tests, 85.27% coverage, ruff clean.
 - The demo is a screen recording of the running service: the question is played into Chrome as a microphone input, then the real Prisma STT → retrieval → grounded responder → Timbre TTS path produces the transcript and audio in the recording.
-- The demo question is synthesized with Timbre (voice **Avinash**) so the recording is reproducible without a human narrator; the answer uses the product voice **Shivani**. This is disclosed rather than presented as a human caller.
+- The demo question (“SC students ke liye central government post matric scholarship ke documents kya chahiye?”) is synthesized with Timbre (voice **Avinash**) so the recording is reproducible without a human narrator; the answer uses the product voice **Shivani**. This is disclosed rather than presented as a human caller.
 - The API key is never in the repo or the image; it is resolved from the environment or `~/.env`.
 
 ## Solo contribution
@@ -105,7 +105,7 @@ Designed and built solo: corpus pipeline, retrieval, grounded responder, voice-s
 ## Posting checklist
 
 - [ ] Register at https://www.gnani.ai/great-indian-ai-intership-registration-form (name, phone, email, stream, college). The project itself is submitted later in the participant workspace.
-- [ ] Attach `docs/demo.mp4` (1080×1080, 54.7 s, 4.5 MB).
+- [ ] Attach `docs/demo.mp4` (1080×1080, 54.9 s, 4.3 MB).
 - [ ] Tag the official account: **gnani.ai** on LinkedIn, **@GnaniAi** on X.
 - [ ] Include both hashtags exactly: `#GnaniAI` `#GreatIndianAIInternshipChallenge`.
 - [ ] Post publicly **as early as possible** — shortlisting verifies reactions, comments and reshares, and only engagement before the cutoff counts.

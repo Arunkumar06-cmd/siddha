@@ -3,17 +3,25 @@ All notable changes to Siddha. Format: [Keep a Changelog](https://keepachangelog
 
 ## [Unreleased]
 ### Changed
-- Product renamed **Saathi → Siddha** across app, docs, env vars (`SIDDHA_*`), Docker user, and repo
+- Product name unified as **Siddha** across app, docs, env vars (`SIDDHA_*`), Docker user, and repo
 - README now shows a real UI screenshot instead of the hand-drawn SVG diagram
 - README hero: centred title and positioning line, logo badges with `logoColor=white`, native GitHub alerts, Mermaid architecture in a collapsible block
-- Demo screenshot converted to a 95 KB WebP (under the 200 KB README asset budget)
+- Demo screenshot recaptured from the final Central-scheme turn and compressed to a 45 KB WebP
+- Demo re-recorded with a state-neutral question (`SC students … central government post matric scholarship`), so the spoken answer is the Central scheme rather than an unstated state scheme
 
 ### Fixed
 - `LICENSE` contained only a header line, so GitHub reported "license not identified" — now the full MIT text
+- A State scheme is now labelled with its state when the question names none, so a generic query can no longer imply nationwide eligibility
+- Removed two rows of browser-capture padding that appeared as a thin line under the answer caption
+
+### Removed
+- Internal agent/working notes (`STATE.md`, `LEDGER.md`, `WBS.md`, `RULES.md`, `DECISIONS.md`, `ledger.json`) from the public tree; they stay locally and are gitignored
 
 ### Added
 - GitHub release **v2.2.0** with the demo video attached: https://github.com/Arunkumar06-cmd/siddha/releases/tag/v2.2.0
-- 54.7 s demo video (`docs/demo.mp4`, 1080×1080): a real Prisma STT → hybrid retrieval → Timbre TTS turn, with Avinash asking the Hinglish question and Shivani answering
+- 54.9 s demo video (`docs/demo.mp4`, 1080×1080): a real Prisma STT → hybrid retrieval → Timbre TTS turn, with Avinash asking the Hinglish question and Shivani answering
+- State/UT detection (`src/places.py`) with canonical names and common spellings, used by the grounded responder
+- `docs/research-inventory.md`: the problem and source research behind the corpus
 - `docs/submission.md`: project explanation, Gnani model/API list, LinkedIn and X copy, posting checklist
 - README links the demo video beside the screenshot
 - CI pipeline (`quality`: ruff, byte-compile, pytest, gitleaks; `docker`: image build) with pip + HF caching, 10-min timeouts, PR + main triggers

@@ -13,3 +13,14 @@ myscheme.zip
 .vscode/
 .coverage
 coverage.xml
+
+# internal agent/working notes (kept locally, never published)
+DECISIONS.md
+LEDGER.md
+ledger.json
+RULES.md
+STATE.md
+WBS.md
+.pytest_cache/
+.ruff_cache/
+*.log

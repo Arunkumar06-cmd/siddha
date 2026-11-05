@@ -83,3 +83,39 @@ def test_conjunction_in_document_list_is_not_commaed():
 
     raw = 'Aadhaar Card and Caste Certificate'
     assert _separate_documents(raw) == 'Aadhaar Card and Caste Certificate'
+
+
+def _hit(level, text, name='Post Matric Scholarship'):
+    return [{'rank_score': 0.03, 'record': {
+        'name': name, 'level': level, 'details': text,
+        'eligibility': 'SC students', 'benefits': 'Scholarship',
+        'documents': 'Caste certificate, income certificate',
+        'application': 'Official portal'}}]
+
+
+def test_state_scheme_is_named_for_state_less_query():
+    """A State scheme must not be presented as if it applied nationwide."""
+    spoken, _, _ = answer('SC scholarship documents?',
+                          _hit('State', 'A scheme of the Government of Madhya Pradesh'))
+    assert 'Yeh Madhya Pradesh ki scheme hai' in spoken
+
+
+def test_state_query_does_not_get_the_caveat_twice():
+    spoken, _, _ = answer('Madhya Pradesh SC scholarship documents?',
+                          _hit('State', 'A scheme of the Government of Madhya Pradesh'))
+    assert 'Yeh Madhya Pradesh ki scheme hai' not in spoken
+
+
+def test_central_scheme_has_no_state_caveat():
+    spoken, _, _ = answer('SC scholarship documents?',
+                          _hit('Central', 'A scheme of the Government of India'))
+    assert 'ki scheme hai' not in spoken
+
+
+def test_places_detects_states_and_aliases():
+    import places
+    assert places.mentioned('bihar post matric scholarship') == 'Bihar'
+    assert places.mentioned('orissa scholarship') == 'Odisha'
+    assert places.mentioned('scholarship documents') is None
+    assert places.state_of({'level': 'State', 'name': 'X', 'details': 'Government of Madhya Pradesh'}) == 'Madhya Pradesh'
+    assert places.state_of({'level': 'Central', 'name': 'X', 'details': 'Madhya Pradesh'}) is None

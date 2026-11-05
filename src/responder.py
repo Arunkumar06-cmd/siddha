@@ -2,6 +2,8 @@
 Voice-safe output: short sentences with <pauses> tags for Timbre v3.0."""
 import re
 
+import places
+
 ASPECT_KEYS = {
     'documents': ['document', 'paper', 'kagaz', 'needed', 'proof', 'certificate', 'दस्तावेज़'],
     'eligibility': ['eligible', 'eligibility', 'qualification', 'who can', 'patricia', 'kaise eligible', 'patr', 'पात्रता'],
@@ -120,7 +122,14 @@ def answer(query, hits):
         return spoken, [], False
     rec = hits[0]['record']
     body = compose(rec, aspects)
-    spoken = f"Suno. Sabse relevant scheme yeh hai, {rec['name']}. {body} " \
+    # A State scheme must never sound nationwide. If the student did not name
+    # a state, say which state the chosen scheme belongs to.
+    state_note = ''
+    if not places.mentioned(query):
+        state = places.state_of(rec)
+        if state:
+            state_note = f" Yeh {state} ki scheme hai."
+    spoken = f"Suno. Sabse relevant scheme yeh hai, {rec['name']}.{state_note} {body} " \
              f"Official details scholarships.gov.in pe dekhiye, wahan current dates dikhengi."
     sources = [{'name': h['record']['name'], 'score': h['rank_score'],
                 'level': h['record']['level']} for h in hits[:3]]

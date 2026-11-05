@@ -7,8 +7,8 @@
 
 <p align="center">
   <a href="https://github.com/Arunkumar06-cmd/siddha/actions"><img src="https://img.shields.io/github/actions/workflow/status/Arunkumar06-cmd/siddha/ci.yml?branch=main&style=for-the-badge&logo=githubactions&logoColor=white" alt="CI status"></a>
-  <a href="https://github.com/Arunkumar06-cmd/siddha"><img src="https://img.shields.io/badge/tests-36%20passing-22c1a0?style=for-the-badge&logo=pytest&logoColor=white" alt="36 tests passing"></a>
-  <a href="https://github.com/Arunkumar06-cmd/siddha"><img src="https://img.shields.io/badge/coverage-85%25-22c1a0?style=for-the-badge&logo=codecov&logoColor=white" alt="Coverage 85%"></a>
+  <a href="https://github.com/Arunkumar06-cmd/siddha"><img src="https://img.shields.io/badge/tests-40%20passing-22c1a0?style=for-the-badge&logo=pytest&logoColor=white" alt="40 tests passing"></a>
+  <a href="https://github.com/Arunkumar06-cmd/siddha"><img src="https://img.shields.io/badge/coverage-86%25-22c1a0?style=for-the-badge&logo=codecov&logoColor=white" alt="Coverage 86%"></a>
   <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.11%2B-ffb84d?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.11+"></a>
   <a href="./LICENSE"><img src="https://img.shields.io/github/license/Arunkumar06-cmd/siddha?style=for-the-badge&logo=opensourceinitiative&logoColor=white" alt="MIT license"></a>
   <a href="#roadmap"><img src="https://img.shields.io/badge/version-2.2.0-ff8a00?style=for-the-badge&logo=git&logoColor=white" alt="Version 2.2.0"></a>
@@ -41,6 +41,7 @@
 ## Features
 - **Voice-in, voice-out** — browser mic → Prisma STT (`prisma-v3.0`, `indic-auto`, `codemix`) → RAG → Timbre TTS answers in the same language.
 - **Grounded answers** — every reply is assembled from myScheme's 1,142 scholarship schemes; the responder never invents eligibility or dates.
+- **State-honest** — a State scheme is named as such, so a state-less question never silently gets another state's scheme.
 - **Hybrid retrieval** — MiniLM-L12 multilingual embeddings + FAISS + BM25, fused with reciprocal rank fusion (RRF).
 - **Hinglish-first** — answers are shaped for Indian code-mixed speech, not translated English.
 - **Cost-safe** — one turn = exactly 2 Gnani calls (1 STT + 1 TTS); 5,000 programme credits ≈ 2,500 turns.
@@ -124,7 +125,7 @@ curl -s -X POST http://127.0.0.1:8765/api/ask_audio \
 ├── data/scholarships.jsonl   # 1,142 schemes (extracted from myScheme)
 ├── data/scholarships.faiss   # prebuilt FAISS index
 ├── specs/NFR.md         # non-functional requirements (explicit)
-├── tests/               # 36 tests, 85% coverage
+├── tests/               # 40 tests, 86% coverage
 ├── docs/                # demo video, screenshot, architecture, ADRs, API
 └── .github/workflows/   # CI + security
 ```
@@ -161,10 +162,10 @@ Everything (model pre-download, healthcheck, non-root user) is baked in — no m
 Fork → branch → `make lint test` → PR → CI green → 1 review. See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ## Roadmap
-- **v2.2** — LLM-composed phrasing (grounded; opt-in via API key), streaming TTS via SSE/WS
-- **v2.3** — Eligibility-aware ranking (age/income/category parsing from voice)
-- **v2.4** — Multi-turn conversation memory; application progress tracking
-- **v3.0** — Voice-based form filling (auto-populate NSP fields from speech)
+- **Shipped (v2.2)** — grounded Hinglish voice loop, hybrid FAISS + BM25 retrieval, 54-second demo
+- **v2.3** — state-aware scheme selection (so a state-less question never silently returns another state's scheme) and eligibility parsing from voice
+- **v2.4** — opt-in LLM phrasing (grounded in retrieved records, requires a key); streaming TTS
+- **v3.0** — voice-based form filling (auto-populate NSP fields from speech)
 
 ## License
 MIT — see [LICENSE](./LICENSE).
