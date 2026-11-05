@@ -2,7 +2,14 @@
 All notable changes to Siddha. Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- BGE-M3 index rebuilt (512-token max sequence, fp32/MPS) — replaces MiniLM-L12 for multilingual/code-mixed retrieval
+- `docs/eval-audio.md`: telephonic/noise robustness probe (8 kHz, traffic/fan) with critical-term preservation and honest caveats
+- `scripts/eval_retrieval.py`: 30-query labeled retrieval evaluation (recall@1, recall@5, MRR) for verifiable comparisons
+- `scripts/eval_audio.py`: reproduces the telephonic/noise probe end to end
+
 ### Changed
+- Retrieval: **state-aware routing** shipped — a query naming a state/UT now ranks that state's schemes first (1.35/0.75 boost/suppression); `central government` queries filter to Central; a state-less query gets a 1.2 Central multiplier. Fixes the Bihar-instead-of-Central regression visible in the demo query (v2.3 content, delivered early)
 - Frontend rebuilt as a **paper-and-ink LaTeX look**: warm ivory background, deep-ink serif type (Iowan/Palatino stack), deep-petrol-teal accents, masthead rules, small-caps speaker labels — high contrast and calm to read
 - Reply text is now `SIDDHA` small-caps with the transcript set as an ink-on-tan note and sources as hairline-bordered chips
 - Demo and intro/outro cards re-recorded on the new theme (Georgia serif, ivory, teal) so the submission video matches the product

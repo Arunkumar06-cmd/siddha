@@ -12,7 +12,7 @@ RUN python -m venv /opt/venv \
     && /opt/venv/bin/pip install --extra-index-url https://download.pytorch.org/whl/cpu -r requirements.txt
 # Pre-download embedding model here so the runtime image never hits the network
 RUN /opt/venv/bin/python -c "from sentence_transformers import SentenceTransformer; \
-    SentenceTransformer('sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2')"
+    SentenceTransformer('BAAI/bge-m3')"
 
 FROM python:3.11-slim AS runtime
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PATH=/opt/venv/bin:$PATH SIDDHA_HOST=0.0.0.0

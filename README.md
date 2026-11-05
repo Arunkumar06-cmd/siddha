@@ -50,7 +50,9 @@
 - **Voice-in, voice-out** — browser mic → Prisma STT (`prisma-v3.0`, `indic-auto`, `codemix`) → RAG → Timbre TTS answers in the same language.
 - **Grounded answers** — every reply is assembled from myScheme's 1,142 scholarship schemes; the responder never invents eligibility or dates.
 - **State-honest** — a State scheme is named as such, so a state-less question never silently gets another state's scheme.
-- **Hybrid retrieval** — MiniLM-L12 multilingual embeddings + FAISS + BM25, fused with reciprocal rank fusion (RRF).
+- **Call-quality tolerant** — 12 code-mixed utterances on band-passed 8 kHz telephony with traffic/fan noise: Prisma transcribes 100% of them; 11/12 keep every critical term (see `docs/eval-audio.md`).
+- **Tamil-ready** — Timbre voices all speak Tamil and Prisma parses it; a Tamil-script question roundtrips in 0.14 s with `detected_language_code=ta-IN`.
+- **Hybrid retrieval** — BGE-M3 multilingual embeddings + FAISS + BM25, fused with reciprocal rank fusion (RRF).
 - **Hinglish-first** — answers are shaped for Indian code-mixed speech, not translated English.
 - **Cost-safe** — one turn = exactly 2 Gnani calls (1 STT + 1 TTS); 5,000 programme credits ≈ 2,500 turns.
 - **Crash-safe** — circuit breakers, retry with backoff+jitter, per-IP rate limits, typed errors.
@@ -170,8 +172,8 @@ Everything (model pre-download, healthcheck, non-root user) is baked in — no m
 Fork → branch → `make lint test` → PR → CI green → 1 review. See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ## Roadmap
-- **Shipped (v2.2)** — grounded Hinglish voice loop, hybrid FAISS + BM25 retrieval, 54-second demo
-- **v2.3** — state-aware scheme selection (so a state-less question never silently returns another state's scheme) and eligibility parsing from voice
+- **Shipped (v2.3)** — grounded Hinglish voice loop, BGE-M3 hybrid FAISS + BM25 retrieval, state-aware routing, 54-second demo
+- **v2.3** — ~~state-aware scheme selection~~ **shipped** (query-aware Central/State routing); eligibility parsing from voice remains
 - **v2.4** — opt-in LLM phrasing (grounded in retrieved records, requires a key); streaming TTS
 - **v3.0** — voice-based form filling (auto-populate NSP fields from speech)
 

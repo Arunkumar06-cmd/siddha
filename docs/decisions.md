@@ -12,10 +12,10 @@
 **Decision:** Use the Kaggle dump → `scholarships.jsonl` (1,142 scholarship/education schemes, deterministic). No runtime dependency.
 **Consequences:** Corpus is a snapshot, update via `src/prepare_corpus.py` when upstream changes.
 
-## ADR-003: MiniLM-L12 (384d) for embeddings
+## ADR-003: embeddings (superseded by ADR-010)
 **Date:** 2026-11-04
 **Context:** Need multilingual (Hinglish/Hindi/Tamil) vectors that run on CPU in <1 s for 1,142 docs.
-**Decision:** `paraphrase-multilingual-MiniLM-L12-v2` — 384d, ~118 MB, CPU.
+**Decision:** `paraphrase-multilingual-MiniLM-L12-v2` — 384d, ~118 MB, CPU. Superseded 2026-11-05 by ADR-010 (BGE-M3).
 **Consequences:** Fast & cached; no GPU requirement; retrieval quality good enough over a small corpus.
 
 ## ADR-004: Circuit breaker + retry over raw retries
@@ -45,7 +45,7 @@
 ## ADR-008: torch 2.12.1 over 2.13.0 (PYSEC-2025-194)
 **Date:** 2026-11-04 · **Status:** accepted-risk
 **Context:** pip-audit flags torch 2.12.1 (fix: 2.13.0). This machine's toolkit hard-pins `torchvision==0.27.1 → torch==2.12.1`; upgrading torch breaks the resolver for the rest of the Anaconda env.
-**Decision:** Pin `torch==2.12.1`. Siddha feeds only a local, trusted corpus through the `MiniLM-L12` encoder; no untrusted tensor/model inputs reach torch ops at request time. Revisit when torchvision releases a 2.13-compatible pin.
+**Decision:** Pin `torch==2.12.1`. Siddha feeds only a local, trusted corpus through the `BGE-M3 encoder; no untrusted tensor/model inputs reach torch ops at request time. Revisit when torchvision releases a 2.13-compatible pin.
 **Consequences:** One advisory accepted; re-audit on any torchvision bump.
 
 ## ADR-009: setuptools 81.0.0 (env-level advisory)
@@ -53,3 +53,8 @@
 **Context:** pip-audit flags setuptools 81.0.0 (fixes require ≥83). `torch==2.12.1` hard-requires `setuptools<82` — upgrading breaks torch. setuptools is a build/install tool, not a runtime path.
 **Decision:** Defer; not in request path. Re-check on the coordinated torch+torchvision bump.
 **Consequences:** Documented accepted-risk; silence CI does not — advisory visible in CI logs.
+
+## ADR-010: BGE-M3 multilingual embeddings (supersedes ADR-003)
+**Status:** accepted (2026-11-05)
+**Decision:** `BAAI/bge-m3` — 1024d, 100+ languages, multilingual code-mixed retrieval for Hinglish queries.
+**Evidence:** BGE-M3 with RRF alone put a State 11th–12th-class scheme above the Central SC post-matric on the demo question — the flat index favored short State names. Adding state-aware re-ranking (BM25 + RRF + 1.2 Central multiplier when no state is named, 0.15 via `central government` filter, 1.35/0.75 State boost/suppression) restores the Central scheme to #1 while Bihar-specific queries return Bihar's scheme #1. Trade-off: ~2.3 GB model download in CI (cached) vs 118 MB for MiniLM.

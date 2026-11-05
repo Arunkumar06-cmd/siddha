@@ -72,3 +72,11 @@ def state_of(record):
     blob = ' '.join(str(record.get(k) or '') for k in ('name', 'details', 'application'))
     found = states_in(blob)
     return found.pop() if len(found) == 1 else None
+
+
+_CENTRAL_PATTERN = re.compile(r'central\s+(government|govt|sector|scheme)', re.IGNORECASE)
+
+
+def mentioned_central(text):
+    """True when the query explicitly asks for Central (not State) schemes."""
+    return bool(_CENTRAL_PATTERN.search(str(text or '')))

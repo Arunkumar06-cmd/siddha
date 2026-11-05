@@ -41,7 +41,7 @@ As of 2026-11-04 | Goal: strongest problem → strongest solution, with papers &
 - STT: Gnani Prisma v3.0 (Indic, code-mixed, indic-auto, keyterms, topic hint, 504≈5s budget)
 - TTS: Gnani Timbre v2.5 (42 voices incl. Hinglish `Poorvi`) / v3.0 (13 voices, all-10 languages, audio tags)
 - LLM: Evon v3.3 unavailable via API; hosted substitutes — Groq (fast llama), Google AI Studio (free Gemini), OpenRouter (free); or local Ollama+Qwen2.5-7B (laptop GPU? likely not)
-- Embeddings: multilingual — `paraphrase-multilingual-MiniLM-L12-v2` (CPU, fast) or `BGE-m3`
+- Embeddings: multilingual — `BAAI/bge-m3` (100+ languages, code-mixed-friendly)
 - Vector store: FAISS (in-process) — 700k myScheme chunks ≤ few GB RAM
 - Reranker: BM25 + dense, RRF fusion (per Voice-Enabled-RAG pattern)
 - Guardrail: refuse when out-of-scope; system prompt "I don't know, visit scholarships.gov.in"
@@ -67,7 +67,7 @@ Engagement on nominated post > demo quality > technical sophistication. 60-90s d
 ## 7. Proposed "big" WBS (7 packages)
 P1. Data ingestion pipeline (myScheme CSV → scholarship subset + NSP FAQ JSON) — 3-4 h
 P2. Multilingual readable schema (name/eligibility/docs/dates in Hindi + English) — 3 h
-P3. RAG core (chunking 800/150, FAISS, MiniLM, BM25+RRF) — 4 h
+P3. RAG core (chunking 800/150, FAISS, BGE-M3, BM25+RRF) — 4 h
 P4. Voice loop (mic→webm→ffmpeg→Prisma→retriever→LLM→Timbre→autoplay, streaming) — 4 h
 P5. Guardrails + latency budget (Silero VAD, 30s cap, refusal path) — 2 h
 P6. Demo + video + post (60-90 s, Hinglish) — 3 h

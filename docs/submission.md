@@ -2,6 +2,10 @@
 
 > Voice-first guide to 1,142 Indian government scholarships. Ask in Hinglish, Hindi or Tamil; hear the exact scheme, the documents you need, and where to check the current deadline.
 
+## Award lane and target users
+
+**Lane: Mixed Vibes** — the best code-mixed Hinglish voice build. Siddha is Hinglish-first end to end: code-mixed listening (Prisma `indic-auto`/`codemix`), Hinglish-shaped grounded answers, and a code-mixed voice (Shivani) delivering them. Secondary framing: **Real Deal** — an information deficit India already pays for in unclaimed scholarships; Siddha removes it for the student who needs it most. Robustness numbers and the Tamil roundtrip are evidence, not decoration: see `docs/eval-audio.md` and the Tamil probe (Prisma detect `ta-IN`, 0.14 s, verbatim transcript of a Tamil-script question answered from the corpus).
+
 ## The problem
 
 India publishes 1,142 scholarship schemes on myScheme. The students who need them most are often the least served by an English, form-first web portal. Discovery is a language and interface problem, not only a data problem.
@@ -10,7 +14,7 @@ India publishes 1,142 scholarship schemes on myScheme. The students who need the
 
 1. The student taps the mic and asks naturally — “SC students ke liye central government post matric scholarship ke documents kya chahiye?”
 2. **Gnani Prisma v3.0** transcribes the code-mixed speech (`indic-auto`, `codemix`).
-3. Hybrid retrieval (MiniLM-L12 multilingual embeddings + FAISS + BM25, fused with RRF) finds the most relevant official scheme records.
+3. Hybrid retrieval (BGE-M3 multilingual embeddings + FAISS + BM25, fused with RRF) finds the most relevant official scheme records.
 4. A grounded responder composes the answer from those records — eligibility, benefit, documents, application route — with no free-form generation. If the chosen scheme belongs to a State and the question named none, the reply says which state it is.
 5. **Gnani Timbre v3.0** speaks the reply in the student's language, with voice-safe prose (`<pauses>`, no slashes, URLs or currency symbols read literally).
 
@@ -27,6 +31,7 @@ No LLM or third-party model composes the answer. Retrieval is local; the two Gna
 
 ## Architecture
 
+- **Robustness (docs/eval-audio.md):** 12 Hinglish scholarship utterances × telemetry conditions. Prisma transcribed 100% of utterances; 11/12 kept every critical term even on band-passed 8 kHz telephony with traffic/fan noise (the misses are Devanagari-script transcripts of correct content).
 - **Serving:** single-process FastAPI, vanilla HTML/JS mic UI.
 - **Audio:** ffmpeg normalises browser webm/opus to 16 kHz mono WAV, deletes the temp file in `finally`.
 - **Retrieval:** prebuilt FAISS index + BM25 over `data/scholarships.jsonl` (1,142 records); RRF fusion; top-5 records.
@@ -69,19 +74,19 @@ Designed and built solo: corpus pipeline, retrieval, grounded responder, voice-s
 
 ### LinkedIn (attach `docs/demo.mp4`)
 
-> Millions of Indian students never claim scholarships they qualify for. The information exists — buried in government portals, in English, in PDFs.
+> Lakhs of Indian students never hear about the scholarship they qualify for — the information is buried in English-first portals.
 >
-> Siddha makes it a conversation. Ask in Hinglish, Hindi or Tamil, and it speaks back the exact scheme, the documents you need, and where to check the current deadline.
+> Siddha makes it one conversation. Ask naturally — “SC students ke liye post matric scholarship ke documents kya chahiye?” — and it speaks back the exact scheme, the documents, and where to check the current deadline. It stays intelligible on 8 kHz call-quality audio with traffic noise — Prisma keeps every critical word.
 >
 > How it works:
 > • Gnani Prisma v3.0 transcribes code-mixed speech (indic-auto, codemix)
-> • Hybrid FAISS + BM25 retrieval over 1,142 official myScheme records
+> • Hybrid FAISS + BM25 + RRF over 1,142 official myScheme records (BGE-M3 multilingual embeddings)
 > • Grounded composition only — no free-form generation, so no invented deadlines
-> • Gnani Timbre v3.0 speaks the reply in the student's language
+> • Gnani Timbre v3.0 (Shivani) speaks the reply back — in Hindi, Hinglish, or Tamil
 >
-> This is a 54-second recording of the real pipeline, not a mockup.
+> Built solo for the Great Indian AI Internship Challenge — my lane is Mixed Vibes: code-mixed, both directions. This is a 54-second recording of the real pipeline, not a mockup.
 >
-> Built solo for the Great Indian AI Internship Challenge. Tagging @gnani.ai.
+> Tagging @gnani.ai.
 >
 > Code + architecture: https://github.com/Arunkumar06-cmd/siddha
 >
