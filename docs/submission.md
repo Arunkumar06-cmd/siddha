@@ -109,7 +109,9 @@ Designed and built solo: corpus pipeline, retrieval, grounded responder, voice-s
 
 ## Posting checklist
 
-- [ ] Register at https://www.gnani.ai/great-indian-ai-intership-registration-form (name, phone, email, stream, college). The project itself is submitted later in the participant workspace.
+- [x] Register — done (email from Team Gnani AI, Nov 4; registration confirmed, 5,000 programme credits, 3 free API keys, closing date Nov 10, 23:59 IST).
+- [x] Working app + release cut — Siddha v2.2.0 published with demo attached
+- [ ] Claim keys and confirm usage at https://app.gnani.ai/voice (3 keys available)
 - [ ] Attach `docs/demo.mp4` (1080×1080, 54.9 s, 4.6 MB).
 - [ ] Tag the official account: **gnani.ai** on LinkedIn, **@GnaniAi** on X.
 - [ ] Include both hashtags exactly: `#GnaniAI` `#GreatIndianAIInternshipChallenge`.
