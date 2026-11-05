@@ -10,6 +10,7 @@ No network beyond the Gnani API (key from ~/.env). Dev-only script.
 import io
 import struct
 import sys
+import tempfile
 import wave
 from pathlib import Path
 
@@ -19,7 +20,7 @@ import requests
 sys.path.insert(0, 'src')
 from config import GNANI_API_KEY, GNANI_BASE, STT_MODEL, TTS_LANG, TTS_MODEL, TTS_SPEED
 
-OUT = Path('/tmp/eval_audio')
+OUT = Path(tempfile.gettempdir()) / 'siddha-eval-audio'
 OUT.mkdir(exist_ok=True)
 
 QUESTIONS = [
@@ -62,7 +63,10 @@ def fix_wav(raw):
     payload = payload[:len(payload)//2*2]
     out = io.BytesIO()
     with wave.open(out, 'wb') as w:
-        w.setnchannels(1); w.setsampwidth(2); w.setframerate(16000); w.writeframes(payload)
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(16000)
+        w.writeframes(payload)
     return out.getvalue()
 
 
@@ -76,7 +80,9 @@ def wav16(x):
     x = np.clip(x, -1, 1)
     b = io.BytesIO()
     with wave.open(b, 'wb') as w:
-        w.setnchannels(1); w.setsampwidth(2); w.setframerate(16000)
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(16000)
         w.writeframes((x * 32767).astype('<i2').tobytes())
     return b.getvalue()
 
@@ -197,7 +203,7 @@ def main():
     out = ['| Variant | Utterances | Mean WER |', '|---|---|---|']
     for name, vals in sorted(agg.items()):
         out.append(f'| {name} | {len(vals)} | {np.mean(vals):.2f} |')
-    Path('/tmp/eval_audio/table.md').write_text('\n'.join(out) + '\n')
+    OUT / 'table.md'.write_text('\n'.join(out) + '\n')
     print('\nwrote /tmp/eval_audio/table.md')
 
 

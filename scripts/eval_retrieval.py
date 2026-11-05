@@ -23,7 +23,7 @@ PAIRS = [
     ("AICTE Swanath scholarship students kya hai",
      "AICTE-Swanath Scholarship Scheme For Students"),
     ("Saksham scholarship specially abled student degree AICTE",
-     "AICTE – Saksham Scholarship Scheme For Specially-Abled Student (Degree)"),
+     "AICTE - Saksham Scholarship Scheme For Specially-Abled Student (Degree)"),
     ("Top Class Education Scheduled Castes students scholarship",
      "Top Class Education For Scheduled Caste Students"),
     ("PM YASASVI top class school education OBC EBC DNT students",
@@ -41,7 +41,7 @@ PAIRS = [
     ("Ambedkar DBT voucher scheme kya hai",
      "Ambedkar DBT Voucher Scheme"),
     ("INSPIRE MANAK award student innovation kaunsi scheme hai",
-     "INSPIRE Awards – MANAK"),
+     "INSPIRE Awards - MANAK"),
     ("Guruji Student Credit Card scheme kya hai",
      "Guruji Student Credit Card"),
     ("alpasankhyak post maitrik chhatravriti yojana kya hai",
@@ -56,7 +56,7 @@ PAIRS = [
     ("SC category post matric college scholarship kaunsa hai",
      "Post-Matric Scholarship for SC students"),
     ("specially abled student diploma scholarship AICTE",
-     "AICTE – Saksham Scholarship Scheme For Specially-Abled Student (Diploma)"),
+     "AICTE - Saksham Scholarship Scheme For Specially-Abled Student (Diploma)"),
     ("disable student ke liye top class education kaunsa scholarship hai",
      "Top Class Education For Students With Disabilities"),
     ("coaching scheme SC ST OBC minority students university",
@@ -68,7 +68,7 @@ PAIRS = [
     ("best performing college students ko kya scholarship mileti hai",
      "PM-USP Central Sector Scheme of Scholarship"),
     ("science ke enthusiastic school students ko award kaunsa milega",
-     "INSPIRE Awards – MANAK"),
+     "INSPIRE Awards - MANAK"),
     ("minority community post matric scholarship Maharashtra",
      "Alpasankhyak Post-Maitrik Chhaatravrtti Yojana"),
     ("workhouse children schooling scholarship asangathit mazdoor",
@@ -77,7 +77,8 @@ PAIRS = [
      "Safai Karmakaar Ke Putr/Putri Hetu Vishesh Coaching Yojana"),
 ]
 
-assert len(PAIRS) == 30
+if len(PAIRS) != 30:
+    sys.exit('PAIRS must have 30 entries')
 
 import retriever  # noqa: E402
 
@@ -85,7 +86,9 @@ hits_at = []
 for query, expect in PAIRS:
     hits = retriever.search(query, k=8)
     names = [h['record']['name'] for h in hits]
-    rank = next((i + 1 for i, n in enumerate(names) if expect.lower() in n.lower()), None)
+    def norm(t):
+        return t.replace('\u2013', '-').replace('\u2014', '-').lower()
+    rank = next((i + 1 for i, n in enumerate(names) if expect.lower() in norm(n)), None)
     hits_at.append(rank)
     status = f"rank {rank}" if rank else "MISS"
     print(f"[{status:>6}] {query[:64]}")
