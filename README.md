@@ -181,6 +181,6 @@ MIT — see [LICENSE](./LICENSE).
 *Built with FastAPI, Gnani Prisma/Timbre and FAISS by Arunkumar Karumbayiram.*
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://capsule-render.vercel.app/api?type=waving&section=footer&height=150&color=0:071926,55:0B2E3E,100:0C3344&text=Built%20with%20Gnani%20Prisma%20%2B%20Timbre&fontSize=24&fontAlignY=38&desc=Ask%20by%20voice.%20Answer%20from%20official%20data.&descSize=15&descAlignY=64&fontColor=EEF4F9&animation=fadeIn" />
+  <source media="(prefers-color-scheme: dark)" srcset="https://capsule-render.vercel.app/api?type=waving&section=footer&height=150&color=0:071926%2C55:0B2E3E%2C100:0C3344&text=Built%20with%20Gnani%20Prisma%20%2B%20Timbre&fontSize=24&fontAlignY=38&desc=Ask%20by%20voice.%20Answer%20from%20official%20data.&descSize=15&descAlignY=64&fontColor=EEF4F9&animation=fadeIn" />
   <img src="https://capsule-render.vercel.app/api?type=waving&section=footer&height=150&color=0:C7E9DF,55:F5E3CB,100:FFFFFF&text=Built%20with%20Gnani%20Prisma%20%2B%20Timbre&fontSize=24&fontAlignY=38&desc=Ask%20by%20voice.%20Answer%20from%20official%20data.&descSize=15&descAlignY=64&fontColor=071926&animation=fadeIn" width="100%" alt="Built with Gnani Prisma + Timbre — ask by voice, answer from official data" />
 </picture>
