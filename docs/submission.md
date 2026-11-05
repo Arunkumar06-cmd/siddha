@@ -59,6 +59,7 @@ Designed and built solo: corpus pipeline, retrieval, grounded responder, voice-s
 - An IVR/telephony channel for students without smartphones.
 
 ## Links
+- One-page pitch (use this for the submission form's Project URL): https://github.com/Arunkumar06-cmd/siddha/blob/main/docs/pitch.md
 
 - Repository: https://github.com/Arunkumar06-cmd/siddha
 - Release v2.2.0 + video download: https://github.com/Arunkumar06-cmd/siddha/releases/tag/v2.2.0
