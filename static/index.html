@@ -1,38 +1,78 @@
 <!doctype html>
-<html lang="hi">
+<html lang="en">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="theme-color" content="#f7f2e7" />
+<meta name="color-scheme" content="light" />
 <title>Siddha — Voice Guide for Indian Scholarships</title>
 <style>
-  :root { --bg:#071a26; --panel:#0f2c3e; --accent:#ff8a00; --accent2:#22c1a0; --text:#eef4f9; --muted:#8fb0c8; --danger:#ff5a5a; }
-  * { box-sizing:border-box; }
-  body { margin:0; min-height:100vh; display:flex; flex-direction:column; color:var(--text);
-         background:radial-gradient(900px 500px at 50% -10%, #10314a, var(--bg));
-         font-family:-apple-system,'Segoe UI',system-ui,Roboto,sans-serif; }
-  header { text-align:center; padding:20px 16px 8px; }
-  h1 { margin:0 0 4px; font-size:clamp(1.3rem,4vw,1.8rem); letter-spacing:.2px; }
-  h1 span { color:var(--accent); }
-  .tag { color:var(--muted); font-size:.75rem; }
-  main { width:min(640px,94vw); margin:12px auto 24px; background:var(--panel); border:1px solid #1d3f55;
-         border-radius:18px; padding:20px; box-shadow:0 24px 60px #000a; }
-  .mic-wrap { display:flex; flex-direction:column; align-items:center; gap:12px; padding:8px 0 2px; }
-  #mic { width:104px; height:104px; border-radius:50%; border:none; cursor:pointer; display:grid; place-items:center;
-         color:#1a1a1a; background:var(--accent); transition:transform .12s ease; box-shadow:0 0 0 0 #ff8a0066; }
-  #mic svg { display:block; }
-  #mic:hover { transform:scale(1.05); }
-  #mic[aria-pressed="true"] { animation:pulse 1.2s infinite; background:#ffb84d; }
-  @keyframes pulse { 0%{box-shadow:0 0 0 0 #ff8a0088} 80%{box-shadow:0 0 0 16px transparent} }
-  #status { min-height:1.4em; color:var(--muted); font-size:.85rem; text-align:center; }
-  #status.error { color:var(--danger); }
-  .bubble { border-radius:12px; padding:12px 14px; margin:10px 0 0; line-height:1.5; display:none; font-size:.95rem; }
-  #transcript { background:#0b2230; color:#c7d7e6; }
-  #reply { background:#123b52; border-left:4px solid var(--accent2); }
-  #sources { font-size:.72rem; color:var(--muted); display:none; }
-  .src { display:flex; justify-content:space-between; gap:8px; background:#0b2230; border-radius:8px; padding:5px 8px; margin:4px 0; }
-  .src b { color:#d7e5ef; font-weight:600; }
-  footer { color:var(--muted); font-size:.65rem; text-align:center; padding:6px 12px 18px; }
-  a { color:var(--accent2); }
+  /* Paper & ink: a LaTeX-calm page for reading and speaking.
+     Deep petrol teal (#0f4c5c) — calm, trust, focus (blue-green family).
+     Warm ivory (#f7f2e7) lowers halation vs pure white for long reading. */
+  :root {
+    --paper: #f7f2e7;
+    --panel: #fffdf8;
+    --ink: #21242a;
+    --muted: #6b6557;
+    --hairline: #d9d2bf;
+    --accent: #0f4c5c;
+    --accent-hover: #14607a;
+    --transcript: #ede8da;
+    --source: #f3efe1;
+    --danger: #a63a2b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; display: flex; flex-direction: column;
+    color: var(--ink); background: var(--paper);
+    background-image: radial-gradient(1100px 620px at 50% -12%, #fdfbf3, var(--paper));
+    font-family: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', 'New York', Georgia, 'Times New Roman', serif;
+    font-size: 17px; line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  header {
+    text-align: center; padding: 26px 16px 14px;
+    border-top: 3px double var(--ink); border-bottom: 1px solid var(--hairline);
+  }
+  h1 { margin: 0 0 4px; font-size: clamp(1.55rem, 5vw, 2.15rem); font-weight: 600;
+       letter-spacing: .015em; color: var(--ink); }
+  h1 span { color: var(--accent); }
+  .tag { color: var(--muted); font-size: .86rem; font-style: italic; }
+  main {
+    width: min(660px, 94vw); margin: auto; background: var(--panel);
+    border: 1px solid var(--hairline); border-radius: 10px;
+    padding: 24px 26px; box-shadow: 0 10px 34px -14px rgba(33, 36, 42, .35);
+  }
+  .mic-wrap { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 10px 0 4px; }
+  #mic {
+    width: 100px; height: 100px; border-radius: 50%; border: none; cursor: pointer;
+    display: grid; place-items: center; color: #fdfaf0; background: var(--accent);
+    box-shadow: 0 14px 28px -12px rgba(15, 76, 92, .55);
+    transition: transform .15s ease, background .15s ease, box-shadow .15s ease;
+  }
+  #mic:hover { transform: translateY(-2px); background: var(--accent-hover); box-shadow: 0 18px 32px -12px rgba(15, 76, 92, .6); }
+  #mic:focus-visible { outline: 3px solid var(--accent-hover); outline-offset: 4px; }
+  #mic[aria-pressed="true"] { background: #a4502f; animation: pulse 1.25s infinite; box-shadow: 0 0 0 0 rgba(164, 80, 47, .45); }
+  @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(164, 80, 47, .45); } 80% { box-shadow: 0 0 0 18px rgba(164, 80, 47, 0); } 100% { box-shadow: 0 0 0 0 rgba(164, 80, 47, 0); } }
+  #status { min-height: 1.5em; color: var(--muted); font-size: .9rem; font-style: italic; text-align: center; }
+  #status.error { color: var(--danger); font-style: normal; }
+  .bubble { border-radius: 8px; padding: 14px 16px; margin: 12px 0 0; line-height: 1.62; display: none; font-size: 1.02rem; }
+  #transcript { background: var(--transcript); border: 1px solid var(--hairline); color: #3d392f; font-size: .92rem; }
+  #reply { background: var(--panel); border: 1px solid var(--hairline); border-left: 3px solid var(--accent); font-size: 1.06rem; color: var(--ink); }
+  #reply strong { color: var(--accent); font-variant: small-caps; letter-spacing: .08em; font-weight: 600; }
+  #sources { font-size: .78rem; color: var(--muted); display: none; margin-top: 10px; }
+  .src { display: flex; justify-content: space-between; gap: 10px; background: var(--source);
+         border: 1px solid var(--hairline); border-radius: 6px; padding: 6px 10px; margin: 5px 0; }
+  .src b { color: var(--ink); font-weight: 600; }
+  .src span { color: var(--accent); }
+  footer {
+    color: var(--muted); font-size: .78rem; font-style: italic; text-align: center;
+    padding: 10px 12px 22px; border-top: 1px solid var(--hairline); width: min(660px, 94vw); margin: 0 auto;
+  }
+  a { color: var(--accent); text-decoration-color: #b9c6bb; }
+  a:hover { color: var(--accent-hover); }
+  ::selection { background: #d7e4dc; }
 </style>
 </head>
 <body>
@@ -43,7 +83,7 @@
 <main>
   <div class="mic-wrap">
     <button id="mic" aria-pressed="false" aria-label="Start recording">
-      <svg viewBox="0 0 24 24" width="44" height="44" aria-hidden="true" focusable="false">
+      <svg viewBox="0 0 24 24" width="42" height="42" aria-hidden="true" focusable="false">
         <rect x="9" y="2" width="6" height="11" rx="3" fill="currentColor"/>
         <path d="M6.5 11.5a5.5 5.5 0 0 0 11 0M12 17v3.5M9 20.5h6"
               fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
@@ -106,9 +146,9 @@ mic.addEventListener('click', async () => {
         replyEl.style.display='block';
         replyEl.textContent = '';
         const strong = document.createElement('strong');
-        strong.textContent = 'Siddha: ';
+        strong.textContent = 'Siddha';
         const span = document.createElement('span');
-        span.textContent = j.reply;
+        span.textContent = ' — ' + j.reply;
         replyEl.append(strong, span);
         renderSources(j.sources || []);
         if (j.audio_wav_b64) {

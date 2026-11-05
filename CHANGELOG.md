@@ -3,10 +3,13 @@ All notable changes to Siddha. Format: [Keep a Changelog](https://keepachangelog
 
 ## [Unreleased]
 ### Changed
+- Frontend rebuilt as a **paper-and-ink LaTeX look**: warm ivory background, deep-ink serif type (Iowan/Palatino stack), deep-petrol-teal accents, masthead rules, small-caps speaker labels — high contrast and calm to read
+- Reply text is now `SIDDHA` small-caps with the transcript set as an ink-on-tan note and sources as hairline-bordered chips
+- Demo and intro/outro cards re-recorded on the new theme (Georgia serif, ivory, teal) so the submission video matches the product
+- Demo screenshot recaptured on the new theme (42 KB WebP)
 - Product name unified as **Siddha** across app, docs, env vars (`SIDDHA_*`), Docker user, and repo
 - README now shows a real UI screenshot instead of the hand-drawn SVG diagram
 - README hero: centred title and positioning line, logo badges with `logoColor=white`, native GitHub alerts, Mermaid architecture in a collapsible block
-- Demo screenshot recaptured from the final Central-scheme turn and compressed to a 45 KB WebP
 - Demo re-recorded with a state-neutral question (`SC students … central government post matric scholarship`), so the spoken answer is the Central scheme rather than an unstated state scheme
 
 ### Fixed

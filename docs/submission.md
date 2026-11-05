@@ -105,7 +105,7 @@ Designed and built solo: corpus pipeline, retrieval, grounded responder, voice-s
 ## Posting checklist
 
 - [ ] Register at https://www.gnani.ai/great-indian-ai-intership-registration-form (name, phone, email, stream, college). The project itself is submitted later in the participant workspace.
-- [ ] Attach `docs/demo.mp4` (1080×1080, 54.9 s, 4.3 MB).
+- [ ] Attach `docs/demo.mp4` (1080×1080, 54.9 s, 4.6 MB).
 - [ ] Tag the official account: **gnani.ai** on LinkedIn, **@GnaniAi** on X.
 - [ ] Include both hashtags exactly: `#GnaniAI` `#GreatIndianAIInternshipChallenge`.
 - [ ] Post publicly **as early as possible** — shortlisting verifies reactions, comments and reshares, and only engagement before the cutoff counts.
