@@ -13,6 +13,7 @@ import json
 import re
 
 import llm
+import places
 import spoken
 from config import logger
 
@@ -144,8 +145,15 @@ def advise(query, hits):
     def _is_education(h):
         return 'education' in str(h['record'].get('category', '')).lower()
 
-    edu = [h for h in hits if _is_education(h)]
-    top = (edu + [h for h in hits if h not in edu])[:3]
+    def _slot_score(h):
+        blob = ' '.join(str(h['record'].get(k) or '') for k in ('name', 'eligibility', 'category', 'details'))
+        education = _is_education(h)
+        return (places.category_boost(query, blob), education, h['rank_score'])
+
+    # Prefer records that match BOTH the student's category and Education; the
+    # corpus's ST/SC-flagged schemes can otherwise be out-ranked by agriwelfare
+    # schemes that also mention SC/ST in passing.
+    top = sorted(hits, key=_slot_score, reverse=True)[:3]
     records = []
     for i, h in enumerate(top, 1):
         r = h['record']

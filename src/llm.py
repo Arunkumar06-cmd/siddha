@@ -66,6 +66,9 @@ def complete(messages, max_tokens=400, temperature=0.1):
                 'messages': messages,
                 'temperature': temperature,
                 'max_tokens': max_tokens,
+                # nemotron-family models default to reasoning mode, which burns the
+                # whole budget on reasoning_content and returns content=None.
+                'chat_template_kwargs': {'enable_thinking': False},
             },
             timeout=_TIMEOUT,
         )

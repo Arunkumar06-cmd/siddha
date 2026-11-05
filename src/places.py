@@ -80,3 +80,25 @@ _CENTRAL_PATTERN = re.compile(r'central\s+(government|govt|sector|scheme)', re.I
 def mentioned_central(text):
     """True when the query explicitly asks for Central (not State) schemes."""
     return bool(_CENTRAL_PATTERN.search(str(text or '')))
+
+
+_CATEGORY_WORDS = {
+    'sc': ('sc', 'scheduled caste'),
+    'st': ('st', 'scheduled tribe'),
+    'obc': ('obc',),
+    'ebc': ('ebc', 'extremely backward'),
+    'minority': ('minority', 'alpasankhyak', 'alpsankhyak', 'alpa'),
+    'disabled': ('disabled', 'handicap', 'divyang', 'physically'),
+    'girl': ('girl', 'kanya', 'beti'),
+}
+
+
+def category_boost(query, record_blob):
+    """1.8 when the record mentions the query's social category, 0.75 when the query names one
+    and the record clearly doesn't, else 1.0."""
+    q = str(query or '').lower()
+    blob = str(record_blob or '').lower()
+    for level, words in _CATEGORY_WORDS.items():
+        if any(re.search(rf'(?<![a-z]){re.escape(w)}(?![a-z])', q) for w in words):
+            return 1.8 if any(re.search(rf'(?<![a-z]){re.escape(w)}(?![a-z])', blob) for w in words) else 0.75
+    return 1.0
