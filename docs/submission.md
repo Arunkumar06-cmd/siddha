@@ -27,7 +27,7 @@ The UI shows the transcript, the spoken answer, and the retrieved sources, so th
 | Speech-to-text | **Prisma v3.0** (`prisma-v3.0`) | `POST https://api.vachana.ai/stt/v3` | `language_code=indic-auto`, `format=codemix` |
 | Text-to-speech | **Timbre v3.0** (`timbre-v3.0`) | `POST https://api.vachana.ai/api/v1/tts/inference` | voice `Shivani`, language `hi-en`, 16 kHz mono WAV |
 
-No LLM or third-party model composes the answer. Retrieval is local; the two Gnani calls are the only external inference calls per turn.
+**Optional third-party reasoning (disclosed, auditable, off by default):** eligibility questions (e.g. "eligible hun kya?") route through an LLM classifier — any OpenAI-compatible endpoint, e.g. DeepSeek's free API — that *extracts a structured profile and classifies record coverage*. It never speaks freely: verdicts must quote the record verbatim, code composes the reply, and any failure falls back to the original grounded templates. No LLM is involved in the standard spoken answer path unless `LLM_API_KEY` is set. Gnani calls remain the only *voice* inference calls.
 
 ## Architecture
 

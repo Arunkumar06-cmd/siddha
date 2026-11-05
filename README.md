@@ -50,6 +50,7 @@
 - **Voice-in, voice-out** — browser mic → Prisma STT (`prisma-v3.0`, `indic-auto`, `codemix`) → RAG → Timbre TTS answers in the same language.
 - **Grounded answers** — every reply is assembled from myScheme's 1,142 scholarship schemes; the responder never invents eligibility or dates.
 - **State-honest** — a State scheme is named as such, so a state-less question never silently gets another state's scheme.
+- **Eligibility, answered** — ask "eligible hun kya?" and Siddha classifies your profile against the actual record text (verbatim quotes, never invented eligibility). Opt-in: any OpenAI-compatible endpoint (e.g. a free DeepSeek key) — without one, the original grounded templates answer unchanged.
 - **Call-quality tolerant** — 12 code-mixed utterances on band-passed 8 kHz telephony with traffic/fan noise: Prisma transcribes 100% of them; 11/12 keep every critical term (see `docs/eval-audio.md`).
 - **Tamil-ready** — Timbre voices all speak Tamil and Prisma parses it; a Tamil-script question roundtrips in 0.14 s with `detected_language_code=ta-IN`.
 - **Hybrid retrieval** — BGE-M3 multilingual embeddings + FAISS + BM25, fused with reciprocal rank fusion (RRF).

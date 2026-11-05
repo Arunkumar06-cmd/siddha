@@ -3,6 +3,8 @@ All notable changes to Siddha. Format: [Keep a Changelog](https://keepachangelog
 
 ## [Unreleased]
 ### Added
+- Opt-in eligibility reasoner (`src/eligibility.py`, `src/llm.py`): profile extraction + record-coverage classification via any OpenAI-compatible endpoint (e.g. DeepSeek), answers the "am I eligible?" gap; strict fallback to grounded templates when unconfigured; fully mocked tests (`tests/test_eligibility.py`)
+
 - BGE-M3 index rebuilt (512-token max sequence, fp32/MPS) — replaces MiniLM-L12 for multilingual/code-mixed retrieval
 - `docs/eval-audio.md`: telephonic/noise robustness probe (8 kHz, traffic/fan) with critical-term preservation and honest caveats
 - `scripts/eval_retrieval.py`: 30-query labeled retrieval evaluation (recall@1, recall@5, MRR) for verifiable comparisons
@@ -28,6 +30,8 @@ All notable changes to Siddha. Format: [Keep a Changelog](https://keepachangelog
 - Internal agent/working notes (`STATE.md`, `LEDGER.md`, `WBS.md`, `RULES.md`, `DECISIONS.md`, `ledger.json`) from the public tree; they stay locally and are gitignored
 
 ### Added
+- Opt-in eligibility reasoner (`src/eligibility.py`, `src/llm.py`): profile extraction + record-coverage classification via any OpenAI-compatible endpoint (e.g. DeepSeek), answers the "am I eligible?" gap; strict fallback to grounded templates when unconfigured; fully mocked tests (`tests/test_eligibility.py`)
+
 - GitHub release **v2.2.0** with the demo video attached: https://github.com/Arunkumar06-cmd/siddha/releases/tag/v2.2.0
 - 54.9 s demo video (`docs/demo.mp4`, 1080×1080): a real Prisma STT → hybrid retrieval → Timbre TTS turn, with Avinash asking the Hinglish question and Shivani answering
 - State/UT detection (`src/places.py`) with canonical names and common spellings, used by the grounded responder
@@ -55,6 +59,8 @@ All notable changes to Siddha. Format: [Keep a Changelog](https://keepachangelog
 
 ## [1.0.0] - 2026-11-04
 ### Added
+- Opt-in eligibility reasoner (`src/eligibility.py`, `src/llm.py`): profile extraction + record-coverage classification via any OpenAI-compatible endpoint (e.g. DeepSeek), answers the "am I eligible?" gap; strict fallback to grounded templates when unconfigured; fully mocked tests (`tests/test_eligibility.py`)
+
 - Initial Siddha: mic → Prisma STT → FAISS+BM25/RRF RAG over 1,142 myScheme scholarships → Hinglish Timbre TTS
 - Grounded, template-composed answers (zero hallucination), Hinglish-first
 - Offline corpus tooling: `prepare_corpus.py`, `build_index.py`
