@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Siddha — a two-turn, voice-first scholarship demo built with Gnani Prisma and Timbre.">
+  <title>Siddha — two-turn voice demo</title>
+  <style>
+    :root {
+      --paper: #faf7ee;
+      --white: #fffdf8;
+      --ink: #21242a;
+      --muted: #6b6557;
+      --teal: #0f4c5c;
+      --terra: #a4502f;
+      --line: #d9d2bf;
+    }
+    * { box-sizing: border-box; }
+    html { background: var(--paper); }
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: Charter, "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+      background:
+        radial-gradient(900px 420px at 12% -8%, rgba(15, 76, 92, .09), transparent 62%),
+        radial-gradient(760px 420px at 100% 108%, rgba(164, 80, 47, .08), transparent 58%),
+        var(--paper);
+    }
+    main { max-width: 900px; margin: 0 auto; padding: 52px 24px 64px; }
+    .kicker {
+      font: 700 11px/1.4 ui-sans-serif, system-ui, -apple-system, sans-serif;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--teal);
+    }
+    h1 {
+      margin: .4rem 0 .55rem;
+      font-size: clamp(2rem, 6vw, 3.5rem);
+      font-weight: 600;
+      line-height: 1.03;
+      letter-spacing: -.015em;
+    }
+    .lede {
+      max-width: 62ch;
+      margin: 0 0 1.6rem;
+      color: var(--muted);
+      font-size: clamp(1.05rem, 2.4vw, 1.2rem);
+      line-height: 1.55;
+    }
+    .player {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #000;
+      box-shadow: 0 26px 70px rgba(33, 36, 42, .14);
+    }
+    video { display: block; width: 100%; aspect-ratio: 1 / 1; background: #000; }
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: .45rem 1.1rem;
+      margin: 1rem 0 0;
+      color: var(--muted);
+      font-size: .95rem;
+    }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--terra); }
+    .links { display: flex; flex-wrap: wrap; gap: .7rem; margin-top: 1.8rem; }
+    .button {
+      display: inline-block;
+      padding: .72rem 1.05rem;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--white);
+      color: var(--ink);
+      text-decoration: none;
+      font: 600 .94rem/1 ui-sans-serif, system-ui, -apple-system, sans-serif;
+    }
+    .button.primary { border-color: var(--teal); background: var(--teal); color: var(--white); }
+    .button:focus-visible { outline: 3px solid rgba(15, 76, 92, .35); outline-offset: 3px; }
+    footer {
+      margin-top: 2.6rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: .9rem;
+      line-height: 1.5;
+    }
+    @media (max-width: 520px) {
+      main { padding: 32px 16px 48px; }
+      .player { border-radius: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="kicker">Siddha · two-turn demo</div>
+    <h1>Ask in Hinglish. Hear the exact scheme.</h1>
+    <p class="lede">
+      Two live turns through Gnani Prisma and Timbre: a documents question, then
+      “Aur is scheme ki last date kya hai?” The scheme is carried forward — no new
+      search, and no date invented when the record has none.
+    </p>
+
+    <div class="player">
+      <video controls playsinline preload="metadata" poster="./demo-poster.webp" aria-label="Siddha two-turn demo video">
+        <source src="./demo.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+        <a href="./demo.mp4">Download the demo</a>.
+      </video>
+    </div>
+
+    <p class="meta">
+      <span class="dot" aria-hidden="true"></span>
+      <span>139 seconds · 1080×1080</span>
+      <span>Grounded in 1,142 myScheme records</span>
+      <span>Prisma STT · Timbre TTS</span>
+    </p>
+
+    <nav class="links" aria-label="Project links">
+      <a class="button primary" href="https://github.com/Arunkumar06-cmd/siddha">GitHub repo</a>
+      <a class="button" href="https://github.com/Arunkumar06-cmd/siddha/blob/main/docs/pitch.md">One-page pitch</a>
+      <a class="button" href="https://github.com/Arunkumar06-cmd/siddha/releases/tag/v2.2.0">Release v2.2.0</a>
+      <a class="button" href="./demo.mp4" download>Download master</a>
+    </nav>
+
+    <footer>
+      Siddha · a voice-first scholarship guide for India · MIT licensed.<br>
+      Demo, not legal advice. Dates change: verify on scholarships.gov.in.
+    </footer>
+  </main>
+</body>
+</html>
