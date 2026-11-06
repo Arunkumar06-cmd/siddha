@@ -4,17 +4,19 @@ import base64
 import collections
 import os
 import pathlib
+import re
 import sys
 import threading
 import time
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent / 'src'))
 
-from fastapi import FastAPI, File, HTTPException, Request, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
+import conversation
 from config import GNANI_API_KEY, logger
 from pipeline import (
     FFMPEG_BIN,
@@ -32,6 +34,8 @@ _metrics = collections.Counter()
 _lock = threading.Lock()
 _ip_calls = collections.defaultdict(list)
 _ip_lock = threading.Lock()
+
+SID_RE = re.compile(r'^[A-Za-z0-9_-]{8,80}$')
 
 app = FastAPI(title='Siddha', version='2.2.0', docs_url=None, redoc_url=None)
 STATIC = pathlib.Path(__file__).parent / 'static'
@@ -99,8 +103,17 @@ def _count(key, n=1):
     with _lock:
         _metrics[key] += n
 
+
+def _session_id(value: str | None):
+    if not value:
+        return None
+    if not SID_RE.match(value):
+        raise HTTPException(400, 'Invalid session id')
+    return value
+
 class TextQuery(BaseModel):
     text: str = Field(min_length=2, max_length=500)
+    session_id: str | None = Field(default=None, max_length=80)
 
 def _speak_or_none(reply: str):
     try:
@@ -111,13 +124,32 @@ def _speak_or_none(reply: str):
 
 @app.post('/api/ask_text')
 def ask_text(q: TextQuery):
-    reply, sources = rag_answer(q.text)
+    sid = _session_id(q.session_id)
+    reply, sources, meta = rag_answer(q.text, sid)
     _count('rag_answered')
     return {'transcript': q.text, 'reply': reply, 'sources': sources,
+            'session_id': sid, **meta,
             'audio_wav_b64': _speak_or_none(reply)}
 
+@app.get('/api/session/{session_id}')
+def session_state(session_id: str):
+    session_id = _session_id(session_id)
+    last = conversation.STORE.last(session_id)
+    if last is None:
+        return {'session_id': session_id, 'turn': None}
+    return {'session_id': session_id, 'turn': {
+        'transcript': last.query, 'reply': last.reply, 'sources': last.sources,
+        'context_used': last.context_used, 'context_name': last.context_name,
+    }}
+
+@app.delete('/api/session/{session_id}')
+def session_reset(session_id: str):
+    session_id = _session_id(session_id)
+    conversation.STORE.reset(session_id)
+    return {'session_id': session_id, 'reset': True}
+
 @app.post('/api/ask_audio')
-async def ask_audio(audio: UploadFile = File(...)):
+async def ask_audio(audio: UploadFile = File(...), session_id: str = Form('')):
     raw = await audio.read(8 * 1024 * 1024 + 1)
     if len(raw) > 8 * 1024 * 1024:
         raise HTTPException(413, 'Audio too large (max 8 MB)')
@@ -125,10 +157,14 @@ async def ask_audio(audio: UploadFile = File(...)):
     suffix = suffix if suffix in {'.webm', '.wav', '.mp3', '.ogg', '.m4a', '.flac', '.aac'} else '.webm'
     wav = to_wav(raw, suffix)
     query, lang = transcribe(wav)
+    sid = _session_id(session_id)
     if not query.strip():
         return {'transcript': '', 'reply': 'Suno, awaaz samajh nahi aayi. Thodi der phir se kahein.',
-                'detected_language_code': lang, 'sources': [], 'audio_wav_b64': None}
-    reply, sources = rag_answer(query)
+                'detected_language_code': lang, 'sources': [], 'audio_wav_b64': None,
+                'session_id': sid, 'follow_up': False,
+                'context_used': False, 'context_name': None}
+    reply, sources, meta = rag_answer(query, sid)
     _count('rag_answered')
     return {'transcript': query, 'reply': reply, 'detected_language_code': lang,
-            'sources': sources, 'audio_wav_b64': _speak_or_none(reply)}
+            'sources': sources, 'session_id': sid, **meta,
+            'audio_wav_b64': _speak_or_none(reply)}

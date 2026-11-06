@@ -116,5 +116,5 @@ def test_pipeline_falls_back_when_llm_unconfigured(monkeypatch):
         'eligibility': 'SC students', 'benefits': 'b',
         'documents': 'Caste certificate', 'application': 'Portal'}}]
     monkeypatch.setattr(retriever, 'search', lambda q, k=5: fake_hit)
-    reply, _ = rag_answer('SC student ke liye scholarship?')
+    reply, _, _ = rag_answer('SC student ke liye scholarship?')
     assert 'X Scheme' in reply

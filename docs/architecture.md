@@ -39,9 +39,22 @@ flowchart TB
 1. Mic audio → webm/opus in browser → POST `/api/ask_audio`.
 2. `to_wav()` re-encodes to 16 kHz mono (Prisma requirement), deletes source in `finally`.
 3. `transcribe()` → Prisma; retries on Timeout/ConnectionError/5xx (2 attempts), circuit breaker trips after 5 failures (60 s cooldown).
-4. `rag_answer()` → retriever loads prebuilt FAISS + BM25, RRF-fuses, picks ann-ready top-5; `responder` composes Hinglish, canned answers for status/renewal flows.
+4. `rag_answer()` → resolves the session context, then loads prebuilt FAISS + BM25, RRF-fuses, picks ann-ready top-5; `responder` composes Hinglish, canned answers for status/renewal flows. Aspect-only follow-ups reuse the last record and skip retrieval.
 5. `synthesize()` → Timbre with voice-safe rendering (`spoken.render()` caps length, strips markup, inserts `<pauses>`).
-6. `/api/ask_audio` returns `{transcript, detected_language_code, reply, sources[], audio_wav_b64}`.
+6. `/api/ask_audio` returns `{transcript, detected_language_code, reply, sources[], session_id, follow_up, context_used, context_name, audio_wav_b64}`.
+
+## Conversation context
+Sessions are keyed by a random ID generated in the browser and validated server-side (`^[A-Za-z0-9_-]{8,80}$`). The store is text-only, in-memory, expires after 30 minutes of inactivity, holds at most 500 sessions and 8 turns per session.
+
+Resolution is deterministic (`src/context.py`), not a model rewrite:
+
+| Follow-up | Behaviour |
+|---|---|
+| pronoun or “aur/and” with only an aspect (“aur last date?”) | answer from the last scheme, no new retrieval |
+| state / category / course refinement (“Tamil Nadu ke liye?”) | re-retrieve with the last scheme as an anchor |
+| a new scheme name (“PM Kisan…”) | treat as a new topic; bypass context |
+
+`GET /api/session/{id}` restores the last turn after a refresh; `DELETE /api/session/{id}` starts a new conversation.
 
 ## Key decisions
 - **No generative LLM in the answer path.** Answers are assembled from retrieved scheme records (zero hallucination). An LLM slot is deliberately left open (`specs/NFR.md` trim-down reasons) but disabled until an owner explicitly supplies a key.

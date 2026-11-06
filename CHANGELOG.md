@@ -3,6 +3,10 @@ All notable changes to Siddha. Format: [Keep a Changelog](https://keepachangelog
 
 ## [Unreleased]
 ### Added
+- **Conversation memory** (`src/context.py`, `src/conversation.py`): deterministic follow-up resolution keyed by session. Aspect-only follow-ups answer from the last scheme with no new retrieval; state/category refinements re-retrieve with the prior scheme as an anchor; new scheme names bypass context. Sessions are text-only, in-memory, 30-minute TTL, 500-session cap, 8-turn cap.
+- Session endpoints `GET/DELETE /api/session/{id}`; page refresh restores the last turn; “Start a new conversation” resets it.
+- Demo re-recorded as a **two-turn conversation** (141 s, 1080×1080): documents question, then “Aur is scheme ki last date kya hai?” with the context row visible; male founder narration (Devansh), Avinash asking, Shivani answering.
+- 63 tests, 86% coverage.
 - Opt-in eligibility reasoner (`src/eligibility.py`, `src/llm.py`): profile extraction + record-coverage classification via any OpenAI-compatible endpoint (e.g. DeepSeek), answers the "am I eligible?" gap; strict fallback to grounded templates when unconfigured; fully mocked tests (`tests/test_eligibility.py`)
 
 - BGE-M3 index rebuilt (512-token max sequence, fp32/MPS) — replaces MiniLM-L12 for multilingual/code-mixed retrieval
@@ -11,7 +15,7 @@ All notable changes to Siddha. Format: [Keep a Changelog](https://keepachangelog
 - `scripts/eval_audio.py`: reproduces the telephonic/noise probe end to end
 
 ### Changed
-- Retrieval: **state-aware routing** shipped — a query naming a state/UT now ranks that state's schemes first (1.35/0.75 boost/suppression); `central government` queries filter to Central; a state-less query gets a 1.2 Central multiplier. Fixes the Bihar-instead-of-Central regression visible in the demo query (v2.3 content, delivered early)
+- Retrieval: **state-aware routing** shipped — a query naming a state/UT now ranks that state's schemes first (1.35/0.75 boost/suppression); `central government` queries filter to Central; a state-less query gets a 1.2 Central multiplier. Fixes the Bihar-instead-of-Central regression visible in the demo query (delivered in this submission build)
 - Frontend rebuilt as a **paper-and-ink LaTeX look**: warm ivory background, deep-ink serif type (Iowan/Palatino stack), deep-petrol-teal accents, masthead rules, small-caps speaker labels — high contrast and calm to read
 - Reply text is now `SIDDHA` small-caps with the transcript set as an ink-on-tan note and sources as hairline-bordered chips
 - Demo and intro/outro cards re-recorded on the new theme (Georgia serif, ivory, teal) so the submission video matches the product
@@ -33,7 +37,7 @@ All notable changes to Siddha. Format: [Keep a Changelog](https://keepachangelog
 - Opt-in eligibility reasoner (`src/eligibility.py`, `src/llm.py`): profile extraction + record-coverage classification via any OpenAI-compatible endpoint (e.g. DeepSeek), answers the "am I eligible?" gap; strict fallback to grounded templates when unconfigured; fully mocked tests (`tests/test_eligibility.py`)
 
 - GitHub release **v2.2.0** with the demo video attached: https://github.com/Arunkumar06-cmd/siddha/releases/tag/v2.2.0
-- 124 s demo video (`docs/demo.mp4`, 1080×1080): a real Prisma STT → hybrid retrieval → Timbre TTS turn, with Avinash asking the Hinglish question and Shivani answering
+- 141 s demo video (`docs/demo.mp4`, 1080×1080): two real Prisma STT → hybrid retrieval → Timbre TTS turns, with Avinash asking and Shivani answering; the second turn is a follow-up that keeps the scheme in context. Founder narration by Devansh.
 - State/UT detection (`src/places.py`) with canonical names and common spellings, used by the grounded responder
 - `docs/research-inventory.md`: the problem and source research behind the corpus
 - `docs/submission.md`: project explanation, Gnani model/API list, LinkedIn and X copy, posting checklist

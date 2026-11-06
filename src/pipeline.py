@@ -15,6 +15,8 @@ sys.path.insert(0, str(pathlib.Path(__file__).parent))
 import requests
 from fastapi import HTTPException
 
+import context
+import conversation
 import responder
 import retriever
 from config import (
@@ -155,12 +157,55 @@ def synthesize(text: str):
 
 ELIGIBILITY_ENABLED = os.getenv('SIDDHA_ELIGIBILITY', '1').strip().lower() not in {'0', 'false', 'off'}
 
-def rag_answer(query: str):
-    """Retrieval + composition. Eligibility intent goes through the opt-in LLM
-    classifier when LLM_API_KEY is configured; any failure falls back to the
-    original grounded responder, unchanged."""
+def _scheme_from(sources, hits, focus):
+    """The record a turn was built from, for the next follow-up."""
+    if focus:
+        return focus
+    if not sources:
+        return None
+    name = sources[0].get('name')
+    for h in hits:
+        if h['record'].get('name') == name:
+            return h['record']
+    return None
+
+
+def _remember(session_id, query, reply, scheme, sources, aspects, used, name):
+    if not session_id:
+        return
+    conversation.STORE.record(session_id, conversation.Turn(
+        query=query, reply=reply, scheme=scheme, sources=list(sources or []),
+        aspects=tuple(aspects), context_used=used, context_name=name,
+    ))
+
+
+def rag_answer(query: str, session_id: str | None = None):
+    """Retrieval + composition, with session-scoped follow-up resolution.
+
+    A follow-up that names only an aspect is answered from the scheme already
+    on the table. A follow-up with a state/category is re-retrieved with the
+    previous scheme as an anchor. A question that names another scheme is
+    treated as new. Eligibility intent still goes through the opt-in LLM
+    classifier; any failure falls back to the grounded responder.
+    """
     t0 = time.time()
-    hits = retriever.search(query, k=5)
+    last = conversation.STORE.last(session_id)
+    follow = context.is_follow_up(query, last)
+    aspects = responder.classify_aspects(query)
+    focus = last.scheme if (follow and last and last.scheme and context.is_aspect_only(query)) else None
+
+    if focus:
+        hits = [{'record': focus, 'rank_score': 0.0}]
+        used, context_name = True, focus['name']
+    else:
+        search_query = context.rewrite(query, last) if follow else query
+        hits = retriever.search(search_query, k=5)
+        used = bool(follow and last and last.scheme and hits
+                    and hits[0]['record'].get('id') == last.scheme.get('id'))
+        context_name = last.scheme['name'] if used and last else None
+
+    meta = {'follow_up': follow, 'context_used': used, 'context_name': context_name}
+
     if _eligibility_ready():
         try:
             import eligibility
@@ -168,13 +213,20 @@ def rag_answer(query: str):
                 looked = eligibility.advise(query, hits)
                 if looked:
                     reply, sources = looked
-                    logger.info('rag_answer path=eligibility hits=%d latency_s=%.2f', len(hits), time.time() - t0)
-                    return reply, sources
+                    _remember(session_id, query, reply, _scheme_from(sources, hits, focus),
+                              sources, aspects, used, context_name)
+                    logger.info('rag_answer path=eligibility hits=%d context=%s latency_s=%.2f',
+                                len(hits), used, time.time() - t0)
+                    return reply, sources, meta
         except Exception:
             logger.exception('eligibility_failed_fallback')
-    reply, sources, is_canned = responder.answer(query, hits)
-    logger.info('rag_answer hits=%d latency_s=%.2f canned=%s', len(hits), time.time() - t0, is_canned)
-    return reply, sources
+
+    reply, sources, is_canned = responder.answer(query, hits, follow_up=used)
+    scheme = None if is_canned else _scheme_from(sources, hits, focus)
+    _remember(session_id, query, reply, scheme, sources, aspects, used, context_name)
+    logger.info('rag_answer hits=%d latency_s=%.2f canned=%s context=%s',
+                len(hits), time.time() - t0, is_canned, used)
+    return reply, sources, meta
 
 def _eligibility_ready():
     if not ELIGIBILITY_ENABLED:

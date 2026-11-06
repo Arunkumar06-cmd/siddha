@@ -3,170 +3,405 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta name="theme-color" content="#f7f2e7" />
+<meta name="theme-color" content="#f8f3e6" />
 <meta name="color-scheme" content="light" />
-<title>Siddha — Voice Guide for Indian Scholarships</title>
+<title>Siddha — A Voice Guide to Indian Scholarships</title>
 <style>
-  /* Paper & ink: a LaTeX-calm page for reading and speaking.
-     Deep petrol teal (#0f4c5c) — calm, trust, focus (blue-green family).
-     Warm ivory (#f7f2e7) lowers halation vs pure white for long reading. */
+  /* Paper and ink. The whole app is one sheet of paper on a warm desk:
+     masthead, numbered sections, a definition-style answer record, and a
+     footnote. Type is Charter (a text face drawn for print), set at a
+     readable 17px with generous leading. Petrol teal for structure,
+     terracotta only for the live microphone. */
   :root {
-    --paper: #f7f2e7;
-    --panel: #fffdf8;
-    --ink: #21242a;
-    --muted: #6b6557;
-    --hairline: #d9d2bf;
+    --desk: #e6deca;
+    --paper: #f8f3e6;
+    --panel: #fffdf6;
+    --ink: #20242a;
+    --muted: #6a6455;
+    --rule: #d3cab4;
+    --rule-soft: #e2dac6;
     --accent: #0f4c5c;
     --accent-hover: #14607a;
-    --transcript: #ede8da;
-    --source: #f3efe1;
-    --danger: #a63a2b;
+    --live: #a34f2e;
+    --danger: #9e3527;
+    --pad: clamp(14px, 3vw, 36px);
   }
   * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html { background: var(--desk); }
   body {
-    margin: 0; min-height: 100vh; display: flex; flex-direction: column;
-    color: var(--ink); background: var(--paper);
-    background-image: radial-gradient(1100px 620px at 50% -12%, #fdfbf3, var(--paper));
-    font-family: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', 'New York', Georgia, 'Times New Roman', serif;
-    font-size: 17px; line-height: 1.5;
+    margin: 0; padding: var(--pad);
+    min-height: 100dvh;
+    display: flex; justify-content: center; align-items: flex-start;
+    color: var(--ink);
+    background:
+      radial-gradient(1100px 700px at 50% -8%, #f2ebd9 0%, transparent 62%),
+      var(--desk);
+    font-family: Charter, 'Bitstream Charter', 'Iowan Old Style', 'Palatino Linotype',
+                 Georgia, 'Kohinoor Devanagari', 'Noto Sans Devanagari', serif;
+    font-size: 17px; line-height: 1.55;
     -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
-  header {
-    text-align: center; padding: 26px 16px 14px;
-    border-top: 3px double var(--ink); border-bottom: 1px solid var(--hairline);
+  .sheet {
+    width: min(860px, 100%);
+    min-height: calc(100dvh - 2 * var(--pad));
+    display: flex; flex-direction: column;
+    padding: clamp(26px, 4.4vw, 48px) clamp(22px, 5.2vw, 58px) 26px;
+    background:
+      linear-gradient(180deg, #fbf7ec 0%, var(--paper) 42%, #f6f0e1 100%);
+    border: 1px solid #d8cfb9;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, .7) inset,
+                0 22px 55px -28px rgba(50, 42, 24, .55);
   }
-  h1 { margin: 0 0 4px; font-size: clamp(1.55rem, 5vw, 2.15rem); font-weight: 600;
-       letter-spacing: .015em; color: var(--ink); }
-  h1 span { color: var(--accent); }
-  .tag { color: var(--muted); font-size: .86rem; font-style: italic; }
-  main {
-    width: min(660px, 94vw); margin: auto; background: var(--panel);
-    border: 1px solid var(--hairline); border-radius: 10px;
-    padding: 24px 26px; box-shadow: 0 10px 34px -14px rgba(33, 36, 42, .35);
+
+  /* ---------- masthead ---------- */
+  .masthead { text-align: center; padding-bottom: 16px; border-bottom: 1px solid var(--rule); }
+  .kicker {
+    margin: 0 0 10px; color: var(--muted);
+    font-size: 11px; letter-spacing: .19em; text-transform: uppercase;
   }
-  .mic-wrap { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 10px 0 4px; }
+  .kicker .indic { letter-spacing: 0; text-transform: none; font-size: 13px; }
+  h1 {
+    margin: 0; font-size: clamp(28px, 4.2vw, 38px); font-weight: 600;
+    letter-spacing: .22em; text-indent: .22em; text-transform: uppercase;
+    line-height: 1.1; color: var(--ink);
+  }
+  .dek {
+    margin: 10px auto 0; max-width: 590px;
+    font-size: 16.5px; line-height: 1.5; color: #34383e;
+    text-wrap: pretty;
+  }
+  .meta {
+    margin: 11px 0 0; color: var(--muted);
+    font-size: 12px; letter-spacing: .015em;
+  }
+  .meta b { font-weight: 600; color: var(--accent); font-variant-numeric: oldstyle-nums; }
+
+  /* ---------- numbered sections ---------- */
+  section { padding-top: 2px; }
+  h2 {
+    display: flex; align-items: center; gap: 10px;
+    margin: 19px 0 10px;
+    font-size: 11.5px; font-weight: 600; letter-spacing: .16em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  h2 .num { color: var(--accent); font-variant-numeric: lining-nums; }
+  h2::after { content: ""; flex: 1; height: 1px; background: var(--rule); }
+
+  /* ---------- ask ---------- */
+  .askbox {
+    border: 1px solid var(--rule);
+    background: linear-gradient(180deg, #fffdf7 0%, #faf5e8 100%);
+    padding: 16px 20px 13px; text-align: center;
+  }
+  .mic-wrap { display: flex; flex-direction: column; align-items: center; gap: 11px; }
   #mic {
-    width: 100px; height: 100px; border-radius: 50%; border: none; cursor: pointer;
+    width: 72px; height: 72px; border-radius: 50%; border: none; cursor: pointer;
     display: grid; place-items: center; color: #fdfaf0; background: var(--accent);
-    box-shadow: 0 14px 28px -12px rgba(15, 76, 92, .55);
+    box-shadow: 0 12px 24px -12px rgba(15, 76, 92, .55);
     transition: transform .15s ease, background .15s ease, box-shadow .15s ease;
   }
-  #mic:hover { transform: translateY(-2px); background: var(--accent-hover); box-shadow: 0 18px 32px -12px rgba(15, 76, 92, .6); }
-  #mic:focus-visible { outline: 3px solid var(--accent-hover); outline-offset: 4px; }
-  #mic[aria-pressed="true"] { background: #a4502f; animation: pulse 1.25s infinite; box-shadow: 0 0 0 0 rgba(164, 80, 47, .45); }
-  @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(164, 80, 47, .45); } 80% { box-shadow: 0 0 0 18px rgba(164, 80, 47, 0); } 100% { box-shadow: 0 0 0 0 rgba(164, 80, 47, 0); } }
-  #status { min-height: 1.5em; color: var(--muted); font-size: .9rem; font-style: italic; text-align: center; }
-  #status.error { color: var(--danger); font-style: normal; }
-  .bubble { border-radius: 8px; padding: 14px 16px; margin: 12px 0 0; line-height: 1.62; display: none; font-size: 1.02rem; }
-  #transcript { background: var(--transcript); border: 1px solid var(--hairline); color: #3d392f; font-size: .92rem; }
-  #reply { background: var(--panel); border: 1px solid var(--hairline); border-left: 3px solid var(--accent); font-size: 1.06rem; color: var(--ink); }
-  #reply strong { color: var(--accent); font-variant: small-caps; letter-spacing: .08em; font-weight: 600; }
-  #sources { font-size: .78rem; color: var(--muted); display: none; margin-top: 10px; }
-  .src { display: flex; justify-content: space-between; gap: 10px; background: var(--source);
-         border: 1px solid var(--hairline); border-radius: 6px; padding: 6px 10px; margin: 5px 0; }
-  .src b { color: var(--ink); font-weight: 600; }
-  .src span { color: var(--accent); }
-  footer {
-    color: var(--muted); font-size: .78rem; font-style: italic; text-align: center;
-    padding: 10px 12px 22px; border-top: 1px solid var(--hairline); width: min(660px, 94vw); margin: 0 auto;
+  #mic:hover { transform: translateY(-1px); background: var(--accent-hover); }
+  #mic:focus-visible { outline: 2px solid var(--accent-hover); outline-offset: 4px; }
+  #mic[aria-pressed="true"] {
+    background: var(--live);
+    animation: pulse 1.3s infinite;
   }
-  a { color: var(--accent); text-decoration-color: #b9c6bb; }
-  a:hover { color: var(--accent-hover); }
-  ::selection { background: #d7e4dc; }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(163, 79, 46, .42); }
+    75% { box-shadow: 0 0 0 16px rgba(163, 79, 46, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(163, 79, 46, 0); }
+  }
+  #status { min-height: 1.4em; color: var(--muted); font-size: 14px; font-style: italic; }
+  #status.error { color: var(--danger); font-style: normal; }
+  .example {
+    margin: 10px 0 0; padding-top: 10px; border-top: 1px dotted var(--rule);
+    font-size: 13.5px; line-height: 1.5; color: var(--muted); font-style: italic;
+    text-wrap: pretty;
+  }
+  body.answered .example { display: none; }
+  .example b { font-style: normal; font-weight: 600; letter-spacing: .08em;
+               text-transform: uppercase; font-size: 10.5px; color: var(--accent); }
+
+  /* ---------- answer record ---------- */
+  .record { border-top: 1px solid var(--rule); }
+  .empty { padding: 13px 0 4px; }
+  .empty p { margin: 0; color: var(--muted); font-size: 14.5px; font-style: italic; }
+  .empty p::before { content: "¶"; color: var(--accent); font-style: normal; margin-right: 8px; }
+  .preview {
+    list-style: none; margin: 18px 0 16px; padding: 0;
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px;
+  }
+  .preview li { border-top: 1px solid var(--rule); padding-top: 8px; }
+  .preview b {
+    display: block; margin-bottom: 3px; color: var(--accent);
+    font-size: 10px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase;
+  }
+  .preview span { display: block; color: var(--muted); font-size: 13px; line-height: 1.45; }
+  dl { margin: 0; }
+  .row {
+    display: grid; grid-template-columns: 92px 1fr; gap: 16px;
+    padding: 9px 0; border-bottom: 1px solid var(--rule-soft);
+  }
+  .row:last-child { border-bottom: none; }
+  dt {
+    padding-top: 3px; color: var(--muted);
+    font-size: 10.5px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase;
+  }
+  dd { margin: 0; min-width: 0; }
+  #transcript { color: #454034; font-size: 15.5px; line-height: 1.55; }
+  #context { color: var(--muted); font-size: 14.5px; font-style: italic; }
+  #reply { font-size: 16px; line-height: 1.52; text-wrap: pretty; }
+  #sources { font-size: 13.5px; }
+  .src { display: flex; align-items: baseline; gap: 8px; padding: 2px 0; color: var(--muted); }
+  .src .name { color: var(--ink); }
+  .src .dots {
+    flex: 1; min-width: 18px; border-bottom: 1px dotted #bfb59d;
+    transform: translateY(-3px);
+  }
+  .src .score { color: var(--accent); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+  .src.empty-src { font-style: italic; }
+  .reset {
+    margin: 12px 0 0; padding: 0 0 2px; border: 0; border-bottom: 1px solid #b9c6bb;
+    background: none; color: var(--accent); cursor: pointer;
+    font: inherit; font-size: 10.5px; font-weight: 600;
+    letter-spacing: .14em; text-transform: uppercase;
+  }
+  .reset:hover { color: var(--accent-hover); border-bottom-color: var(--accent-hover); }
+
+  /* ---------- footnote ---------- */
+  footer { margin-top: auto; padding-top: 14px; }
+  footer::before {
+    content: ""; display: block; width: 132px; height: 1px;
+    background: var(--muted); margin-bottom: 9px;
+  }
+  .foot-row {
+    display: flex; justify-content: space-between; gap: 18px;
+    color: var(--muted); font-size: 11.5px; line-height: 1.5;
+  }
+  .foot-row p { margin: 0; max-width: 62ch; }
+  .foot-row .stamp { white-space: nowrap; font-variant-numeric: oldstyle-nums; }
+  footer a { color: var(--accent); text-decoration: none; border-bottom: 1px solid #b9c6bb; }
+  footer a:hover { color: var(--accent-hover); }
+
+  ::selection { background: #d9e6de; }
+
+  /* Capture mode for the demo: the sheet ends above a caption band. */
+  html.capture body { padding-bottom: 184px; }
+  html.capture .reset { display: none; }
+  html.capture .sheet { min-height: 840px; }
+
+  @media (max-width: 620px) {
+    body { font-size: 16px; }
+    .sheet { padding: 24px 20px 20px; }
+    h1 { font-size: 28px; letter-spacing: .18em; text-indent: .18em; }
+    .dek { font-size: 16px; }
+    .meta { font-size: 10.5px; line-height: 1.7; }
+    .row { grid-template-columns: 1fr; gap: 3px; padding: 10px 0; }
+    dt { padding-top: 0; }
+    .foot-row { flex-direction: column; gap: 4px; }
+    .preview { grid-template-columns: 1fr; gap: 10px; }
+    html.capture body { padding-bottom: 168px; }
+    html.capture .sheet { min-height: 0; }
+  }
 </style>
 </head>
 <body>
-<header>
-  <h1>Siddha <span>✦</span> Voice Guide to Scholarships</h1>
-  <div class="tag">Speak naturally — it answers with the exact NSP scholarships, documents and dates</div>
-</header>
-<main>
-  <div class="mic-wrap">
-    <button id="mic" aria-pressed="false" aria-label="Start recording">
-      <svg viewBox="0 0 24 24" width="42" height="42" aria-hidden="true" focusable="false">
-        <rect x="9" y="2" width="6" height="11" rx="3" fill="currentColor"/>
-        <path d="M6.5 11.5a5.5 5.5 0 0 0 11 0M12 17v3.5M9 20.5h6"
-              fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-      </svg>
-    </button>
-    <div id="status" role="status">Tap once and ask your question</div>
-    <audio id="player" autoplay></audio>
-  </div>
-  <div id="transcript" class="bubble"></div>
-  <div id="reply" class="bubble"></div>
-  <div id="sources"></div>
-</main>
-<footer>Demo, not legal advice. Verify on <a href="https://www.scholarships.gov.in">scholarships.gov.in</a> · Built on Gnani Prisma/Timbre</footer>
+<div class="sheet">
+  <header class="masthead">
+    <p class="kicker">Hinglish <span class="indic">· हिन्दी · தமிழ்</span></p>
+    <h1>Siddha</h1>
+    <p class="dek">A voice guide to Indian scholarships. Ask in your language and hear the exact scheme, the documents it needs, and where to check the current deadline.</p>
+    <p class="meta"><b>1,142</b> myScheme scholarships · Central and State · Gnani Prisma and Timbre</p>
+  </header>
+
+  <main>
+    <section aria-labelledby="ask-h">
+      <h2 id="ask-h"><span class="num">1</span> Ask</h2>
+      <div class="askbox">
+        <div class="mic-wrap">
+          <button id="mic" aria-pressed="false" aria-label="Start recording">
+            <svg viewBox="0 0 24 24" width="34" height="34" aria-hidden="true" focusable="false">
+              <rect x="9" y="2" width="6" height="11" rx="3" fill="currentColor"/>
+              <path d="M6.5 11.5a5.5 5.5 0 0 0 11 0M12 17v3.5M9 20.5h6"
+                    fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+          </button>
+          <div id="status" role="status" aria-live="polite">Tap once, then speak.</div>
+          <audio id="player" autoplay></audio>
+        </div>
+        <p class="example"><b>Try</b> — “SC students ke liye central government post matric scholarship ke documents kya chahiye?”</p>
+      </div>
+    </section>
+
+    <section aria-labelledby="answer-h">
+      <h2 id="answer-h"><span class="num">2</span> Answer</h2>
+      <div class="record">
+        <div class="empty" id="empty">
+          <p>The grounded answer appears here, assembled only from the official record.</p>
+          <ul class="preview">
+            <li><b>Scheme</b><span>The closest matching Central or State scholarship.</span></li>
+            <li><b>Documents</b><span>Only the documents that record actually lists.</span></li>
+            <li><b>Deadline</b><span>The official page to check — never a guessed date.</span></li>
+          </ul>
+        </div>
+        <dl id="fields" hidden>
+          <div class="row" id="context-row" hidden><dt>Context</dt><dd id="context"></dd></div>
+          <div class="row"><dt>You said</dt><dd id="transcript"></dd></div>
+          <div class="row"><dt>Answer</dt><dd id="reply" aria-live="polite"></dd></div>
+          <div class="row"><dt>Sources</dt><dd id="sources"></dd></div>
+        </dl>
+      </div>
+      <button class="reset" id="reset" hidden>Start a new conversation</button>
+    </section>
+  </main>
+
+  <footer>
+    <div class="foot-row">
+      <p>Demo, not legal advice. Dates change: verify on
+        <a href="https://www.scholarships.gov.in">scholarships.gov.in</a>. Speech by Gnani Prisma, voice by Gnani Timbre.</p>
+      <p class="stamp">Siddha v2.2.0 · MIT</p>
+    </div>
+  </footer>
+</div>
 
 <script>
+if (new URLSearchParams(location.search).has('capture')) document.documentElement.classList.add('capture');
+
 const mic = document.getElementById('mic'), statusEl = document.getElementById('status');
 const transcriptEl = document.getElementById('transcript'), replyEl = document.getElementById('reply');
-const sourcesEl = document.getElementById('sources'), player = document.getElementById('player');
+const sourcesEl = document.getElementById('sources');
+const emptyEl = document.getElementById('empty'), fieldsEl = document.getElementById('fields');
+const contextRow = document.getElementById('context-row'), contextEl = document.getElementById('context');
+const resetEl = document.getElementById('reset');
+const player = document.getElementById('player');
+const SESSION_KEY = 'siddha_session';
+const params = new URLSearchParams(location.search);
+let sessionId = params.get('session') || sessionStorage.getItem(SESSION_KEY)
+  || (crypto.randomUUID ? crypto.randomUUID() : 's' + Date.now());
+sessionStorage.setItem(SESSION_KEY, sessionId);
 const MIME = ['audio/webm','audio/mp4','audio/wav'].find(m => MediaRecorder.isTypeSupported(m)) || '';
 let recorder = null, chunks = [];
 
-function setStatus(msg, isErr=false){
-  statusEl.textContent = msg; statusEl.classList.toggle('error', isErr);
+function setStatus(msg, isErr = false) {
+  statusEl.textContent = msg;
+  statusEl.classList.toggle('error', isErr);
 }
-function renderSources(sources){
-  sourcesEl.style.display = 'block';
+
+function renderTurn(turn) {
+  emptyEl.hidden = true;
+  fieldsEl.hidden = false;
+  document.body.classList.add('answered');
+  transcriptEl.textContent = turn.transcript || '(no speech detected)';
+  replyEl.textContent = turn.reply;
+  renderSources(turn.sources || []);
+  if (turn.context_used && turn.context_name) {
+    contextEl.textContent = turn.context_name;
+    contextRow.hidden = false;
+  } else {
+    contextRow.hidden = true;
+  }
+  resetEl.hidden = false;
+}
+
+function resetUI() {
+  emptyEl.hidden = false;
+  fieldsEl.hidden = true;
+  document.body.classList.remove('answered');
+  transcriptEl.textContent = '';
+  replyEl.textContent = '';
   sourcesEl.textContent = '';
-  const lbl = document.createElement('div');
-  lbl.textContent = 'Sources (1,142 schemes):';
-  sourcesEl.appendChild(lbl);
+  contextRow.hidden = true;
+  resetEl.hidden = true;
+  player.removeAttribute('src');
+  setStatus('Tap once, then speak.');
+}
+
+function renderSources(sources) {
+  sourcesEl.textContent = '';
+  if (!sources.length) {
+    const none = document.createElement('div');
+    none.className = 'src empty-src';
+    none.textContent = 'No matching scheme in the corpus.';
+    sourcesEl.appendChild(none);
+    return;
+  }
   for (const s of sources) {
     const row = document.createElement('div');
     row.className = 'src';
-    const b = document.createElement('b');
-    b.textContent = s.name;
-    const sc = document.createElement('span');
-    sc.textContent = s.score ?? 'official';
-    row.append(b, sc);
+    const name = document.createElement('span');
+    name.className = 'name';
+    name.textContent = s.name;
+    const dots = document.createElement('span');
+    dots.className = 'dots';
+    const score = document.createElement('span');
+    score.className = 'score';
+    score.textContent = s.level ?? 'official';
+    row.append(name, dots, score);
     sourcesEl.appendChild(row);
   }
 }
+
+resetEl.addEventListener('click', async () => {
+  try { await fetch('/api/session/' + encodeURIComponent(sessionId), { method: 'DELETE' }); } catch (e) {}
+  sessionId = crypto.randomUUID ? crypto.randomUUID() : 's' + Date.now();
+  sessionStorage.setItem(SESSION_KEY, sessionId);
+  resetUI();
+});
+
 mic.addEventListener('click', async () => {
   if (recorder) { recorder.stop(); return; }
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     chunks = [];
-    recorder = new MediaRecorder(stream, MIME ? {mimeType: MIME} : undefined);
+    recorder = new MediaRecorder(stream, MIME ? { mimeType: MIME } : undefined);
     recorder.ondataavailable = e => chunks.push(e.data);
     recorder.onstop = async () => {
       stream.getTracks().forEach(t => t.stop());
-      mic.setAttribute('aria-pressed','false'); mic.setAttribute('aria-label','Start recording');
-      setStatus('Thinking…');
-      const blob = new Blob(chunks, {type: MIME || 'audio/webm'});
-      const fd = new FormData(); fd.append('audio', blob, 'q.webm');
+      mic.setAttribute('aria-pressed', 'false');
+      mic.setAttribute('aria-label', 'Start recording');
+      setStatus('Reading the official records…');
+      const blob = new Blob(chunks, { type: MIME || 'audio/webm' });
+      const fd = new FormData();
+      fd.append('audio', blob, 'q.webm');
+      fd.append('session_id', sessionId);
       try {
-        const r = await fetch('/api/ask_audio', {method:'POST', body: fd});
+        const r = await fetch('/api/ask_audio', { method: 'POST', body: fd });
         const j = await r.json();
         if (!r.ok) throw new Error(j.error || 'Server error');
-        transcriptEl.style.display='block'; transcriptEl.textContent = 'You: ' + (j.transcript || '(no speech detected)');
-        replyEl.style.display='block';
-        replyEl.textContent = '';
-        const strong = document.createElement('strong');
-        strong.textContent = 'Siddha';
-        const span = document.createElement('span');
-        span.textContent = ' — ' + j.reply;
-        replyEl.append(strong, span);
-        renderSources(j.sources || []);
+        sessionId = j.session_id || sessionId;
+        sessionStorage.setItem(SESSION_KEY, sessionId);
+        renderTurn(j);
         if (j.audio_wav_b64) {
           player.src = 'data:audio/wav;base64,' + j.audio_wav_b64;
-          await player.play().catch(()=>{});
+          await player.play().catch(() => {});
         }
-        setStatus('Done — tap the mic and ask again.');
+        setStatus('Done. Tap the mic to ask another question.');
       } catch (err) {
         setStatus('Problem: ' + err.message + '. Try again in a quiet place.', true);
       } finally { recorder = null; }
     };
     recorder.start();
-    mic.setAttribute('aria-pressed','true'); mic.setAttribute('aria-label','Stop recording');
-    setStatus('Listening… tap to stop.');
+    mic.setAttribute('aria-pressed', 'true');
+    mic.setAttribute('aria-label', 'Stop recording');
+    setStatus('Listening. Tap again to stop.');
   } catch (err) {
     setStatus('Microphone blocked. Allow mic access in the browser.', true);
   }
 });
+
+(async function restore() {
+  try {
+    const r = await fetch('/api/session/' + encodeURIComponent(sessionId));
+    if (!r.ok) return;
+    const j = await r.json();
+    if (j.turn) {
+      renderTurn(j.turn);
+      setStatus('Done. Tap the mic to ask another question.');
+    }
+  } catch (e) { /* first run or offline: stay idle */ }
+})();
 </script>
 </body>
 </html>

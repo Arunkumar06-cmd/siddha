@@ -11,12 +11,16 @@ ASPECT_KEYS = {
     'apply': ['apply', 'portal', 'nsp', 'आवेदन'],
     'renewal': ['renew', 'renewal', 'purana'],
     'status': ['status', 'track', 'application id'],
+    'deadline': ['deadline', 'last date', 'last day', 'kab tak', 'akhri',
+                 'tareekh', 'tarikh', 'अंतिम तारीख', 'आखिरी तारीख'],
 }
 
-def classify_aspects(q):
+def explicit_aspects(q):
     ql = q.lower()
-    hits = [a for a, ks in ASPECT_KEYS.items() if any(k in ql for k in ks)]
-    return hits or ['eligibility', 'benefit', 'documents', 'apply']
+    return [a for a, ks in ASPECT_KEYS.items() if any(k in ql for k in ks)]
+
+def classify_aspects(q):
+    return explicit_aspects(q) or ['eligibility', 'benefit', 'documents', 'apply']
 
 TRAILING_STOPWORDS = frozenset({
     'a', 'an', 'and', 'are', 'as', 'at', 'be', 'by', 'for', 'from',
@@ -83,6 +87,21 @@ def _clean(raw, cap=160):
         t += '.'
     return t
 
+DATE_RE = re.compile(
+    r'((?:last date|closing date|deadline|last day)[^.]{0,100})', re.IGNORECASE
+)
+
+
+def deadline_line(rec):
+    """Quote a date only when the record contains one; otherwise say so."""
+    blob = ' '.join(str(rec.get(k) or '') for k in ('application', 'details', 'benefits'))
+    match = DATE_RE.search(blob)
+    if match:
+        return f"Record ke mutabik, {_clean(match.group(1), 130)}"
+    return ("Is record mein last date nahi di gayi. Scheme ka official page "
+            "scholarships.gov.in pe kholiye, wahan current date dikhegi.")
+
+
 def compose(rec, aspects):
     out = []
     if 'eligibility' in aspects:
@@ -97,6 +116,8 @@ def compose(rec, aspects):
         t = _clean(_separate_documents(rec.get('documents')), 170)
         if t:
             out.append(f"Documents chahiye. {t}")
+    if 'deadline' in aspects:
+        out.append(deadline_line(rec))
     if 'apply' in aspects:
         t = _clean(rec.get('application'), 150)
         if t:
@@ -105,7 +126,7 @@ def compose(rec, aspects):
         out.append("Is scheme ke baare mein portal pe poori jaankari milegi.")
     return ' '.join(out)
 
-def answer(query, hits):
+def answer(query, hits, follow_up=False):
     aspects = classify_aspects(query)
     if 'status' in aspects:
         spoken = ("Suno. Status check karne ke liye portal pe login karke my applications kholo, "
@@ -129,8 +150,14 @@ def answer(query, hits):
         state = places.state_of(rec)
         if state:
             state_note = f" Yeh {state} ki scheme hai."
-    spoken = f"Suno. Sabse relevant scheme yeh hai, {rec['name']}.{state_note} {body} " \
-             f"Official details scholarships.gov.in pe dekhiye, wahan current dates dikhengi."
+    if follow_up:
+        lead = f"Suno. Usi scheme ke liye — {rec['name']}."
+    else:
+        lead = f"Suno. Sabse relevant scheme yeh hai, {rec['name']}."
+    closing = "Official details scholarships.gov.in pe dekhiye, wahan current dates dikhengi."
+    if aspects == ['deadline']:
+        closing = ""  # the deadline line already points at the official page
+    spoken = f"{lead}{state_note} {body} {closing}".strip()
     sources = [{'name': h['record']['name'], 'score': h['rank_score'],
                 'level': h['record']['level']} for h in hits[:3]]
     return spoken, sources, False

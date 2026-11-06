@@ -18,7 +18,9 @@ India publishes 1,142 scholarship schemes on myScheme. The students who need the
 4. A grounded responder composes the answer from those records — eligibility, benefit, documents, application route — with no free-form generation. If the chosen scheme belongs to a State and the question named none, the reply says which state it is.
 5. **Gnani Timbre v3.0** speaks the reply in the student's language, with voice-safe prose (`<pauses>`, no slashes, URLs or currency symbols read literally).
 
-The UI shows the transcript, the spoken answer, and the retrieved sources, so the answer is inspectable.
+A deterministic session layer keeps the scheme on the table. A follow-up that names only an aspect (“Aur is scheme ki last date kya hai?”) is answered from the same record with no new retrieval; a follow-up that adds a state or category re-retrieves with the previous scheme as an anchor; a new scheme name is treated as a new topic. Sessions are text-only, in-memory, 30-minute TTL, with a 500-session cap.
+
+The UI shows the transcript, the spoken answer, the carried scheme when context is used, and the retrieved sources, so the answer is inspectable.
 
 ## Gnani models / APIs used
 
@@ -35,16 +37,16 @@ The UI shows the transcript, the spoken answer, and the retrieved sources, so th
 - **Serving:** single-process FastAPI, vanilla HTML/JS mic UI.
 - **Audio:** ffmpeg normalises browser webm/opus to 16 kHz mono WAV, deletes the temp file in `finally`.
 - **Retrieval:** prebuilt FAISS index + BM25 over `data/scholarships.jsonl` (1,142 records); RRF fusion; top-5 records.
-- **Answering:** aspect classification (documents / eligibility / benefit / apply / renewal / status) and template composition strictly from retrieved fields.
+- **Answering:** aspect classification (documents / eligibility / benefit / apply / renewal / status / deadline) and template composition strictly from retrieved fields; aspect-only follow-ups reuse the last scheme and skip retrieval.
 - **Voice safety:** number, currency, URL, slash and bracket normalisation; comma-separated document lists; word-boundary truncation; dangling-preposition removal.
 - **Resilience:** retries with backoff + jitter on timeout/connection/5xx, circuit breakers for STT and TTS, per-IP rate limit, typed error envelope, `/api/health` corpus check, `/api/metrics`.
-- **Delivery:** multi-stage Docker image, non-root user, CI (ruff, compile, 40 tests, 86% coverage gate, gitleaks, Docker build) and a security workflow (`gitleaks`, `pip-audit`).
+- **Delivery:** multi-stage Docker image, non-root user, CI (ruff, compile, 63 tests, 86% coverage gate, gitleaks, Docker build) and a security workflow (`gitleaks`, `pip-audit`).
 
 ## Why it is not a mockup
 
-- 40 tests, 86% coverage, ruff clean.
-- The demo is a screen recording of the running service: the question is played into Chrome as a microphone input, then the real Prisma STT → retrieval → grounded responder → Timbre TTS path produces the transcript and audio in the recording.
-- The demo question (“SC students ke liye central government post matric scholarship ke documents kya chahiye?”) is synthesized with Timbre (voice **Avinash**) so the recording is reproducible without a human narrator; the answer uses the product voice **Shivani**. This is disclosed rather than presented as a human caller.
+- 63 tests, 86% coverage, ruff clean.
+- The demo is a screen recording of the running service: two questions are played into Chrome as microphone input, then the real Prisma STT → retrieval → grounded responder → Timbre TTS path produces each transcript and audio in the recording.
+- The two student questions (“SC students ke liye central government post matric scholarship ke documents kya chahiye?” and “Aur is scheme ki last date kya hai?”) are synthesized with Timbre (voice **Avinash**) so the recording is reproducible without a human caller; the answers use the product voice **Shivani**. Founder narration is **Devansh**. This is disclosed rather than presented as a human speaker.
 - The API key is never in the repo or the image; it is resolved from the environment or `~/.env`.
 
 ## Solo contribution
@@ -63,7 +65,7 @@ Designed and built solo: corpus pipeline, retrieval, grounded responder, voice-s
 
 - Repository: https://github.com/Arunkumar06-cmd/siddha
 - Release v2.2.0 + video download: https://github.com/Arunkumar06-cmd/siddha/releases/tag/v2.2.0
-- Demo video: https://github.com/Arunkumar06-cmd/siddha/blob/main/docs/demo.mp4
+- Demo video (141 s, two turns): https://github.com/Arunkumar06-cmd/siddha/releases/download/v2.2.0/demo.mp4
 - Architecture: https://github.com/Arunkumar06-cmd/siddha/blob/main/docs/architecture.md
 - API reference: https://github.com/Arunkumar06-cmd/siddha/blob/main/docs/api.md
 - LinkedIn post: _add after posting_
@@ -85,9 +87,10 @@ Designed and built solo: corpus pipeline, retrieval, grounded responder, voice-s
 > • Gnani Prisma v3.0 does STT on code-mixed speech (indic-auto, codemix)
 > • FAISS + BM25 over the official myScheme corpus, fused with RRF (BGE-M3 multilingual embeddings underneath)
 > • Every answer is assembled from official records — no invented eligibility, no made-up deadlines
+> • Follow-ups keep the scheme in context — ask “aur last date?” and Siddha stays on the same record
 > • Gnani Timbre v3.0 (Shivani) speaks the answer back
 >
-> Built solo for the Great Indian AI Internship Challenge — I'm in the Mixed Vibes lane: code-mixed both directions. This is a 54-second recording of the real pipeline, not a staged demo.
+> Built solo for the Great Indian AI Internship Challenge — I'm in the Mixed Vibes lane: code-mixed both directions. This is a two-minute recording of the real pipeline, with a live follow-up, not a staged demo.
 >
 > Tagging @gnani.ai. Code: https://github.com/Arunkumar06-cmd/siddha
 >
@@ -113,7 +116,7 @@ Designed and built solo: corpus pipeline, retrieval, grounded responder, voice-s
 - [x] Register — done (email from Team Gnani AI, Nov 4; registration confirmed, 5,000 programme credits, 3 free API keys, closing date Nov 10, 23:59 IST).
 - [x] Working app + release cut — Siddha v2.2.0 published with demo attached
 - [ ] Claim keys and confirm usage at https://app.gnani.ai/voice (3 keys available)
-- [ ] Attach `docs/demo.mp4` (1080×1080, 124 s, 4.6 MB).
+- [ ] Attach `docs/demo.mp4` (1080×1080, 141 s, 6.3 MB).
 - [ ] Tag the official account: **gnani.ai** on LinkedIn, **@GnaniAi** on X.
 - [ ] Include both hashtags exactly: `#GnaniAI` `#GreatIndianAIInternshipChallenge`.
 - [ ] Post publicly **as early as possible** — shortlisting verifies reactions, comments and reshares, and only engagement before the cutoff counts.

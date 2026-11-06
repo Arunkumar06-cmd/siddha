@@ -119,3 +119,36 @@ def test_places_detects_states_and_aliases():
     assert places.mentioned('scholarship documents') is None
     assert places.state_of({'level': 'State', 'name': 'X', 'details': 'Government of Madhya Pradesh'}) == 'Madhya Pradesh'
     assert places.state_of({'level': 'Central', 'name': 'X', 'details': 'Madhya Pradesh'}) is None
+
+
+def test_deadline_is_an_explicit_aspect():
+    assert classify_aspects('aur last date kya hai?') == ['deadline']
+
+
+def test_deadline_is_honest_when_the_record_has_no_date():
+    rec = {'name': 'Post-Matric Scholarship for SC students', 'level': 'Central',
+           'documents': 'Aadhaar Card', 'application': 'Apply on NSP.', 'benefits': 'Fees'}
+    spoken, _, canned = answer('last date kya hai', [{'rank_score': 0.03, 'record': rec}])
+    assert not canned
+    assert 'last date nahi di gayi' in spoken
+    assert 'scholarships.gov.in' in spoken
+    assert not any(ch.isdigit() for ch in spoken), 'must never invent a date'
+
+
+def test_deadline_quotes_a_date_that_is_in_the_record():
+    rec = {'name': 'ICMR Fellowship', 'level': 'Central',
+           'application': 'Last Date of Application (30th June and 31st December Every Year)',
+           'benefits': 'Fellowship'}
+    spoken, _, _ = answer('last date kya hai', [{'rank_score': 0.03, 'record': rec}])
+    assert '30th June' in spoken
+
+
+def test_follow_up_lead_names_the_scheme_again():
+    spoken, _, _ = answer('last date kya hai', FAKE_HIT, follow_up=True)
+    assert spoken.startswith('Suno. Usi scheme ke liye')
+    assert 'Post Matric Scholarship SC Rajasthan' in spoken
+
+
+def test_new_topic_lead_does_not_claim_continuity():
+    spoken, _, _ = answer('documents kya chahiye', FAKE_HIT)
+    assert spoken.startswith('Suno. Sabse relevant scheme yeh hai')

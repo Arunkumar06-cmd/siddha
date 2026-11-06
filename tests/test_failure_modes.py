@@ -27,7 +27,7 @@ def fake_search(q, k=5):
     return FAKE_HITS
 
 
-def fake_answer(q, hits):
+def fake_answer(q, hits, follow_up=False):
     return (
         'Suno. Test answer.',
         [{'name': 'Test Scheme', 'score': 0.05, 'level': 'State'}],
