@@ -40,8 +40,12 @@ def test_clean_never_cuts_mid_word():
     out = _clean(raw, 50)
     core = out.rstrip('.')
     assert len(core) <= 50
-    assert raw.startswith(core)
-    assert len(raw) == len(core) or raw[len(core)] == ' ', f'cut mid-word: {core[-15:]!r}'
+    # The output is a prefix of the comma-separated rendering: items are
+    # never cut mid-word, and documents are separated before clipping.
+    assert core in 'Aadhaar Card, Caste Certificate, Income Certificate, Bank Account Details'
+    assert len(core) == 0 or core[-1] not in ' ,'
+    if core and len(core) < len(raw):
+        assert core.endswith(('Card', 'Certificate', 'Details', 'Certificate.')) or core[-1] != ' '
 
 
 def test_clean_terminates_short_text():

@@ -84,21 +84,31 @@ def _separate_documents(text):
     return ''.join(pieces).strip(' ,')
 
 
-def _clean(raw, cap=160):
-    t = re.sub(r'\s+', ' ', str(raw or '')).strip(' .,')
-    t = re.sub(r'^(Documents Required?|Eligibility( Criteria)?|Benefits?|How to Apply|Application|Details)\s*:?\s*',
-               '', t, flags=re.IGNORECASE).strip(' .,')
-    if len(t) > cap:
-        # Cut on a word boundary, then drop any dangling preposition so the
-        # voice never says "...fee receipt from" before switching sentence.
-        words = t[:cap].rsplit(' ', 1)[0].rstrip(' .,;:').split()
-        while words and words[-1].lower().strip('.,;:') in TRAILING_STOPWORDS:
-            words.pop()
-        t = ' '.join(words)
-    t = t.rstrip(' .,;:')
-    if t and t[-1] not in '.!?':
-        t += '.'
-    return t
+def _clean(raw, cap=320):
+    """Normalise a record field, cutting only at sentence boundaries.
+
+    The old word-boundary cap could turn "income must not exceed Rs. 2.5 lakh"
+    into "income must not exceed" and could cut a document list mid-item.
+    Now: sentences are kept whole; a comma list is kept at item boundaries;
+    if the opening item alone is too long it is dropped rather than cut. """
+    t = _tidy(_separate_documents(raw))
+    if not t or len(t) <= cap:
+        return _end(t) if t else ''
+    if ',' in t or ';' in t:
+        items = [i.strip(' .') for i in re.split(r'\s*[,;]\s*|(?<=\.)\s+', t) if i.strip(' .')]
+        kept, used = [], 0
+        for item in items:
+            extra = len(item) + (2 if kept else 0)
+            if kept and used + extra > cap:
+                break
+            if not kept and len(item) > cap:
+                break
+            kept.append(item)
+            used += extra
+        if kept:
+            return _end(', '.join(kept))
+        return ''
+    return clip_sentences(t, budget=cap, hard=max(cap, 320), more='')
 
 _PREFIX_RE = re.compile(
     r'^(Documents Required?|Eligibility( Criteria)?|Benefits?|How to Apply|Application|Details)\s*:?\s*',
@@ -182,7 +192,7 @@ def _grounded_sentence(rec, needle):
 def renewal_line(rec):
     sent = _grounded_sentence(rec, 'renew')
     if sent:
-        return f"Record ke mutabik, {_clean(sent, 200)}"
+        return f"Record ke mutabik, {clip_sentences(sent, 200)}"
     return "Is record mein renewal ki jaankari nahi hai. Official page pe dekhiye."
 
 
@@ -201,7 +211,7 @@ def deadline_line(rec):
     blob = ' '.join(str(rec.get(k) or '') for k in ('application', 'details', 'benefits'))
     match = DATE_RE.search(blob)
     if match:
-        return f"Record ke mutabik, {_clean(match.group(1), 130)}"
+        return f"Record ke mutabik, {clip_sentences(match.group(1), 130)}"
     return ("Is record mein last date nahi di gayi. Scheme ka official page "
             "scholarships.gov.in pe kholiye, wahan current date dikhegi.")
 
@@ -234,7 +244,7 @@ def compose(rec, aspects, overview=False):
     if 'status' in aspects:
         out.append(status_line(rec))
     if 'apply' in aspects:
-        t = _clean(rec.get('application'), 150)
+        t = clip_sentences(rec.get('application'), 150, more=' Baaki ki jaankari official page pe hai.')
         if t:
             out.append(f"Apply kaise kare. {t}")
     if not out:
