@@ -28,7 +28,7 @@
 ![Siddha — ask by voice, get a grounded scholarship answer](docs/demo.webp)
 
 <p align="center">
-  <a href="./docs/demo.mp4"><b>▶ Watch the 54-second demo</b></a>
+  <a href="./docs/demo.mp4"><b>▶ Watch the 2-minute demo</b></a>
   &nbsp;·&nbsp;
   <a href="./docs/architecture.md">Architecture</a>
   <br/>
@@ -173,7 +173,7 @@ Everything (model pre-download, healthcheck, non-root user) is baked in — no m
 Fork → branch → `make lint test` → PR → CI green → 1 review. See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ## Roadmap
-- **Shipped (v2.3)** — grounded Hinglish voice loop, BGE-M3 hybrid FAISS + BM25 retrieval, state-aware routing, 54-second demo
+- **Shipped (v2.3)** — grounded Hinglish voice loop, BGE-M3 hybrid FAISS + BM25 retrieval, state-aware routing, 2-minute demo
 - **v2.3** — ~~state-aware scheme selection~~ **shipped** (query-aware Central/State routing); eligibility parsing from voice remains
 - **v2.4** — opt-in LLM phrasing (grounded in retrieved records, requires a key); streaming TTS
 - **v3.0** — voice-based form filling (auto-populate NSP fields from speech)
