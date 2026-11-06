@@ -5,19 +5,32 @@ import re
 import places
 
 ASPECT_KEYS = {
-    'documents': ['document', 'paper', 'kagaz', 'needed', 'proof', 'certificate', 'दस्तावेज़'],
-    'eligibility': ['eligible', 'eligibility', 'qualification', 'who can', 'patricia', 'kaise eligible', 'patr', 'पात्रता'],
-    'benefit': ['benefit', 'amount', 'kitna', 'paisa', 'paise', 'rupees', 'rupee', 'लाभ'],
-    'apply': ['apply', 'portal', 'nsp', 'आवेदन'],
-    'renewal': ['renew', 'renewal', 'purana'],
-    'status': ['status', 'track', 'application id'],
+    'documents': ['document', 'paper', 'kagaz', 'needed', 'proof', 'certificate',
+                  'दस्तावेज', 'कागज', 'ஆவண'],
+    'eligibility': ['eligible', 'eligibility', 'qualification', 'who can', 'kaise eligible',
+                    'patra', 'patrata', 'patrta', 'पात्रता', 'पात्र', 'தகுதி'],
+    'benefit': ['benefit', 'amount', 'kitna', 'paisa', 'paise', 'rupees', 'rupee',
+                'लाभ', 'राशि', 'பலன்', 'தொகை'],
+    'apply': ['apply', 'portal', 'nsp', 'आवेदन', 'விண்ணப்ப'],
+    'renewal': ['renew', 'renewal', 'purana', 'नवीनीकरण', 'புதுப்பி'],
+    'status': ['status', 'track', 'application id', 'स्थिति', 'நிலை'],
     'deadline': ['deadline', 'last date', 'last day', 'kab tak', 'akhri',
-                 'tareekh', 'tarikh', 'अंतिम तारीख', 'आखिरी तारीख'],
+                 'tareekh', 'tarikh', 'अंतिम तारीख', 'आखिरी तारीख', 'अंतिम तिथि',
+                 'கடைசி தேதி', 'கடைசி நாள்'],
 }
+
+
+def _has_key(ql, key):
+    """ASCII keys must start a word ("paper" must not fire on "newspaper");
+    Indic keys are matched as substrings because script word boundaries are fuzzy."""
+    if key.isascii():
+        return re.search(rf'(?<![a-z]){re.escape(key)}', ql) is not None
+    return key in ql
+
 
 def explicit_aspects(q):
     ql = q.lower()
-    return [a for a, ks in ASPECT_KEYS.items() if any(k in ql for k in ks)]
+    return [a for a, ks in ASPECT_KEYS.items() if any(_has_key(ql, k) for k in ks)]
 
 def classify_aspects(q):
     return explicit_aspects(q) or ['eligibility', 'benefit', 'documents', 'apply']
@@ -87,6 +100,97 @@ def _clean(raw, cap=160):
         t += '.'
     return t
 
+_PREFIX_RE = re.compile(
+    r'^(Documents Required?|Eligibility( Criteria)?|Benefits?|How to Apply|Application|Details)\s*:?\s*',
+    re.IGNORECASE)
+_ABBR = re.compile(r'(?i)\b(rs|no|dr|mr|mrs|ms|sr|jr|vs|approx|govt|dept|etc)\.')
+_LATIN_ABBR = re.compile(r'(?i)\b(i\.e|e\.g)\.')
+_LIST_NO = re.compile(r'(?<![\d.])(\d{1,2})\.(?=\s)')
+_DOT = '\x00'
+
+
+def _tidy(raw):
+    t = re.sub(r'\s+', ' ', str(raw or '')).strip(' .,')
+    return _PREFIX_RE.sub('', t).strip(' .,')
+
+
+def _end(t):
+    return t if not t or t[-1] in '.!?' else t + '.'
+
+
+def _sentences(text):
+    """Split on sentence ends without breaking "Rs. 2.5 lakh", "No. 4" or "1. Aadhaar"."""
+    t = _ABBR.sub(lambda m: m.group(1) + _DOT, text)
+    t = _LATIN_ABBR.sub(lambda m: m.group(0).replace('.', _DOT), t)
+    t = _LIST_NO.sub(lambda m: m.group(1) + _DOT, t)
+    return [p.replace(_DOT, '.').strip() for p in re.split(r'(?<=[.;!?])\s+', t) if p.strip()]
+
+
+def clip_sentences(raw, budget=150, hard=320, more=' Baaki ki jaankari official page pe hai.'):
+    """Shorten a rule (eligibility, benefit) without ever speaking half a rule.
+
+    Whole sentences only. If sentences are left out, say so. A first sentence
+    too long to speak whole is not read in part: the student is sent to the
+    official page instead of hearing a clause with its condition cut off."""
+    t = _tidy(raw)
+    if not t:
+        return ''
+    if len(t) <= budget:
+        return _end(t)
+    sents = _sentences(t)
+    first = sents[0].rstrip(' ;')
+    if len(first) > hard:
+        return 'Yeh shart lambi hai, poori jaankari official page pe dekhiye.'
+    kept, used = [first], len(first)
+    for sent in sents[1:]:
+        sent = sent.rstrip(' ;')
+        if used + 1 + len(sent) > budget:
+            break
+        kept.append(sent)
+        used += 1 + len(sent)
+    out = ' '.join(_end(k) for k in kept)
+    return out + (more if len(kept) < len(sents) else '')
+
+
+def clip_items(raw, budget=300, more=' Aur bhi documents hain, poori list official page pe dekhiye.'):
+    """Shorten a document list at an item boundary and say when items were left out."""
+    t = _tidy(_separate_documents(raw))
+    if not t:
+        return ''
+    if len(t) <= budget:
+        return _end(t)
+    items = [i.strip(' .') for i in re.split(r'\s*[,;]\s*|(?<=\.)\s+', t) if i.strip(' .')]
+    kept, used = [], 0
+    for item in items:
+        extra = len(item) + (2 if kept else 0)
+        if kept and used + extra > budget:
+            break
+        kept.append(item)
+        used += extra
+    return _end(', '.join(kept)) + (more if len(kept) < len(items) else '')
+
+
+def _grounded_sentence(rec, needle):
+    """First sentence of the record that mentions `needle`, else None."""
+    blob = ' '.join(str(rec.get(k) or '') for k in ('application', 'details', 'eligibility', 'documents', 'benefits'))
+    for sent in _sentences(re.sub(r'\s+', ' ', blob)):
+        if needle in sent.lower():
+            return sent
+    return None
+
+
+def renewal_line(rec):
+    sent = _grounded_sentence(rec, 'renew')
+    if sent:
+        return f"Record ke mutabik, {_clean(sent, 200)}"
+    return "Is record mein renewal ki jaankari nahi hai. Official page pe dekhiye."
+
+
+def status_line(rec):
+    return ("Is record mein application status dekhne ka tareeka nahi diya gaya. "
+            "Jis portal pe apply kiya, uska official page dekhiye.")
+
+
 DATE_RE = re.compile(
     r'((?:last date|closing date|deadline|last day)[^.]{0,100})', re.IGNORECASE
 )
@@ -102,22 +206,33 @@ def deadline_line(rec):
             "scholarships.gov.in pe kholiye, wahan current date dikhegi.")
 
 
-def compose(rec, aspects):
+def compose(rec, aspects, overview=False):
+    """Answer the requested aspects from the record.
+
+    overview=True is the "tell me about this scholarship" answer: the opening
+    sentence of eligibility and benefit only, with no per-field marker because
+    the closing line already says it is a summary."""
     out = []
+    more_e = '' if overview else ' Baaki conditions official page pe dekhiye.'
+    more_b = '' if overview else ' Baaki ki jaankari official page pe hai.'
     if 'eligibility' in aspects:
-        t = _clean(rec.get('eligibility'), 150)
+        t = clip_sentences(rec.get('eligibility'), 100 if overview else 150, more=more_e)
         if t:
             out.append(f"Eligibility sun lo. {t}")
     if 'benefit' in aspects:
-        t = _clean(rec.get('benefits'), 140)
+        t = clip_sentences(rec.get('benefits'), 100 if overview else 140, more=more_b)
         if t:
             out.append(f"Benefit yeh hai. {t}")
     if 'documents' in aspects:
-        t = _clean(_separate_documents(rec.get('documents')), 170)
+        t = clip_items(rec.get('documents'), 240)
         if t:
             out.append(f"Documents chahiye. {t}")
     if 'deadline' in aspects:
         out.append(deadline_line(rec))
+    if 'renewal' in aspects:
+        out.append(renewal_line(rec))
+    if 'status' in aspects:
+        out.append(status_line(rec))
     if 'apply' in aspects:
         t = _clean(rec.get('application'), 150)
         if t:
@@ -128,21 +243,17 @@ def compose(rec, aspects):
 
 def answer(query, hits, follow_up=False):
     aspects = classify_aspects(query)
-    if 'status' in aspects:
-        spoken = ("Suno. Status check karne ke liye portal pe login karke my applications kholo, "
-                  "wahaan status dikhega. Agar payment nahi aayi hai, PFMS portal pe application ID daaliye. "
-                  "Aur yaad rakhiye, Aadhaar bank account se linked hona bahut zaroori hai, warna paisa nahi aata.")
-        return spoken, [{'name': 'NSP official flow', 'score': None, 'level': 'official'}], True
-    if 'renewal' in aspects:
-        spoken = ("Suno. Renewal ke liye renewal option chuniye, previous year ki fee receipt aur "
-                  "income certificate upload kijiye. Institute verify karega, aur seedha bank mein paisa aayega.")
-        return spoken, [{'name': 'NSP renewal flow', 'score': None, 'level': 'official'}], True
     if not hits:
         spoken = ("Suno. Mujhe iss sawal ka jawab nahi mila. Scholarships.gov.in pe check kijiye, "
                   "wahaan sab schemes aur last dates dikhenge.")
         return spoken, [], False
     rec = hits[0]['record']
-    body = compose(rec, aspects)
+    # No specific question ("scholarship batao") gets a short overview that fits one
+    # spoken turn instead of all four sections; documents/apply are one question away.
+    overview = not explicit_aspects(query)
+    if overview:
+        aspects = ['eligibility', 'benefit']
+    body = compose(rec, aspects, overview=overview)
     # A State scheme must never sound nationwide. If the student did not name
     # a state, say which state the chosen scheme belongs to.
     state_note = ''
@@ -155,6 +266,9 @@ def answer(query, hits, follow_up=False):
     else:
         lead = f"Suno. Sabse relevant scheme yeh hai, {rec['name']}."
     closing = "Official details scholarships.gov.in pe dekhiye, wahan current dates dikhengi."
+    if overview:
+        closing = ("Documents ya apply kaise karein, yeh bhi pooch sakte hain. "
+                   "Poori shartein official page pe dekhiye.")
     if aspects == ['deadline']:
         closing = ""  # the deadline line already points at the official page
     spoken = f"{lead}{state_note} {body} {closing}".strip()

@@ -20,9 +20,11 @@ import conversation
 from config import GNANI_API_KEY, logger
 from pipeline import (
     FFMPEG_BIN,
+    MAX_AUDIO_BYTES,
     STT_BREAKER,
     TTS_BREAKER,
     rag_answer,
+    speakable,
     synthesize,
     to_wav,
     transcribe,
@@ -41,9 +43,20 @@ app = FastAPI(title='Siddha', version='2.2.0', docs_url=None, redoc_url=None)
 STATIC = pathlib.Path(__file__).parent / 'static'
 app.mount('/static', StaticFiles(directory=STATIC), name='static')
 
+_IP_TABLE_SOFT_CAP = 10_000
+
+
+def _evict_idle_ips(now: float):
+    """Drop clients with no call in the last minute so the table cannot grow without bound."""
+    for ip in [k for k, v in _ip_calls.items() if not v or now - v[-1] >= 60]:
+        del _ip_calls[ip]
+
+
 def _rate_limit(ip: str):
     now = time.time()
     with _ip_lock:
+        if len(_ip_calls) > _IP_TABLE_SOFT_CAP:
+            _evict_idle_ips(now)
         calls = [t for t in _ip_calls[ip] if now - t < 60]
         if len(calls) >= RATE_LIMIT:
             _ip_calls[ip] = calls
@@ -53,7 +66,8 @@ def _rate_limit(ip: str):
 
 @app.middleware('http')
 async def _global(request: Request, call_next):
-    if request.url.path.startswith('/api'):
+    # /api/health is the container healthcheck: it must never spend a client's quota.
+    if request.url.path.startswith('/api') and request.url.path != '/api/health':
         try:
             _rate_limit(request.client.host if request.client else 'anon')
         except HTTPException as e:
@@ -122,14 +136,20 @@ def _speak_or_none(reply: str):
         _count('tts_degraded')
         return None
 
+
+def _audio_fields(reply: str):
+    """Audio plus a flag telling the client when the voice covers only the first part of the text."""
+    audio = _speak_or_none(reply)
+    truncated = bool(audio) and speakable(reply)[1]
+    return {'audio_wav_b64': audio, 'audio_truncated': truncated}
+
 @app.post('/api/ask_text')
 def ask_text(q: TextQuery):
     sid = _session_id(q.session_id)
     reply, sources, meta = rag_answer(q.text, sid)
     _count('rag_answered')
     return {'transcript': q.text, 'reply': reply, 'sources': sources,
-            'session_id': sid, **meta,
-            'audio_wav_b64': _speak_or_none(reply)}
+            'session_id': sid, **meta, **_audio_fields(reply)}
 
 @app.get('/api/session/{session_id}')
 def session_state(session_id: str):
@@ -149,22 +169,24 @@ def session_reset(session_id: str):
     return {'session_id': session_id, 'reset': True}
 
 @app.post('/api/ask_audio')
-async def ask_audio(audio: UploadFile = File(...), session_id: str = Form('')):
-    raw = await audio.read(8 * 1024 * 1024 + 1)
-    if len(raw) > 8 * 1024 * 1024:
+def ask_audio(audio: UploadFile = File(...), session_id: str = Form('')):
+    # A plain `def` route: FastAPI runs it in the threadpool. ffmpeg, the provider
+    # calls and the embedding model are all blocking, and as `async def` any one
+    # slow turn would have frozen every other request, /api/health included.
+    sid = _session_id(session_id)  # reject a bad id before any STT credit is spent
+    raw = audio.file.read(MAX_AUDIO_BYTES + 1)
+    if len(raw) > MAX_AUDIO_BYTES:
         raise HTTPException(413, 'Audio too large (max 8 MB)')
     suffix = pathlib.Path(audio.filename or 'q.webm').suffix or '.webm'
     suffix = suffix if suffix in {'.webm', '.wav', '.mp3', '.ogg', '.m4a', '.flac', '.aac'} else '.webm'
     wav = to_wav(raw, suffix)
     query, lang = transcribe(wav)
-    sid = _session_id(session_id)
     if not query.strip():
         return {'transcript': '', 'reply': 'Suno, awaaz samajh nahi aayi. Thodi der phir se kahein.',
                 'detected_language_code': lang, 'sources': [], 'audio_wav_b64': None,
-                'session_id': sid, 'follow_up': False,
+                'audio_truncated': False, 'session_id': sid, 'follow_up': False,
                 'context_used': False, 'context_name': None}
     reply, sources, meta = rag_answer(query, sid)
     _count('rag_answered')
     return {'transcript': query, 'reply': reply, 'detected_language_code': lang,
-            'sources': sources, 'session_id': sid, **meta,
-            'audio_wav_b64': _speak_or_none(reply)}
+            'sources': sources, 'session_id': sid, **meta, **_audio_fields(reply)}

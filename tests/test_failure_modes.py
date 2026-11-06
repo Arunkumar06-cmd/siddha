@@ -1,6 +1,7 @@
 """Failure-mode tests: provider timeouts, breaker, concurrency, rate limit, artifact cleanup."""
 import concurrent.futures as cf
 import io
+import time
 import wave
 
 import pytest
@@ -40,6 +41,7 @@ class FakeResp:
         self.status_code = status
         self._body = body or {'success': True, 'transcript': 'test', 'detected_language_code': 'hi-IN'}
         self.content = content
+        self.text = ''
 
     def json(self):
         return self._body
@@ -147,3 +149,93 @@ def test_health_is_independent_of_working_directory(tmp_path, monkeypatch):
     r = TestClient(server.app).get('/api/health')
     assert r.status_code == 200
     assert r.json()['status'] == 'ok'
+
+
+# -- regressions from the pre-submission review ------------------------------
+
+def test_stt_retry_resends_the_whole_upload(monkeypatch):
+    """The retry used to reuse a file handle already read to EOF, so the second
+    attempt uploaded an empty file."""
+    import server
+
+    server.STT_BREAKER.record_success()
+    sizes = []
+
+    def fake_post(url, **kw):
+        sizes.append(len(kw['files']['audio_file'][1]))
+        if len(sizes) == 1:
+            raise requests.Timeout('slow')
+        return FakeResp(200)
+
+    monkeypatch.setattr('requests.post', fake_post)
+    monkeypatch.setattr('time.sleep', lambda s: None)  # skip the retry backoff
+    wav = server.to_wav(silent_wav_bytes(1), '.wav')
+    server.transcribe(wav)
+    assert len(sizes) == 2
+    assert sizes[0] == sizes[1] > 0
+
+
+def test_wav_is_deleted_even_when_the_circuit_is_open():
+    import pipeline
+
+    wav = pipeline.to_wav(silent_wav_bytes(1), '.wav')
+    pipeline.STT_BREAKER._fails = pipeline.STT_BREAKER.threshold
+    pipeline.STT_BREAKER._opened_at = time.time()
+    try:
+        with pytest.raises(HTTPException):
+            pipeline.transcribe(wav)
+        assert not wav.exists(), 'temp file leaked when the circuit was open'
+    finally:
+        pipeline.STT_BREAKER.record_success()
+
+
+def test_provider_4xx_does_not_trip_the_breaker(monkeypatch):
+    """A bad upload is the caller's problem; six of them must not take STT down for everyone."""
+    import pipeline
+
+    pipeline.STT_BREAKER.record_success()
+    monkeypatch.setattr('requests.post', lambda url, **kw: FakeResp(400, body={}))
+    for _ in range(6):
+        wav = pipeline.to_wav(silent_wav_bytes(1), '.wav')
+        with pytest.raises(HTTPException) as exc:
+            pipeline.transcribe(wav)
+        assert exc.value.status_code == 422
+    assert pipeline.STT_BREAKER.state() == 'closed'
+
+
+def test_tts_text_is_cut_on_sentence_boundaries(monkeypatch):
+    """The reply used to be sliced at character 600, mid-sentence or mid-tag."""
+    import pipeline
+
+    pipeline.TTS_BREAKER.record_success()
+    sent = []
+
+    def fake_post(url, **kw):
+        sent.append(kw['json']['text'])
+        return FakeResp(200, content=b'WAV')
+
+    monkeypatch.setattr('requests.post', fake_post)
+    long_reply = ' '.join(f'Yeh sentence number {i} hai.' for i in range(80))
+    pipeline.synthesize(long_reply)
+    assert len(sent[0]) <= pipeline.MAX_TTS_CHARS
+    assert sent[0].rstrip().endswith('.')
+    assert not sent[0].rstrip().endswith('<pauses>')
+    assert pipeline.speakable(long_reply)[1] is True, 'the client must be told the audio is shorter than the text'
+
+
+def test_oversized_upload_is_rejected_before_any_decoding(monkeypatch):
+    import pipeline
+    import server
+
+    monkeypatch.setattr(pipeline, 'MAX_AUDIO_BYTES', 10)
+    monkeypatch.setattr(server, 'MAX_AUDIO_BYTES', 10)
+    r = TestClient(server.app).post('/api/ask_audio', files={'audio': ('q.wav', silent_wav_bytes(1), 'audio/wav')})
+    assert r.status_code == 413
+
+
+def test_non_audio_upload_is_refused_without_calling_ffmpeg():
+    import pipeline
+
+    with pytest.raises(HTTPException) as exc:
+        pipeline.to_wav(b'#EXTM3U\nhttp://example.com/x\n', '.wav')
+    assert exc.value.status_code == 415

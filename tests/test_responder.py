@@ -24,9 +24,12 @@ def test_no_hits_returns_safe_fallback():
     assert not canned and 'scholarships.gov.in' in spoken.lower()
     assert sources == []
 
-def test_status_canned_flow():
-    spoken, _, canned = answer('status check kaise kare', [])
-    assert canned and 'PFMS' in spoken
+def test_status_question_with_no_hits_gets_the_safe_fallback():
+    """There used to be a hard-coded NSP/PFMS flow here. It invented a process for
+    schemes that are not on NSP, so it is gone; see tests/test_regressions.py."""
+    spoken, sources, canned = answer('status check kaise kare', [])
+    assert not canned and sources == []
+    assert 'PFMS' not in spoken
 
 
 def test_clean_never_cuts_mid_word():

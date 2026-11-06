@@ -2,6 +2,21 @@
 All notable changes to Siddha. Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Fixed (pre-submission review)
+- **No invented process.** The hard-coded NSP/PFMS "status" and "renewal" answers (which fired for any scheme, including State schemes not on NSP, and ran before retrieval) are removed. Status and renewal now quote the record or say it is silent.
+- **Never speak half a rule.** Eligibility and benefit text is clipped on whole sentences (`clip_sentences`, aware of "Rs. 2.5" and "No. 4"); an overlong first sentence is sent to the official page instead of being read in part. Document lists are clipped on item boundaries (`clip_items`).
+- **Audio is cut on sentence boundaries**, never by string index. The old `[:600]` slice could split a sentence or a `<pauses>` tag; the API now also reports `audio_truncated`.
+- **STT retry resent an empty file** (the handle was already read to EOF); the upload is now held as bytes.
+- **Circuit breaker** now has a real half-open state (one probe), no longer counts provider 4xx as outages, and logs open/half-open/closed transitions.
+- **Temp-file leaks** closed: the WAV is removed when the circuit is open or decoding fails.
+- **Hindi/Tamil follow-ups**: the tokenizer discarded every non-Latin character, so a Devanagari or Tamil question about a *new* scheme was answered from the previous one. Devanagari and Tamil are now tokenised (NFC-normalised) with aspect/filler/pronoun lists; unknown Indic words count as topic words and force retrieval.
+- **Aspect keywords match on word starts** (`paper` no longer fires on `newspaper`; removed the `patr`/`patricia` entries).
+- `ask_audio` is a plain `def` route, so ffmpeg, provider calls and embedding no longer block the event loop and `/api/health`.
+- Uploads are allow-listed by container signature and decoded with `-nostdin`, a file/pipe protocol whitelist, no non-audio streams and a 30 s cap.
+- Docker: the baked embedding model (`HF_HOME=/opt/hf`) is now copied into the runtime image and the runtime is offline, so the first request no longer downloads ~2 GB; CPU torch is pinned as in CI.
+- Spoken layer: em/en dashes were never normalised (a `noqa` comment had swallowed the rule).
+- README: removed claims the code did not support, removed hot-linked banner widgets, dropped static test/coverage badges, added **Known limitations**.
+
 ### Added
 - **Conversation memory** (`src/context.py`, `src/conversation.py`): deterministic follow-up resolution keyed by session. Aspect-only follow-ups answer from the last scheme with no new retrieval; state/category refinements re-retrieve with the prior scheme as an anchor; new scheme names bypass context. Sessions are text-only, in-memory, 30-minute TTL, 500-session cap, 8-turn cap.
 - Session endpoints `GET/DELETE /api/session/{id}`; page refresh restores the last turn; “Start a new conversation” resets it.

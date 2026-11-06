@@ -4,7 +4,11 @@ import sys
 
 import pytest
 
-sys.path.insert(0, str(pathlib.Path(__file__).parent.parent / 'src'))
+ROOT = pathlib.Path(__file__).parent.parent
+# src/ for the modules, the repo root for server.py: a bare `pytest` (not `python -m pytest`)
+# does not put the root on sys.path.
+sys.path.insert(0, str(ROOT / 'src'))
+sys.path.insert(0, str(ROOT))
 
 
 @pytest.fixture(autouse=True)

@@ -1,29 +1,20 @@
-<p align="center">
-  <img src="https://capsule-render.vercel.app/api?type=waving&section=header&height=180&color=0:22C1A0,100:FF8A00&text=Siddha&fontSize=64&fontAlignY=38&desc=Voice-first%20scholarship%20guide%20for%20India&descSize=17&descAlignY=63&fontColor=071926&animation=fadeIn" alt="Siddha — voice-first scholarship guide for India" width="100%" />
-</p>
-
-<div align="center">
-  <img src="https://readme-typing-svg.demolab.com?font=Inter&weight=600&size=21&pause=1000&color=22C1A0&center=true&vCenter=true&width=760&lines=Ask%20in%20Hinglish%2C%20get%20the%20exact%20scholarship;Grounded%20in%201%2C142%20official%20myScheme%20schemes;Powered%20by%20Gnani%20Prisma%20%2B%20Timbre" alt="Ask in Hinglish, get the exact scholarship — grounded in 1,142 official myScheme schemes — powered by Gnani Prisma + Timbre" />
-</div>
+<h1 align="center">Siddha</h1>
 
 <p align="center">
   <b>A voice-first scholarship guide for India.</b><br/>
-  Ask in Hinglish, Hindi or Tamil. Get the exact scheme, the documents you need, and where to check the current deadline — spoken back in your language.
+  Ask in Hinglish, Hindi or Tamil. Get the matching scheme, the documents it lists, and where to check the current deadline. Answers are spoken in Hinglish.<br/>
+  Grounded in 1,142 official myScheme records. Powered by Gnani Prisma (speech-to-text) and Timbre (text-to-speech).
 </p>
 
 <p align="center">
   <a href="https://github.com/Arunkumar06-cmd/siddha/actions"><img src="https://img.shields.io/github/actions/workflow/status/Arunkumar06-cmd/siddha/ci.yml?branch=main&style=for-the-badge&logo=githubactions&logoColor=white" alt="CI status"></a>
-  <a href="https://github.com/Arunkumar06-cmd/siddha"><img src="https://img.shields.io/badge/tests-63%20passing-22c1a0?style=for-the-badge&logo=pytest&logoColor=white" alt="63 tests passing"></a>
-  <a href="https://github.com/Arunkumar06-cmd/siddha"><img src="https://img.shields.io/badge/coverage-86%25-22c1a0?style=for-the-badge&logo=codecov&logoColor=white" alt="Coverage 86%"></a>
   <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.11%2B-ffb84d?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.11+"></a>
   <a href="./LICENSE"><img src="https://img.shields.io/github/license/Arunkumar06-cmd/siddha?style=for-the-badge&logo=opensourceinitiative&logoColor=white" alt="MIT license"></a>
   <a href="#roadmap"><img src="https://img.shields.io/badge/version-2.2.0-ff8a00?style=for-the-badge&logo=git&logoColor=white" alt="Version 2.2.0"></a>
 </p>
 
-<img src="https://capsule-render.vercel.app/api?type=wave&color=0:22C1A0,100:FF8A00&height=42" width="100%" alt="" />
-
 > [!IMPORTANT]
-> **No hallucinated eligibility.** Every answer is assembled from 1,142 official myScheme scholarship records. Siddha never invents a deadline, amount, or required document.
+> **Grounded, or silent.** Every statement about a scheme is composed from that scheme's myScheme record. Where the record has no deadline, amount or document list, Siddha says the record is silent and points to the official page instead of filling the gap. Rules are read whole or sent to the official page, never cut mid-condition.
 
 ![Siddha — ask by voice, get a grounded scholarship answer](docs/demo.webp)
 
@@ -50,16 +41,16 @@
 
 ## Features
 - **Voice-in, voice-out.** Browser mic → Prisma STT → retrieval → Timbre TTS. No chat box required.
-- **Grounded answers, not generative ones.** The answer is assembled from 1,142 official myScheme records. If a fact isn't in the corpus, Siddha doesn't invent it. The UI shows the sources it used.
+- **Grounded answers, not generative ones.** The answer is assembled from 1,142 official myScheme records. If a fact isn't in the record, Siddha says so. The UI shows the sources it used. Status and renewal questions are answered only from what the record says; there is no hard-coded portal flow.
 - **Conversation, not cold starts.** A follow-up like “Aur last date kya hai?” resolves against the scheme already on the table; a new scheme name or a new state still retrieves fresh. Sessions are text-only, in-memory, and expire after 30 minutes. The UI shows the carried scheme, so context is visible, not guessed.
 - **States stay in their lane.** A state-specific question gets that state's schemes first; a national question gets Central schemes. When a State scheme is chosen for a state-less query, it's named as one.
-- **Eligibility questions work too.** Ask "qualify hun kya?" and Siddha checks your profile against the actual record text — the verdict includes the line it matched. Opt-in via any OpenAI-compatible endpoint (e.g. a free DeepSeek key). Without a key the original grounded path answers unchanged.
-- **Survives call-quality audio.** 12 code-mixed utterances on 8 kHz band-passed telephony with traffic and fan noise: Prisma transcribes all 12; 11/12 keep every critical term (`docs/eval-audio.md`).
-- **Tamil is native, not bolted on.** A Tamil-script question roundtrips in 0.14 s with `detected_language_code=ta-IN`.
+- **Eligibility questions work too.** Ask "qualify hun kya?" and Siddha checks your profile against the actual record text — the verdict includes the line it matched. Opt-in: it runs only when an OpenAI-compatible endpoint is configured, and then the text of the question (which may contain income or category) is sent to that provider. Without a key nothing leaves the server except the Gnani STT/TTS calls, and the grounded path answers unchanged.
+- **Call-quality audio probe.** A small probe (n = 12 code-mixed utterances, 8 kHz band-passed telephony with traffic and fan noise): Prisma transcribes all 12; 11/12 keep every critical term (`docs/eval-audio.md`). It shows the idea works; it is not a benchmark.
+- **Hindi and Tamil questions are understood.** A Tamil-script question is transcribed with `detected_language_code=ta-IN`, and Devanagari/Tamil follow-ups are resolved by the same context rules. The spoken answer is Hinglish for now (see Known limitations).
 - **Retrieval that mixes two signals.** BGE-M3 multilingual embeddings for semantic match, BM25 for exact keywords, fused with reciprocal rank fusion.
 - **Hinglish-first** — answers are shaped for Indian code-mixed speech, not translated English.
 - **Cheap to run.** One turn = exactly 2 Gnani calls (one STT, one TTS). Roughly 2,500 full voice turns per 5,000 programme credits.
-- **Crash-safe** — circuit breakers, retry with backoff+jitter, per-IP rate limits, typed errors.
+- **Fails soft.** Circuit breakers with a single half-open probe, retry with backoff and jitter that resends the whole upload, per-IP rate limits, typed errors, and a text-only reply if voice synthesis is down.
 
 ## Quick start
 ```bash
@@ -78,7 +69,8 @@ Open http://127.0.0.1:8765 — tap the mic, ask in Hinglish.
 **Prerequisites:** Python 3.11+, macOS/Linux, ffmpeg on PATH, ~2 GB free disk (CPU torch), a valid `GNANI_API_KEY` from [app.gnani.ai](https://app.gnani.ai/).
 
 ```bash
-pip install --extra-index-url https://download.pytorch.org/whl/cpu -r requirements.txt
+pip install --index-url https://download.pytorch.org/whl/cpu "torch==2.12.1"   # CPU wheel, as in CI and Docker
+pip install -r requirements.txt
 ```
 
 Environment variables (put in `~/.env` locally; never commit):
@@ -143,7 +135,7 @@ curl -s -X POST http://127.0.0.1:8765/api/ask_audio \
 ├── data/scholarships.jsonl   # 1,142 schemes (extracted from myScheme)
 ├── data/scholarships.faiss   # prebuilt FAISS index
 ├── specs/NFR.md         # non-functional requirements (explicit)
-├── tests/               # 63 tests, 86% coverage
+├── tests/               # unit, failure-mode and regression tests
 ├── docs/                # demo video, screenshot, architecture, ADRs, API
 └── .github/workflows/   # CI + security
 ```
@@ -178,6 +170,16 @@ Any Docker host works. For Hugging Face Spaces (free):
 Everything (model pre-download, healthcheck, non-root user) is baked in — no manual steps beyond the secret.
 </details>
 
+## Known limitations
+Stated up front so nobody has to find them.
+
+- **Answers are Hinglish.** Hindi and Tamil questions are understood, but the reply text and voice (`hi-en`) are always Hinglish templates.
+- **Retrieval is good, not perfect.** On the 30-query labelled set (`scripts/eval_retrieval.py`) recall@1 is 0.67 and recall@5 is 0.77. The state-routing multipliers were set with that set in view and there is no held-out split yet, so treat the figures as optimistic. Siddha always answers from the top hit; it does not yet ask "did you mean A or B?" when two schemes are close.
+- **Deadlines are not in most records.** Only 50 of the 1,142 records (4.4%) contain a last-date or deadline phrase, and the corpus has no "as of" date. For the rest, the answer to "last date?" is "the record has none, check scholarships.gov.in".
+- **Long rules are summarised, not read in full.** Eligibility and benefit text is spoken as whole sentences up to a length budget; the rest is sent to the official page. The voice may cover less than the on-screen text (the API reports `audio_truncated`).
+- **Single process, in-memory sessions.** A restart clears conversations. One worker, one machine.
+- **Observability is minimal.** Two counters, circuit state and log lines; no request IDs, per-stage latency or Prometheus export yet.
+
 ## Contributing
 Fork → branch → `make lint test` → PR → CI green → 1 review. See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
@@ -191,8 +193,3 @@ Fork → branch → `make lint test` → PR → CI green → 1 review. See [CONT
 MIT — see [LICENSE](./LICENSE).
 
 *Built with FastAPI, Gnani Prisma/Timbre and FAISS by Arunkumar Karumbayiram.*
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://capsule-render.vercel.app/api?type=waving&section=footer&height=150&color=0:071926%2C55:0B2E3E%2C100:0C3344&text=Built%20with%20Gnani%20Prisma%20%2B%20Timbre&fontSize=24&fontAlignY=38&desc=Ask%20by%20voice.%20Answer%20from%20official%20data.&descSize=15&descAlignY=64&fontColor=EEF4F9&animation=fadeIn" />
-  <img src="https://capsule-render.vercel.app/api?type=waving&section=footer&height=150&color=0:C7E9DF,55:F5E3CB,100:FFFFFF&text=Built%20with%20Gnani%20Prisma%20%2B%20Timbre&fontSize=24&fontAlignY=38&desc=Ask%20by%20voice.%20Answer%20from%20official%20data.&descSize=15&descAlignY=64&fontColor=071926&animation=fadeIn" width="100%" alt="Built with Gnani Prisma + Timbre — ask by voice, answer from official data" />
-</picture>

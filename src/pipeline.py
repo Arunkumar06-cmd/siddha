@@ -45,10 +45,32 @@ if not FFMPEG_BIN:
 STT_BREAKER = CircuitBreaker('stt', threshold=5, cooldown_s=60)
 TTS_BREAKER = CircuitBreaker('tts', threshold=5, cooldown_s=60)
 
+def sniff_audio(raw: bytes) -> bool:
+    """Allow-list of container signatures the browser/mobile recorders produce.
+
+    ffmpeg picks its demuxer from content, not from the file name, so we refuse
+    anything that is not recognisably audio before it ever reaches ffmpeg
+    (playlist/concat/text demuxers are not something an upload should reach)."""
+    head = raw[:16]
+    return bool(
+        head[:4] == b'\x1aE\xdf\xa3'                         # WebM / Matroska
+        or (head[:4] == b'RIFF' and head[8:12] == b'WAVE')    # WAV
+        or head[:4] in (b'OggS', b'fLaC')                     # Ogg, FLAC
+        or head[:3] == b'ID3'                                 # MP3 with tag
+        or (len(head) > 1 and head[0] == 0xFF and head[1] & 0xE0 == 0xE0)  # MP3/ADTS sync
+        or head[4:8] == b'ftyp'                               # MP4 / M4A (Safari)
+    )
+
+
 def to_wav(raw: bytes, suffix: str) -> pathlib.Path:
-    """Decode to 16 kHz mono WAV for Prisma; always remove the source temp file."""
+    """Decode to 16 kHz mono WAV for Prisma; always remove temp files.
+
+    Input is allow-listed by signature, restricted to the file protocol, stripped
+    of non-audio streams and capped at MAX_WAV_SECONDS (Prisma's hard limit)."""
     if not FFMPEG_BIN:
         raise HTTPException(503, 'Audio decoding unavailable on this server')
+    if not sniff_audio(raw):
+        raise HTTPException(415, 'Unsupported audio. Use WebM, WAV, MP3, OGG, M4A or FLAC.')
     f_src = None
     with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as f:
         f.write(raw)
@@ -56,14 +78,20 @@ def to_wav(raw: bytes, suffix: str) -> pathlib.Path:
     dst = f_src + '.wav'
     try:
         subprocess.run(  # noqa: S603 - FFMPEG_BIN is an absolute which-resolved path
-            [FFMPEG_BIN, '-y', '-loglevel', 'error', '-i', f_src,
+            [FFMPEG_BIN, '-y', '-nostdin', '-loglevel', 'error',
+             '-protocol_whitelist', 'file,pipe', '-i', f_src,
+             '-vn', '-sn', '-dn', '-t', str(MAX_WAV_SECONDS),
              '-ar', '16000', '-ac', '1', dst],
             check=True, timeout=20, shell=False)
         return pathlib.Path(dst)
     except subprocess.CalledProcessError as e:
         logger.warning('ffmpeg_decode_failed src=%s', f_src)
+        with contextlib.suppress(OSError):
+            os.unlink(dst)
         raise HTTPException(415, 'Could not decode audio. Use WAV/MP3/OGG/M4A.') from e
     except subprocess.TimeoutExpired as e:
+        with contextlib.suppress(OSError):
+            os.unlink(dst)
         raise HTTPException(408, 'Audio decode timed out') from e
     finally:
         with contextlib.suppress(OSError):
@@ -72,88 +100,108 @@ def to_wav(raw: bytes, suffix: str) -> pathlib.Path:
 def _retryable(exc: Exception) -> bool:
     return isinstance(exc, (requests.Timeout, requests.ConnectionError))
 
+
+def _client_status(code: int) -> int:
+    """Map a provider 4xx to what the caller should see. The provider answered,
+    so none of these is an outage and none of them trips a circuit breaker."""
+    if code in (400, 413, 415, 422):
+        return 422
+    if code == 429:
+        return 503
+    return 502
+
+
 def transcribe(wav: pathlib.Path):
     """STT via Prisma v3.0 (indic-auto, codemix).
 
-    Deletes the wav on completion. On any failure, records the circuit-breaker
-    failure and raises a typed HTTPException — never a raw provider exception."""
-    if not STT_BREAKER.allow():
-        raise HTTPException(502, 'Transcription service temporarily unavailable (circuit open)')
-    t0 = time.time()
+    The WAV is deleted on every exit path, including an open circuit. Only
+    timeouts, connection errors and 5xx count against the breaker; a 4xx means
+    the provider is up and the request was the problem."""
     try:
-        with open(wav, 'rb') as f:
-            def call():
-                r = requests.post(f'{GNANI_BASE}/stt/v3',
-                    headers={'X-API-Key-ID': GNANI_API_KEY, 'X-API-Request-ID': uuid.uuid4().hex},
-                    files={'audio_file': ('q.wav', f, 'audio/wav')},
-                    data={'model': STT_MODEL, 'language_code': 'indic-auto', 'format': 'codemix'},
-                    timeout=60)
-                if r.status_code >= 500:
-                    # turn transient 5xx into a retryable signal; never count 4xx as failures to retry
-                    raise requests.ConnectionError(f'server {r.status_code}')
-                return r
+        # Read before allow(): allow() may claim the single half-open probe slot, and a
+        # failure after that point would leave the slot held. Bytes, not a file handle:
+        # a retry must resend the whole upload.
+        data = wav.read_bytes()
+        if not STT_BREAKER.allow():
+            raise HTTPException(502, 'Transcription service temporarily unavailable (circuit open)')
+        t0 = time.time()
 
-            r = retry(call, attempts=2, retryable=_retryable)
-        logger.info('stt_call status=%s latency_s=%.2f', r.status_code, time.time() - t0)
-        if r.status_code != 200:
-            logger.error('stt_failed status=%s body=%s', r.status_code, r.text[:200])
-            raise HTTPException(502, 'Transcription service unavailable')
-        j = r.json()
-        if not j.get('success'):
-            logger.error('stt_unsuccessful body=%s', r.text[:200])
-            raise HTTPException(502, 'Transcription failed')
-        STT_BREAKER.record_success()
-        return j.get('transcript', ''), j.get('detected_language_code', 'unknown')
-    except HTTPException:
-        STT_BREAKER.record_failure()
-        raise
-    except Exception as e:
-        # every provider failure must trip the breaker
-        STT_BREAKER.record_failure()
-        logger.exception('stt_exc err=%s', e)
-        raise HTTPException(502, 'Transcription service unavailable') from e
-    finally:
-        with contextlib.suppress(OSError):
-            os.unlink(wav)
-
-def synthesize(text: str):
-    """TTS via Timbre (voice-safe rendering, input capped).
-
-    On any failure, records the circuit-breaker failure and raises a typed
-    HTTPException — the route layer degrades to text-only replies."""
-    if not TTS_BREAKER.allow():
-        raise HTTPException(502, 'Voice synthesis temporarily unavailable (circuit open)')
-    capped = render(text, use_tags=True)[:MAX_TTS_CHARS]
-    t0 = time.time()
-    try:
         def call():
-            r = requests.post(f'{GNANI_BASE}/api/v1/tts/inference',
-                headers={'X-API-Key-ID': GNANI_API_KEY, 'Content-Type': 'application/json'},
-                json={'text': capped, 'voice': TTS_VOICE, 'model': TTS_MODEL,
-                      'language': TTS_LANG, 'speed': TTS_SPEED,
-                      'audio_config': {'sample_rate': 16000, 'num_channels': 1,
-                                       'sample_width': 2, 'encoding': 'linear_pcm',
-                                       'container': 'wav'}},
-                timeout=90)
+            r = requests.post(f'{GNANI_BASE}/stt/v3',
+                headers={'X-API-Key-ID': GNANI_API_KEY, 'X-API-Request-ID': uuid.uuid4().hex},
+                files={'audio_file': ('q.wav', data, 'audio/wav')},
+                data={'model': STT_MODEL, 'language_code': 'indic-auto', 'format': 'codemix'},
+                timeout=60)
             if r.status_code >= 500:
                 raise requests.ConnectionError(f'server {r.status_code}')
             return r
 
-        r = retry(call, attempts=2, retryable=_retryable)
-        logger.info('tts_call status=%s latency_s=%.2f chars=%d', r.status_code, time.time() - t0, len(capped))
+        try:
+            r = retry(call, attempts=2, retryable=_retryable)
+            payload = r.json() if r.status_code == 200 else None
+        except Exception as e:
+            STT_BREAKER.record_failure()
+            logger.exception('stt_exc err=%s', e)
+            raise HTTPException(502, 'Transcription service unavailable') from e
+
+        logger.info('stt_call status=%s latency_s=%.2f', r.status_code, time.time() - t0)
+        STT_BREAKER.record_success()  # the provider answered
         if r.status_code != 200:
-            logger.error('tts_failed status=%s body=%s', r.status_code, r.text[:300])
-            raise HTTPException(502, 'Voice synthesis unavailable')
-        TTS_BREAKER.record_success()
-        return r.content
-    except HTTPException:
-        TTS_BREAKER.record_failure()
-        raise
+            logger.error('stt_failed status=%s body=%s', r.status_code, r.text[:200])
+            raise HTTPException(_client_status(r.status_code), 'Transcription service unavailable')
+        if not payload.get('success'):
+            logger.error('stt_unsuccessful body=%s', str(payload)[:200])
+            raise HTTPException(422, 'Could not transcribe this audio')
+        return payload.get('transcript', ''), payload.get('detected_language_code', 'unknown')
+    finally:
+        with contextlib.suppress(OSError):
+            os.unlink(wav)
+
+
+def speakable(text: str):
+    """(text sent to Timbre, whether it is shorter than the full reply)."""
+    full = render(text, use_tags=True)
+    capped = render(text, use_tags=True, max_chars=MAX_TTS_CHARS)
+    return capped, len(capped) < len(full)
+
+
+def synthesize(text: str):
+    """TTS via Timbre (voice-safe rendering, cut on sentence boundaries).
+
+    Provider failures (timeouts, connection errors, 5xx) trip the breaker; a 4xx
+    does not. Any failure raises a typed HTTPException and the route degrades
+    to a text-only reply."""
+    if not TTS_BREAKER.allow():
+        raise HTTPException(502, 'Voice synthesis temporarily unavailable (circuit open)')
+    capped, _ = speakable(text)
+    t0 = time.time()
+
+    def call():
+        r = requests.post(f'{GNANI_BASE}/api/v1/tts/inference',
+            headers={'X-API-Key-ID': GNANI_API_KEY, 'Content-Type': 'application/json'},
+            json={'text': capped, 'voice': TTS_VOICE, 'model': TTS_MODEL,
+                  'language': TTS_LANG, 'speed': TTS_SPEED,
+                  'audio_config': {'sample_rate': 16000, 'num_channels': 1,
+                                   'sample_width': 2, 'encoding': 'linear_pcm',
+                                   'container': 'wav'}},
+            timeout=90)
+        if r.status_code >= 500:
+            raise requests.ConnectionError(f'server {r.status_code}')
+        return r
+
+    try:
+        r = retry(call, attempts=2, retryable=_retryable)
     except Exception as e:
-        # every provider failure must trip the breaker
         TTS_BREAKER.record_failure()
         logger.exception('tts_exc err=%s', e)
         raise HTTPException(502, 'Voice synthesis unavailable') from e
+
+    logger.info('tts_call status=%s latency_s=%.2f chars=%d', r.status_code, time.time() - t0, len(capped))
+    TTS_BREAKER.record_success()  # the provider answered
+    if r.status_code != 200:
+        logger.error('tts_failed status=%s body=%s', r.status_code, r.text[:300])
+        raise HTTPException(502, 'Voice synthesis unavailable')
+    return r.content
 
 ELIGIBILITY_ENABLED = os.getenv('SIDDHA_ELIGIBILITY', '1').strip().lower() not in {'0', 'false', 'off'}
 
