@@ -12,6 +12,14 @@
 - **Contribution:** solo — corpus, retrieval, grounded responder, context layer, voice loop, UI, tests, CI, docs, demo.
 - **Repository:** https://github.com/Arunkumar06-cmd/siddha
 
+## Personal details (from registration)
+
+- **Full name:** _paste from registration_
+- **Registered email ID:** _paste the email used at registration_
+- **Institution:** _paste college name_
+
+The final submission form is emailed to this registered address after registration; check that inbox and spam.
+
 ## Award lane and target users
 
 **Lane: Mixed Vibes** — the best code-mixed Hinglish voice build. Siddha is Hinglish-first end to end: code-mixed listening (Prisma `indic-auto`/`codemix`), Hinglish-shaped grounded answers, and a code-mixed voice (Shivani) delivering them. Secondary framing: **Real Deal** — an information deficit India already pays for in unclaimed scholarships; Siddha removes it for the student who needs it most. Robustness numbers and the Tamil roundtrip are evidence, not decoration: see `docs/eval-audio.md` and the Tamil probe (Prisma detect `ta-IN`, 0.14 s, verbatim transcript of a Tamil-script question answered from the corpus).
@@ -125,7 +133,7 @@ Designed and built solo: corpus pipeline, retrieval, grounded responder, voice-s
 
 - [x] Register — done (email from Team Gnani AI, Nov 4; registration confirmed, 5,000 programme credits, 3 free API keys, closing date Nov 10, 23:59 IST).
 - [x] Working app + release cut — Siddha v2.2.0 published with demo attached
-- [ ] Claim keys and confirm usage at https://app.gnani.ai/voice (3 keys available)
+- [x] Keys claimed and usage confirmed — live Prisma STT and Timbre TTS calls return 200
 - [ ] Attach `docs/demo.mp4` (1080×1080, 139 s, 6.4 MB; also fits X’s free-account 140 s cap).
 - [ ] Tag the official account: **gnani.ai** on LinkedIn, **@GnaniAi** on X.
 - [ ] Include both hashtags exactly: `#GnaniAI` `#GreatIndianAIInternshipChallenge`.
