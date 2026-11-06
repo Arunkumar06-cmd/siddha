@@ -42,7 +42,14 @@ jobs:
           pip install --timeout 60 --retries 5 -r requirements-dev.txt
 
       - name: Install ffmpeg (runtime dependency)
-        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg
+        # Bounded: the runner's apt mirror stalled here for 20 minutes once and cancelled the job.
+        timeout-minutes: 5
+        run: |
+          command -v ffmpeg >/dev/null || {
+            sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=30 update
+            sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=30 install -y --no-install-recommends ffmpeg
+          }
+          ffmpeg -version | head -1
 
       - name: Config resolves without a developer ~/.env
         run: |
