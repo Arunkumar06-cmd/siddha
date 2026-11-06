@@ -28,7 +28,9 @@
 ![Siddha — ask by voice, get a grounded scholarship answer](docs/demo.webp)
 
 <p align="center">
-  <a href="./docs/demo.mp4"><b>▶ Watch the 2-minute demo</b></a>
+  <a href="https://arunkumar06-cmd.github.io/siddha/"><b>▶ Watch the 2-minute demo (streams inline)</b></a>
+  &nbsp;·&nbsp;
+  <a href="./docs/demo.mp4">Download master</a>
   &nbsp;·&nbsp;
   <a href="./docs/architecture.md">Architecture</a>
   <br/>
