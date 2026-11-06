@@ -5,7 +5,7 @@ All notable changes to Siddha. Format: [Keep a Changelog](https://keepachangelog
 ### Added
 - **Conversation memory** (`src/context.py`, `src/conversation.py`): deterministic follow-up resolution keyed by session. Aspect-only follow-ups answer from the last scheme with no new retrieval; state/category refinements re-retrieve with the prior scheme as an anchor; new scheme names bypass context. Sessions are text-only, in-memory, 30-minute TTL, 500-session cap, 8-turn cap.
 - Session endpoints `GET/DELETE /api/session/{id}`; page refresh restores the last turn; “Start a new conversation” resets it.
-- Demo re-recorded as a **two-turn conversation** (141 s, 1080×1080): documents question, then “Aur is scheme ki last date kya hai?” with the context row visible; male founder narration (Devansh), Avinash asking, Shivani answering.
+- Demo re-recorded as a **two-turn conversation** (139 s, 1080×1080): documents question, then “Aur is scheme ki last date kya hai?” with the context row visible; male founder narration (Devansh), Avinash asking, Shivani answering.
 - 63 tests, 86% coverage.
 - Opt-in eligibility reasoner (`src/eligibility.py`, `src/llm.py`): profile extraction + record-coverage classification via any OpenAI-compatible endpoint (e.g. DeepSeek), answers the "am I eligible?" gap; strict fallback to grounded templates when unconfigured; fully mocked tests (`tests/test_eligibility.py`)
 
@@ -37,7 +37,7 @@ All notable changes to Siddha. Format: [Keep a Changelog](https://keepachangelog
 - Opt-in eligibility reasoner (`src/eligibility.py`, `src/llm.py`): profile extraction + record-coverage classification via any OpenAI-compatible endpoint (e.g. DeepSeek), answers the "am I eligible?" gap; strict fallback to grounded templates when unconfigured; fully mocked tests (`tests/test_eligibility.py`)
 
 - GitHub release **v2.2.0** with the demo video attached: https://github.com/Arunkumar06-cmd/siddha/releases/tag/v2.2.0
-- 141 s demo video (`docs/demo.mp4`, 1080×1080): two real Prisma STT → hybrid retrieval → Timbre TTS turns, with Avinash asking and Shivani answering; the second turn is a follow-up that keeps the scheme in context. Founder narration by Devansh.
+- 139 s demo video (`docs/demo.mp4`, 1080×1080): two real Prisma STT → hybrid retrieval → Timbre TTS turns, with Avinash asking and Shivani answering; the second turn is a follow-up that keeps the scheme in context. Founder narration by Devansh.
 - State/UT detection (`src/places.py`) with canonical names and common spellings, used by the grounded responder
 - `docs/research-inventory.md`: the problem and source research behind the corpus
 - `docs/submission.md`: project explanation, Gnani model/API list, LinkedIn and X copy, posting checklist

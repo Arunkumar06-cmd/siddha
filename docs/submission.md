@@ -5,7 +5,7 @@
 ## Form-ready answers
 
 - **Project URL (one-page pitch):** https://github.com/Arunkumar06-cmd/siddha/blob/main/docs/pitch.md
-- **Demo video (141 s, two turns):** https://github.com/Arunkumar06-cmd/siddha/releases/download/v2.2.0/demo.mp4
+- **Demo video (139 s, two turns — fits X’s 140 s cap):** https://github.com/Arunkumar06-cmd/siddha/releases/download/v2.2.0/demo.mp4
 - **Problem:** 1,142 official scholarships are published, but the students who need them most cannot find the right one through English, form-first portals. Siddha makes discovery voice-first in Hinglish, Hindi and Tamil — and keeps a follow-up on the same scheme.
 - **Gnani models/APIs:** Prisma v3.0 STT (`indic-auto`, `codemix`); Timbre v3.0 TTS (Shivani, `hi-en`).
 - **Who uses it:** students, first-generation families, school and college counsellors, scholarship helpdesks.
@@ -75,7 +75,7 @@ Designed and built solo: corpus pipeline, retrieval, grounded responder, voice-s
 
 - Repository: https://github.com/Arunkumar06-cmd/siddha
 - Release v2.2.0 + video download: https://github.com/Arunkumar06-cmd/siddha/releases/tag/v2.2.0
-- Demo video (141 s, two turns): https://github.com/Arunkumar06-cmd/siddha/releases/download/v2.2.0/demo.mp4
+- Demo video (139 s, two turns): https://github.com/Arunkumar06-cmd/siddha/releases/download/v2.2.0/demo.mp4
 - Architecture: https://github.com/Arunkumar06-cmd/siddha/blob/main/docs/architecture.md
 - API reference: https://github.com/Arunkumar06-cmd/siddha/blob/main/docs/api.md
 - LinkedIn post: _add after posting_
@@ -126,7 +126,7 @@ Designed and built solo: corpus pipeline, retrieval, grounded responder, voice-s
 - [x] Register — done (email from Team Gnani AI, Nov 4; registration confirmed, 5,000 programme credits, 3 free API keys, closing date Nov 10, 23:59 IST).
 - [x] Working app + release cut — Siddha v2.2.0 published with demo attached
 - [ ] Claim keys and confirm usage at https://app.gnani.ai/voice (3 keys available)
-- [ ] Attach `docs/demo.mp4` (1080×1080, 141 s, 6.3 MB).
+- [ ] Attach `docs/demo.mp4` (1080×1080, 139 s, 6.4 MB; also fits X’s free-account 140 s cap).
 - [ ] Tag the official account: **gnani.ai** on LinkedIn, **@GnaniAi** on X.
 - [ ] Include both hashtags exactly: `#GnaniAI` `#GreatIndianAIInternshipChallenge`.
 - [ ] Post publicly **as early as possible** — shortlisting verifies reactions, comments and reshares, and only engagement before the cutoff counts.

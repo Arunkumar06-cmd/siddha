@@ -21,4 +21,4 @@
 
 **Target lane.** Mixed Vibes (best code-mixed Hinglish build) with a Real Deal framing (real impact for students who rarely get told).
 
-**Links.** Repo: https://github.com/Arunkumar06-cmd/siddha — Demo (141 s, two live turns): https://github.com/Arunkumar06-cmd/siddha/releases/download/v2.2.0/demo.mp4 — Release: https://github.com/Arunkumar06-cmd/siddha/releases/tag/v2.2.0
+**Links.** Repo: https://github.com/Arunkumar06-cmd/siddha — Demo (139 s, two live turns): https://github.com/Arunkumar06-cmd/siddha/releases/download/v2.2.0/demo.mp4 — Release: https://github.com/Arunkumar06-cmd/siddha/releases/tag/v2.2.0
