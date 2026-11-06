@@ -2,6 +2,16 @@
 
 > Voice-first guide to 1,142 Indian government scholarships. Ask in Hinglish, Hindi or Tamil; hear the exact scheme, the documents you need, and where to check the current deadline.
 
+## Form-ready answers
+
+- **Project URL (one-page pitch):** https://github.com/Arunkumar06-cmd/siddha/blob/main/docs/pitch.md
+- **Demo video (141 s, two turns):** https://github.com/Arunkumar06-cmd/siddha/releases/download/v2.2.0/demo.mp4
+- **Problem:** 1,142 official scholarships are published, but the students who need them most cannot find the right one through English, form-first portals. Siddha makes discovery voice-first in Hinglish, Hindi and Tamil — and keeps a follow-up on the same scheme.
+- **Gnani models/APIs:** Prisma v3.0 STT (`indic-auto`, `codemix`); Timbre v3.0 TTS (Shivani, `hi-en`).
+- **Who uses it:** students, first-generation families, school and college counsellors, scholarship helpdesks.
+- **Contribution:** solo — corpus, retrieval, grounded responder, context layer, voice loop, UI, tests, CI, docs, demo.
+- **Repository:** https://github.com/Arunkumar06-cmd/siddha
+
 ## Award lane and target users
 
 **Lane: Mixed Vibes** — the best code-mixed Hinglish voice build. Siddha is Hinglish-first end to end: code-mixed listening (Prisma `indic-auto`/`codemix`), Hinglish-shaped grounded answers, and a code-mixed voice (Shivani) delivering them. Secondary framing: **Real Deal** — an information deficit India already pays for in unclaimed scholarships; Siddha removes it for the student who needs it most. Robustness numbers and the Tamil roundtrip are evidence, not decoration: see `docs/eval-audio.md` and the Tamil probe (Prisma detect `ta-IN`, 0.14 s, verbatim transcript of a Tamil-script question answered from the corpus).

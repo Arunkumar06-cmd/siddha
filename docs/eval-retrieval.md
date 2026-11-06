@@ -11,7 +11,7 @@ Labeled benchmark: 30 queries against the shipped corpus (`data/scholarships.jso
 | MRR | 0.63 | **0.73** |
 | n | 30 | 30 |
 
-** State-aware routing (shipped v2.3 content)** — the previous failure mode (a state-less query silently returned another state's post-matric scheme) is fixed in the ranker, not just in the responder's caveat. A query naming a state/UT multiplies that state's schemes by 1.35, other state schemes by 0.75, Central by 1.05; a query containing `central government|central govt|central sector` filters Central-only; a state-less query gives Central schemes a 1.2 multiplier. The Central "Post-Matric Scholarship for SC students" now ranks #1 for the demo question; a Bihar-specific question returns Bihar's post-matric scheme #1.
+**State-aware routing (shipped)** — the previous failure mode (a state-less query silently returned another state's post-matric scheme) is fixed in the ranker, not just in the responder's caveat. A query naming a state/UT multiplies that state's schemes by 1.35, other state schemes by 0.75, Central by 1.05; a query containing `central government|central govt|central sector` filters Central-only; a state-less query gives Central schemes a 1.2 multiplier. The Central "Post-Matric Scholarship for SC students" now ranks #1 for the demo question; a Bihar-specific question returns Bihar's post-matric scheme #1.
 
 **Known failure (honest):** `PM USP` as an isolated acronym misses top-8 — the record contains `(PM-USP)` but the dense similarity doesn't separate it without more context words. Rephrase with intent ("college university students scholarship for meritorious") and it retrieves.
 
