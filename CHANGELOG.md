@@ -33,7 +33,7 @@ All notable changes to Siddha. Format: [Keep a Changelog](https://keepachangelog
 - Opt-in eligibility reasoner (`src/eligibility.py`, `src/llm.py`): profile extraction + record-coverage classification via any OpenAI-compatible endpoint (e.g. DeepSeek), answers the "am I eligible?" gap; strict fallback to grounded templates when unconfigured; fully mocked tests (`tests/test_eligibility.py`)
 
 - GitHub release **v2.2.0** with the demo video attached: https://github.com/Arunkumar06-cmd/siddha/releases/tag/v2.2.0
-- 54.9 s demo video (`docs/demo.mp4`, 1080×1080): a real Prisma STT → hybrid retrieval → Timbre TTS turn, with Avinash asking the Hinglish question and Shivani answering
+- 124 s demo video (`docs/demo.mp4`, 1080×1080): a real Prisma STT → hybrid retrieval → Timbre TTS turn, with Avinash asking the Hinglish question and Shivani answering
 - State/UT detection (`src/places.py`) with canonical names and common spellings, used by the grounded responder
 - `docs/research-inventory.md`: the problem and source research behind the corpus
 - `docs/submission.md`: project explanation, Gnani model/API list, LinkedIn and X copy, posting checklist
