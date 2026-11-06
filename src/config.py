@@ -10,7 +10,10 @@ import os
 import pathlib
 import sys
 
-LOG_FORMAT = '%(asctime)s %(levelname)s [%(name)s] %(message)s'
+import reqid
+
+LOG_FORMAT = '%(asctime)s %(levelname)s [%(name)s] [%(request_id)s] %(message)s'
+reqid.install_log_factory()  # before basicConfig: every record carries request_id
 logging.basicConfig(level=logging.INFO, format=LOG_FORMAT, stream=sys.stdout)
 logger = logging.getLogger('siddha')
 

@@ -35,6 +35,11 @@ def _load():
     bm25 = BM25Okapi([re.findall(r'\w+', d.lower()) for d in docs])
     return recs, docs, model, index, bm25
 
+def is_loaded() -> bool:
+    """True once the model/index have been loaded, for the readiness probe."""
+    return _load.cache_info().currsize > 0
+
+
 def search(query, k=8, dense_k=20, bm25_k=20, rrf_k=60):
     recs, docs, model, index, bm25 = _load()
     q = model.encode([query], normalize_embeddings=True)[0].astype('float32')

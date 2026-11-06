@@ -12,11 +12,15 @@ import time
 sys.path.insert(0, str(pathlib.Path(__file__).parent / 'src'))
 
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 import conversation
+import reqid
+import retriever
+import stats
+import timing
 from config import GNANI_API_KEY, logger
 from pipeline import (
     FFMPEG_BIN,
@@ -29,6 +33,7 @@ from pipeline import (
     to_wav,
     transcribe,
 )
+from version import VERSION
 
 BASE_DIR = pathlib.Path(__file__).parent
 RATE_LIMIT = int(os.getenv('SIDDHA_RATE_LIMIT', '30'))
@@ -66,16 +71,35 @@ def _rate_limit(ip: str):
 
 @app.middleware('http')
 async def _global(request: Request, call_next):
+    # One correlation id per request: logged on every line, returned to the caller and
+    # sent to Gnani. A well-formed inbound X-Request-ID is kept so a client can trace it.
+    rid = reqid.accept_or_new(request.headers.get('x-request-id'))
+    reqid.set_current(rid)
+    request.state.request_id = rid
+    timings = timing.begin()
+    t_start = time.perf_counter()
+    id_header = {'X-Request-ID': rid}
     # /api/health is the container healthcheck: it must never spend a client's quota.
     if request.url.path.startswith('/api') and request.url.path != '/api/health':
         try:
             _rate_limit(request.client.host if request.client else 'anon')
         except HTTPException as e:
             logger.warning('rate_limited ip=%s', request.client.host if request.client else 'anon')
-            return JSONResponse(status_code=e.status_code, content={'error': e.detail})
+            return JSONResponse(status_code=e.status_code, content={'error': e.detail}, headers=id_header)
     response = await call_next(request)
+    if request.url.path.startswith('/api/ask'):
+        total = time.perf_counter() - t_start
+        timing.record('total', total)
+        timings['total'] = total
+        logger.info('timing path=%s status=%s %s', request.url.path, response.status_code,
+                    timing.server_timing(timings))
+    st = timing.server_timing(timings)
     if response.status_code == 422:
-        return JSONResponse(status_code=422, content={'error': 'Invalid request — check audio/upload size and fields'})
+        return JSONResponse(status_code=422, headers={**id_header, **({'Server-Timing': st} if st else {})},
+                            content={'error': 'Invalid request — check audio/upload size and fields'})
+    response.headers['X-Request-ID'] = rid
+    if st:
+        response.headers['Server-Timing'] = st
     return response
 
 @app.exception_handler(HTTPException)
@@ -85,8 +109,13 @@ async def _http_err(request: Request, exc: HTTPException):
 
 @app.exception_handler(Exception)
 async def _unhandled(request: Request, exc: Exception):
+    # Runs outside the middleware stack, so restore the id from request.state.
+    rid = getattr(request.state, 'request_id', None)
+    if rid:
+        reqid.set_current(rid)
     logger.exception('unhandled path=%s err=%s', request.url.path, exc)
-    return JSONResponse(status_code=500, content={'error': 'Internal error'})
+    return JSONResponse(status_code=500, content={'error': 'Internal error'},
+                        headers={'X-Request-ID': rid} if rid else None)
 
 @app.get('/')
 def index():
@@ -104,19 +133,36 @@ def health():
     ]
     if missing:
         raise HTTPException(503, f'Health check failed: missing {", ".join(missing)}')
-    return {'status': 'ok', 'version': '2.2.0'}
+    return {'status': 'ok', 'version': VERSION}
+
+
+@app.get('/api/ready')
+def ready():
+    """Readiness: the model and index are in memory, so the first real turn will not
+    pay a multi-second load. /api/health stays a pure liveness probe."""
+    not_ready = [name for name, ok in (
+        ('model_and_index', retriever.is_loaded()),
+        ('ffmpeg', bool(FFMPEG_BIN)),
+    ) if not ok]
+    if not_ready:
+        return JSONResponse(status_code=503, content={'status': 'not_ready', 'waiting_for': not_ready,
+                                                       'version': VERSION})
+    return {'status': 'ready', 'version': VERSION}
 
 @app.get('/api/metrics')
 def metrics():
-    with _lock:
-        snap = dict(_metrics)
-    return {'counters': snap, 'stt_circuit': STT_BREAKER.state(),
-            'tts_circuit': TTS_BREAKER.state(), 'rate_limit_per_min': RATE_LIMIT}
+    snap = stats.snapshot()
+    return {'counters': snap['counters'], 'quality': snap,
+            'stt_circuit': STT_BREAKER.state(),
+            'tts_circuit': TTS_BREAKER.state(), 'rate_limit_per_min': RATE_LIMIT,
+            'stage_seconds': timing.snapshot()}
 
-def _count(key, n=1):
-    with _lock:
-        _metrics[key] += n
+@app.get('/metrics')
+def prometheus_metrics():
+    return PlainTextResponse(stats.prometheus() + timing.prometheus(),
+                             media_type='text/plain; version=0.0.4')
 
+_count = stats.count
 
 def _session_id(value: str | None):
     if not value:

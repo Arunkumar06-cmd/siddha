@@ -8,7 +8,6 @@ import subprocess
 import sys
 import tempfile
 import time
-import uuid
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 
@@ -17,8 +16,11 @@ from fastapi import HTTPException
 
 import context
 import conversation
+import reqid
 import responder
 import retriever
+import stats
+import timing
 from config import (
     GNANI_API_KEY,
     GNANI_BASE,
@@ -77,12 +79,13 @@ def to_wav(raw: bytes, suffix: str) -> pathlib.Path:
         f_src = f.name
     dst = f_src + '.wav'
     try:
-        subprocess.run(  # noqa: S603 - FFMPEG_BIN is an absolute which-resolved path
-            [FFMPEG_BIN, '-y', '-nostdin', '-loglevel', 'error',
-             '-protocol_whitelist', 'file,pipe', '-i', f_src,
-             '-vn', '-sn', '-dn', '-t', str(MAX_WAV_SECONDS),
-             '-ar', '16000', '-ac', '1', dst],
-            check=True, timeout=20, shell=False)
+        with timing.stage('ffmpeg'):
+            subprocess.run(  # noqa: S603 - FFMPEG_BIN is an absolute which-resolved path
+                [FFMPEG_BIN, '-y', '-nostdin', '-loglevel', 'error',
+                 '-protocol_whitelist', 'file,pipe', '-i', f_src,
+                 '-vn', '-sn', '-dn', '-t', str(MAX_WAV_SECONDS),
+                 '-ar', '16000', '-ac', '1', dst],
+                check=True, timeout=20, shell=False)
         return pathlib.Path(dst)
     except subprocess.CalledProcessError as e:
         logger.warning('ffmpeg_decode_failed src=%s', f_src)
@@ -127,8 +130,9 @@ def transcribe(wav: pathlib.Path):
         t0 = time.time()
 
         def call():
+            stats.gnani_call('stt')
             r = requests.post(f'{GNANI_BASE}/stt/v3',
-                headers={'X-API-Key-ID': GNANI_API_KEY, 'X-API-Request-ID': uuid.uuid4().hex},
+                headers={'X-API-Key-ID': GNANI_API_KEY, 'X-API-Request-ID': reqid.upstream('stt')},
                 files={'audio_file': ('q.wav', data, 'audio/wav')},
                 data={'model': STT_MODEL, 'language_code': 'indic-auto', 'format': 'codemix'},
                 timeout=60)
@@ -137,7 +141,8 @@ def transcribe(wav: pathlib.Path):
             return r
 
         try:
-            r = retry(call, attempts=2, retryable=_retryable)
+            with timing.stage('stt'):
+                r = retry(call, attempts=2, retryable=_retryable)
             payload = r.json() if r.status_code == 200 else None
         except Exception as e:
             STT_BREAKER.record_failure()
@@ -177,8 +182,10 @@ def synthesize(text: str):
     t0 = time.time()
 
     def call():
+        stats.gnani_call('tts')
         r = requests.post(f'{GNANI_BASE}/api/v1/tts/inference',
-            headers={'X-API-Key-ID': GNANI_API_KEY, 'Content-Type': 'application/json'},
+            headers={'X-API-Key-ID': GNANI_API_KEY, 'Content-Type': 'application/json',
+                     'X-API-Request-ID': reqid.upstream('tts')},
             json={'text': capped, 'voice': TTS_VOICE, 'model': TTS_MODEL,
                   'language': TTS_LANG, 'speed': TTS_SPEED,
                   'audio_config': {'sample_rate': 16000, 'num_channels': 1,
@@ -190,7 +197,8 @@ def synthesize(text: str):
         return r
 
     try:
-        r = retry(call, attempts=2, retryable=_retryable)
+        with timing.stage('tts'):
+            r = retry(call, attempts=2, retryable=_retryable)
     except Exception as e:
         TTS_BREAKER.record_failure()
         logger.exception('tts_exc err=%s', e)
@@ -247,11 +255,18 @@ def rag_answer(query: str, session_id: str | None = None):
         used, context_name = True, focus['name']
     else:
         search_query = context.rewrite(query, last) if follow else query
-        hits = retriever.search(search_query, k=5)
+        with timing.stage('retrieve'):
+            hits = retriever.search(search_query, k=5)
+        stats.observe_retrieval(hits)
         used = bool(follow and last and last.scheme and hits
                     and hits[0]['record'].get('id') == last.scheme.get('id'))
         context_name = last.scheme['name'] if used and last else None
 
+    stats.count('turns')
+    if used:
+        stats.count('context_used')
+    if follow:
+        stats.count('follow_ups')
     meta = {'follow_up': follow, 'context_used': used, 'context_name': context_name}
 
     if _eligibility_ready():
@@ -269,8 +284,11 @@ def rag_answer(query: str, session_id: str | None = None):
         except Exception:
             logger.exception('eligibility_failed_fallback')
 
-    reply, sources, is_canned = responder.answer(query, hits, follow_up=used)
+    with timing.stage('respond'):
+        reply, sources, is_canned = responder.answer(query, hits, follow_up=used)
     scheme = None if is_canned else _scheme_from(sources, hits, focus)
+    if is_canned:
+        stats.count('canned_answers')
     _remember(session_id, query, reply, scheme, sources, aspects, used, context_name)
     logger.info('rag_answer hits=%d latency_s=%.2f canned=%s context=%s',
                 len(hits), time.time() - t0, is_canned, used)
