@@ -113,9 +113,11 @@ curl -s -X POST http://127.0.0.1:8765/api/ask_audio \
 | `/api/ask_text` | POST | RAG answer | `{"text": "...", "session_id": "..."}` (2–500 chars) |
 | `/api/ask_audio` | POST | Voice STT→RAG→TTS | multipart `audio` ≤ 8 MB + optional `session_id` |
 | `/api/session/{id}` | GET | Restore the last turn: transcript, reply, sources, context | — |
+| `/api/ready` | GET | Readiness: model + index loaded | — |
+| `/metrics` | GET | Prometheus counters + per-stage latency | — |
 | `/api/session/{id}` | DELETE | Start a new conversation | — |
 | `/api/health` | GET | Liveness + corpus check (503 if degraded) | — |
-| `/api/metrics` | GET | Counters + circuit state | — |
+| `/api/metrics` | GET | Quality counters, credits, circuit state, per-stage latency | — |
 
 ## Project structure
 ```
@@ -178,7 +180,7 @@ Stated up front so nobody has to find them.
 - **Deadlines are not in most records.** Only 50 of the 1,142 records (4.4%) contain a last-date or deadline phrase, and the corpus has no "as of" date. For the rest, the answer to "last date?" is "the record has none, check scholarships.gov.in".
 - **Long rules are summarised, not read in full.** Eligibility and benefit text is spoken as whole sentences up to a length budget; the rest is sent to the official page. The voice may cover less than the on-screen text (the API reports `audio_truncated`).
 - **Single process, in-memory sessions.** A restart clears conversations. One worker, one machine.
-- **Observability is minimal.** Two counters, circuit state and log lines; no request IDs, per-stage latency or Prometheus export yet.
+- **Audio may cover less than the text.** Long replies are spoken as whole sentences up to the Timbre cap; the API reports `audio_truncated`.
 
 ## Contributing
 Fork → branch → `make lint test` → PR → CI green → 1 review. See [CONTRIBUTING.md](./CONTRIBUTING.md).
