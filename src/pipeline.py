@@ -211,7 +211,7 @@ def synthesize(text: str):
         raise HTTPException(502, 'Voice synthesis unavailable')
     return r.content
 
-ELIGIBILITY_ENABLED = os.getenv('SIDDHA_ELIGIBILITY', '1').strip().lower() not in {'0', 'false', 'off'}
+ELIGIBILITY_ENABLED = os.getenv('SIDDHA_ELIGIBILITY', '0').strip().lower() not in {'0', 'false', 'off'}
 
 def _scheme_from(sources, hits, focus):
     """The record a turn was built from, for the next follow-up."""

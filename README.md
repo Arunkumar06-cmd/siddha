@@ -110,7 +110,7 @@ curl -s -X POST http://127.0.0.1:8765/api/ask_audio \
 
 | Endpoint | Method | Purpose | Body |
 |---|---|---|---|
-| `/api/ask_text` | POST | RAG answer | `{"text": "...", "session_id": "..."}` (2–500 chars) |
+| `/api/ask_text` | POST | RAG answer | `{"text": "...", "session_id": "...", "speak": false}` (2–500 chars; `speak=false` skips the TTS call) |
 | `/api/ask_audio` | POST | Voice STT→RAG→TTS | multipart `audio` ≤ 8 MB + optional `session_id` |
 | `/api/session/{id}` | GET | Restore the last turn: transcript, reply, sources, context | — |
 | `/api/ready` | GET | Readiness: model + index loaded | — |

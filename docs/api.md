@@ -3,7 +3,7 @@
 Base: `/api`. All requests: JSON. All errors: `{"error": "..."}` with typed status code.
 
 ## POST /api/ask_text
-**Body:** `{"text": string (2–500 chars), "session_id": string | null}`
+**Body:** `{"text": string (2–500 chars), "session_id": string | null, "speak": boolean = true}`
 **200:** `{transcript, reply, sources[], session_id, follow_up, context_used, context_name, audio_wav_b64}`
 **422:** Invalid request (empty text / too long)
 **429:** Rate limit (30/min/IP)

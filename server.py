@@ -174,6 +174,7 @@ def _session_id(value: str | None):
 class TextQuery(BaseModel):
     text: str = Field(min_length=2, max_length=500)
     session_id: str | None = Field(default=None, max_length=80)
+    speak: bool = True
 
 def _speak_or_none(reply: str):
     try:
@@ -194,8 +195,9 @@ def ask_text(q: TextQuery):
     sid = _session_id(q.session_id)
     reply, sources, meta = rag_answer(q.text, sid)
     _count('rag_answered')
+    audio = _audio_fields(reply) if q.speak else {'audio_wav_b64': None, 'audio_truncated': False}
     return {'transcript': q.text, 'reply': reply, 'sources': sources,
-            'session_id': sid, **meta, **_audio_fields(reply)}
+            'session_id': sid, **meta, **audio}
 
 @app.get('/api/session/{session_id}')
 def session_state(session_id: str):
