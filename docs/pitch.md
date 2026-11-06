@@ -9,7 +9,7 @@
 - Gnani **Prisma v3.0** transcribes the code-mixed speech.
 - Siddha retrieves the closest scheme records from a local FAISS + BM25 index (BGE-M3 multilingual embeddings, RRF fusion) over the official myScheme corpus.
 - A grounded responder composes the answer — eligibility, benefit, documents, where to apply — strictly from those records. Nothing is generated from outside knowledge; if it can't ground it, it says so instead of inventing it.
-- Gnani **Timbre v3.0** speaks the answer back in the same language.
+- Gnani **Timbre v3.0** speaks the answer back in Hinglish (`hi-en`); Hindi and Tamil are understood as input, but replies are Hinglish templates today.
 - Follow-ups keep the thread: “Aur last date kya hai?” resolves to the scheme just discussed, and the UI shows the carried scheme. A new scheme name or state still retrieves fresh.
 - The UI shows sources next to the answer, so it's auditable rather than magical.
 

@@ -100,7 +100,7 @@ Designed and built solo: corpus pipeline, retrieval, grounded responder, voice-s
 >
 > The rules aren't hard to find — they're stuck behind English forms, dropdowns and PDFs most students will never open. So I built Siddha.
 >
-> Ask naturally: “SC students ke liye post matric scholarship ke documents kya chahiye?” Siddha replies with the exact scheme, the documents, and where the current deadline lives. Spoken back in your language — Hinglish, Hindi or Tamil.
+> Ask naturally: “SC students ke liye post matric scholarship ke documents kya chahiye?” Siddha replies with the exact scheme, the documents, and where the current deadline lives. It understands Hindi and Tamil input; replies today are in Hinglish.
 >
 > What's inside:
 > • Gnani Prisma v3.0 does STT on code-mixed speech (indic-auto, codemix)
