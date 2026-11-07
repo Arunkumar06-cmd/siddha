@@ -6,7 +6,7 @@
 
 - **Project URL (one-page pitch):** https://github.com/Arunkumar06-cmd/siddha/blob/main/docs/pitch.md
 - **Demo video (139 s, two turns — fits X’s 140 s cap) — watch in browser:** https://arunkumar06-cmd.github.io/siddha/
-  - Download master: https://github.com/Arunkumar06-cmd/siddha/releases/download/v2.2.0/demo.mp4
+  - Download current master: https://raw.githubusercontent.com/Arunkumar06-cmd/siddha/main/docs/demo.mp4
 - **Problem:** 1,141 government schemes are published on myScheme (694 in education), but the students who need them most cannot find the right one through English, form-first portals. Siddha makes discovery voice-first in Hinglish, Hindi and Tamil — and keeps a follow-up on the same scheme.
 - **Gnani models/APIs:** Prisma v3.0 STT (`indic-auto`, `codemix`); Timbre v3.0 TTS (Shivani, `hi-en`).
 - **Who uses it:** students, first-generation families, school and college counsellors, scholarship helpdesks.
@@ -65,7 +65,7 @@ The UI shows the transcript, the spoken answer, the carried scheme when context 
 
 - 227 tests in the suite; 224 passed locally, with three model-backed retrieval tests blocked by the unavailable BGE-M3 cache. The runnable suite measured 90.26% coverage; ruff is clean.
 - The demo is a screen recording of the running service: two questions are played into Chrome as microphone input, then the real Prisma STT → retrieval → grounded responder → Timbre TTS path produces each transcript and audio in the recording.
-- The two student questions (“SC students ke liye central government post matric scholarship ke documents kya chahiye?” and “Aur is scheme ki last date kya hai?”) are synthesized with Timbre (voice **Avinash**) so the recording is reproducible without a human caller; the answers use the product voice **Shivani**. Founder narration is **Devansh**. This is disclosed rather than presented as a human speaker.
+- The two student questions (“SC students ke liye central government post matric scholarship ke documents kya chahiye?” and “Aur is scheme ki last date kya hai?”) are synthesized with Timbre (voice **Avinash**) so the recording is reproducible without a human caller; the answers use the product voice **Shivani**. The corrected opening and evaluation narration were also generated with Gnani Timbre v3.0 (voice **Shivani**). All spoken parts are synthetic.
 - The API key is never in the repo or the image; it is resolved from the environment or `~/.env`.
 
 ## Solo contribution
@@ -83,8 +83,8 @@ Designed and built solo: corpus pipeline, retrieval, grounded responder, voice-s
 - One-page pitch (use this for the submission form's Project URL): https://github.com/Arunkumar06-cmd/siddha/blob/main/docs/pitch.md
 
 - Repository: https://github.com/Arunkumar06-cmd/siddha
-- Release v2.2.0 + video download: https://github.com/Arunkumar06-cmd/siddha/releases/tag/v2.2.0
-- Demo video (139 s, two turns — watch in browser): https://arunkumar06-cmd.github.io/siddha/ (download: https://github.com/Arunkumar06-cmd/siddha/releases/download/v2.2.0/demo.mp4)
+- Code release v2.2.0: https://github.com/Arunkumar06-cmd/siddha/releases/tag/v2.2.0
+- Current demo video (139 s, two turns — watch in browser): https://arunkumar06-cmd.github.io/siddha/ (download the current main-branch file: https://raw.githubusercontent.com/Arunkumar06-cmd/siddha/main/docs/demo.mp4)
 - Architecture: https://github.com/Arunkumar06-cmd/siddha/blob/main/docs/architecture.md
 - API reference: https://github.com/Arunkumar06-cmd/siddha/blob/main/docs/api.md
 - LinkedIn post: _add after posting_
