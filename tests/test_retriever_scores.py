@@ -142,3 +142,13 @@ def test_one_word_names_are_too_generic_to_count_as_evidence(monkeypatch):
     _install_named(monkeypatch, recs, dense_ids=[0, 1])
     top = retriever.search('biponi', k=2)[0]['record']['name']
     assert top == 'Alpha Education Scheme'
+
+
+def test_an_exact_name_outside_the_fused_candidates_is_still_returned(monkeypatch):
+    """A rare name can be missed by both dense and BM25. The exact-name lookup must
+    search the corpus, not only the records fusion happened to return."""
+    recs = [_rec('Alpha Education Scheme', 'Central'), _rec('Beta Skill Training Subsidy', 'State')]
+    _install_named(monkeypatch, recs, dense_ids=[0])          # Beta is not a dense candidate
+    hits = retriever.search('Beta Skill Training Subsidy kya hai', k=2)
+    assert hits[0]['record']['name'] == 'Beta Skill Training Subsidy'
+    assert hits[0]['name_match'] is True

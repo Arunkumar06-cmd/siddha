@@ -5,6 +5,7 @@ import collections
 import json
 import pathlib
 import re
+import threading
 from functools import lru_cache
 
 import faiss
@@ -66,8 +67,12 @@ def doc_text(rec):
             parts.append(f"{label}: {v}")
     return '\n'.join(parts)
 
-@lru_cache(maxsize=1)
-def _load():
+_load_lock = threading.Lock()
+_cache = None
+
+
+def _read_all():
+    """Read the corpus and index and build the model. Called at most once."""
     with open(CORPUS, encoding='utf-8') as fh:
         recs = [json.loads(line) for line in fh]
     docs = [doc_text(r) for r in recs]
@@ -76,9 +81,30 @@ def _load():
     bm25 = BM25Okapi([re.findall(r'\w+', d.lower()) for d in docs])
     return recs, docs, model, index, bm25
 
+
+def _load():
+    """Load everything exactly once, even when several first requests race.
+
+    lru_cache can run the wrapped function more than once on a cold cache: two
+    concurrent first turns would each build a 2 GB model. The double check under
+    one lock means one loader and one copy, while later calls stay lock-free."""
+    global _cache
+    if _cache is not None:
+        return _cache
+    with _load_lock:
+        if _cache is None:
+            _cache = _read_all()
+    return _cache
+
+
 def is_loaded() -> bool:
     """True once the model/index have been loaded, for the readiness probe."""
-    return _load.cache_info().currsize > 0
+    return _cache is not None
+
+
+def warm_up():
+    """Load before the first user turn; called from the server's lifespan."""
+    return _load()
 
 
 def search(query, k=8, dense_k=20, bm25_k=20, rrf_k=60):
@@ -102,7 +128,12 @@ def search(query, k=8, dense_k=20, bm25_k=20, rrf_k=60):
         fused[int(i)] = fused.get(int(i), 0) + 1.0 / (rrf_k + rank + 1)
     for rank, i in enumerate(b_ids):
         fused[int(i)] = fused.get(int(i), 0) + 1.0 / (rrf_k + rank + 1)
-    for i in _name_matches(query, recs, list(fused)):
+    # Check the whole corpus, not only the fused candidates: an exact name can be
+    # missed by both dense and BM25 (a rare spelling, a short query) and still be
+    # the one scheme the student asked for. A unique full name is strong evidence.
+    name_hits = set(_name_matches(query, recs, range(len(recs))))
+    for i in name_hits:
+        fused[i] = fused.get(i, 0.0) + 1.0 / (rrf_k + 1)
         fused[i] *= NAME_MATCH_BOOST
     # State-aware re-ranking: a State scheme must not silently win for a
     # state-less query, and a State-specific query should not be answered with
@@ -133,5 +164,6 @@ def search(query, k=8, dense_k=20, bm25_k=20, rrf_k=60):
         # keyword hit with no semantic support, which the confidence gate treats as weak.
         out.append({'rank_score': round(score, 4),
                     'dense_score': round(dense_sim[i], 4) if i in dense_sim else None,
+                    'name_match': i in name_hits,
                     'record': recs[i], 'document': docs[i]})
     return out

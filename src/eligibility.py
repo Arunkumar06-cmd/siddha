@@ -105,6 +105,22 @@ def _parse_json(text):
         return None
 
 
+def _quote_in_record(quote, rec):
+    """True when the LLM's quote is verbatim text from the record.
+
+    The prompt asks for a verbatim line, but a model can paraphrase or invent one.
+    A spoken eligibility verdict must never contain a sentence the record does not
+    have, so an unverified quote falls back to the grounded responder instead."""
+    if not quote:
+        return True                       # no quote: the caller uses a neutral phrase
+    q = re.sub(r'\s+', ' ', str(quote)).strip().lower()
+    if len(q) < 8:
+        return False
+    blob = ' '.join(str(rec.get(k) or '') for k in ('eligibility', 'details', 'benefits', 'documents'))
+    blob = re.sub(r'\s+', ' ', blob).lower()
+    return q in blob
+
+
 def extract_profile(query):
     raw = llm.complete(
         [{'role': 'system', 'content': PROFILE_SYSTEM},
@@ -188,9 +204,13 @@ def advise(query, hits):
         # All 'not' or all 'unsure' -> honest negative answer naming the closest record.
         first, v = top[0], verdicts.get(1, {})
         if v.get('verdict') == 'not':
+            quote = v.get('quote')
+            if not _quote_in_record(quote, first['record']):
+                logger.info('eligibility_no_result reason=unverified_quote')
+                return None
             reason = v.get('decisive') or 'category'
             reply = (f"Suno. {first['record']['name']} mein eligibility case jaata hai: "
-                     f"record kehta hai {v.get('quote') or reason}. Aap is scheme ke liye qualify nahi karte. "
+                     f"record kehta hai {quote or reason}. Aap is scheme ke liye qualify nahi karte. "
                      f"Exact details scholarships.gov.in pe dikhengi.")
             sources = [{'name': h['record']['name'], 'score': h['rank_score'], 'level': h['record']['level']}
                        for h in top]
@@ -200,7 +220,11 @@ def advise(query, hits):
 
     h = top[pick_idx - 1]
     v = verdicts.get(pick_idx, {})
-    quote = v.get('quote') or 'eligibility detail official record mein hai'
+    quote = v.get('quote')
+    if not _quote_in_record(quote, h['record']):
+        logger.info('eligibility_no_result reason=unverified_quote')
+        return None
+    quote = quote or 'eligibility detail official record mein hai'
     reply = (f"Suno. {h['record']['name']} ki eligibility ho sakti hai. "
              f"Record kehta hai, {quote}. "
              f"Documents chahiye: {h['record'].get('documents') or 'ye record mein nahi hai'}. "

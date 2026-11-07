@@ -70,9 +70,9 @@ def test_advise_negative_case_names_blocker(monkeypatch):
         if 'eligibility engine' in messages[0]['content']:
             return json.dumps({'profile': {'category': 'GEN'},
                                'verdicts': [
-                                   {'record': 1, 'verdict': 'not', 'decisive': 'category', 'quote': 'OBC only'},
-                                   {'record': 2, 'verdict': 'not', 'decisive': 'category', 'quote': 'EBC only'},
-                                   {'record': 3, 'verdict': 'not', 'decisive': 'category', 'quote': 'minority only'},
+                                   {'record': 1, 'verdict': 'not', 'decisive': 'category', 'quote': 'SC students'},
+                                   {'record': 2, 'verdict': 'not', 'decisive': 'category', 'quote': 'OBC only'},
+                                   {'record': 3, 'verdict': 'not', 'decisive': 'category', 'quote': 'Means and merit'},
                                ], 'best': None})
         return json.dumps({'category': 'GEN', 'income_lakh_pa': 5.0})
     monkeypatch.setattr(llm, 'complete', all_not)
@@ -85,6 +85,26 @@ def test_advise_negative_case_names_blocker(monkeypatch):
 def test_advise_returns_none_on_bad_json(monkeypatch):
     monkeypatch.setattr(llm, 'complete', lambda messages, **kw: 'not json at all')
     assert eligibility.advise('eligible hai?', _hits()) is None
+
+
+def test_advise_rejects_a_quote_that_is_not_in_the_record(monkeypatch):
+    """The LLM must not be able to put a sentence in the student's mouth that the
+    official record does not contain."""
+    def fabricated(messages, **kw):
+        if 'eligibility engine' in messages[0]['content']:
+            return json.dumps({
+                'profile': {'category': 'SC'},
+                'verdicts': [
+                    {'record': 1, 'verdict': 'eligible', 'decisive': 'category',
+                     'quote': 'Students must be under 10 years old'},
+                    {'record': 2, 'verdict': 'unsure', 'decisive': None, 'quote': None},
+                    {'record': 3, 'verdict': 'unsure', 'decisive': None, 'quote': None},
+                ],
+                'best': 1,
+            })
+        return json.dumps({'category': 'SC'})
+    monkeypatch.setattr(llm, 'complete', fabricated)
+    assert eligibility.advise('SC student eligible hai?', _hits()) is None
 
 
 def test_advise_returns_none_when_llm_raises(monkeypatch):

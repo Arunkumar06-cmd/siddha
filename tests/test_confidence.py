@@ -23,14 +23,30 @@ def hit(dense, rec=REC, rank=0.03):
 
 @pytest.mark.parametrize('best, expected', [
     (0.30, confidence.LOW),
-    (0.4999, confidence.LOW),
-    (0.50, confidence.SOFT),      # the floor is inclusive: exactly MIN_DENSE is answerable
+    (0.5449, confidence.LOW),     # above the off-topic maximum (0.544), so refused
+    (0.545, confidence.SOFT),     # the floor is inclusive: exactly MIN_DENSE is answerable
     (0.5799, confidence.SOFT),
     (0.58, confidence.OK),
     (0.80, confidence.OK),
 ])
 def test_tier_boundaries(best, expected):
     assert confidence.tier([hit(best)]) == expected
+
+
+def test_an_exact_unique_name_is_answered_even_when_dense_is_low():
+    """Naming the scheme is stronger evidence than the embedding score. The real
+    query 'Mukhyamantri Matrupushti Uphar kya hai' scores 0.4865, below the floor,
+    but is exactly the record the student asked for."""
+    exact = hit(0.4865)
+    exact['name_match'] = True
+    assert confidence.tier([exact]) == confidence.OK
+
+
+def test_a_name_match_on_a_lower_hit_does_not_excuse_a_weak_top_hit():
+    weak = hit(0.40, OTHER)
+    exact = hit(0.4865)
+    exact['name_match'] = True
+    assert confidence.tier([weak, exact]) == confidence.LOW
 
 
 def test_no_hits_is_low():
@@ -55,6 +71,24 @@ def test_hits_that_never_came_from_the_retriever_are_not_judged():
 
 def test_thresholds_are_ordered():
     assert 0 < confidence.MIN_DENSE < confidence.SOFT_DENSE < 1
+
+
+# -- the real scores, not a hand-picked number ---------------------------------------
+# A synthetic 0.41 test used to "prove" the gate refused off-topic queries while the
+# real query scored 0.5439 and was answered with an export-council membership scheme.
+
+def test_real_off_topic_query_is_refused():
+    import retriever
+    hits = retriever.search('gym membership offers', k=8)
+    assert confidence.tier(hits) == confidence.LOW
+
+
+def test_real_exact_name_query_is_answered():
+    import retriever
+    hits = retriever.search('Mukhyamantri Matrupushti Uphar kya hai', k=8)
+    assert hits[0]['record']['name'] == 'Mukhyamantri Matrupushti Uphar'
+    assert hits[0]['name_match'] is True
+    assert confidence.tier(hits) == confidence.OK
 
 
 # -- through the pipeline ------------------------------------------------------------
@@ -93,7 +127,7 @@ def test_low_confidence_admits_it_and_names_no_scheme(search):
 
 
 def test_shaky_answer_is_hedged_and_invites_the_name(search):
-    search['hits'] = [hit(0.54)]
+    search['hits'] = [hit(0.55)]
     reply, _, meta = pipeline.rag_answer('SC scholarship ke documents', SID)
     assert 'Pakka nahi hai' in reply
     assert REC['name'] in reply                      # still answers, from the nearest scheme

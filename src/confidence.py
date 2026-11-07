@@ -8,7 +8,14 @@ scale, so it can be thresholded.
 
 Thresholds come from scripts/calibrate_confidence.py on 100 queries (30 hand-written and
 40 name-anchored in-domain, 30 off-topic): in-domain top-5 best score had min 0.497 /
-p10 ~0.55 / median ~0.66; clearly off-topic had median 0.42 / max 0.544.
+p10 ~0.55 / median ~0.66; clearly off-topic had median 0.42 / max 0.544. The floor is
+0.545, just above the off-topic maximum, so "gym membership offers" is refused instead of
+answered with an export-council scheme.
+
+An exact, unique scheme name in the query overrides the dense floor: the student named the
+record, so the answer is grounded even when the embedding similarity is low (for example
+"Mukhyamantri Matrupushti Uphar kya hai" scores 0.4865 but is exactly the record asked for).
+The retriever marks that hit with `name_match`.
 
     best < MIN_DENSE            LOW   nothing in the records supports an answer: say so
     MIN_DENSE <= best < SOFT    SOFT  probably right but shaky: answer, but hedge and invite
@@ -24,7 +31,7 @@ import os
 
 LOW, SOFT, OK = 'low', 'soft', 'ok'
 
-MIN_DENSE = float(os.getenv('SIDDHA_MIN_DENSE', '0.50'))
+MIN_DENSE = float(os.getenv('SIDDHA_MIN_DENSE', '0.545'))
 SOFT_DENSE = float(os.getenv('SIDDHA_SOFT_DENSE', '0.58'))
 
 NOT_FOUND = ("Suno. Mujhe iska jawab apne records mein nahi mila. Scheme ka naam, ya apna state "
@@ -44,6 +51,10 @@ def best_dense(hits):
 def tier(hits):
     if not hits:
         return LOW
+    if hits[0].get('name_match'):
+        # The query contains this record's unique full name. The student named the
+        # scheme, so dense similarity is not the deciding signal.
+        return OK
     if not any('dense_score' in h for h in hits):
         # Not produced by the retriever (a carried-over scheme, a test double): there is no
         # similarity to judge, so do not invent a verdict.
