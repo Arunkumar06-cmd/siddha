@@ -1,4 +1,6 @@
 """Deterministic follow-up resolution and session memory."""
+import threading
+
 import context
 import conversation
 import pipeline
@@ -73,7 +75,34 @@ def test_store_caps_turns():
     for i in range(conversation.MAX_TURNS + 4):
         store.record('session-abc', conversation.Turn(
             query=f'q{i}', reply='r', scheme=None))
-    assert len(store.get('session-abc').turns) == conversation.MAX_TURNS
+    conv = store.get('session-abc')
+    with conv._lock:
+        assert len(conv.turns) == conversation.MAX_TURNS
+
+
+def test_store_record_is_atomic_under_concurrency():
+    store = conversation.ConversationStore()
+    errors = []
+
+    def worker(i):
+        try:
+            for j in range(20):
+                store.record('s', conversation.Turn(query=f'q{i}-{j}', reply='r', scheme=None))
+        except Exception as e:  # pragma: no cover
+            errors.append(e)
+
+    threads = [threading.Thread(target=worker, args=(i,)) for i in range(8)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    assert not errors
+    last = store.last('s')
+    assert last is not None
+    conv = store.get('s')
+    with conv._lock:
+        assert 1 <= len(conv.turns) <= conversation.MAX_TURNS
+        assert conv.turns[-1].query == last.query
 
 
 def test_pipeline_reuses_focus_without_retrieval(monkeypatch):

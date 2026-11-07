@@ -34,15 +34,22 @@ class Turn:
 class Conversation:
     turns: list[Turn] = field(default_factory=list)
     touched: float = field(default_factory=time.time)
+    _lock: threading.Lock = field(default_factory=threading.Lock, init=False, repr=False, compare=False)
 
     @property
     def last(self) -> Turn | None:
-        return self.turns[-1] if self.turns else None
+        with self._lock:
+            return self.turns[-1] if self.turns else None
 
     def add(self, turn: Turn) -> None:
-        self.turns.append(turn)
-        del self.turns[:-MAX_TURNS]
-        self.touched = time.time()
+        with self._lock:
+            self.turns.append(turn)
+            del self.turns[:-MAX_TURNS]
+            self.touched = time.time()
+
+    def snapshot_last(self) -> Turn | None:
+        with self._lock:
+            return self.turns[-1] if self.turns else None
 
 
 class ConversationStore:
@@ -52,24 +59,36 @@ class ConversationStore:
         self._data: dict[str, Conversation] = {}
         self._lock = threading.Lock()
 
+    def _touched(self, conv: Conversation) -> float:
+        # Read under the conversation lock when available; safe for pruning decisions.
+        lock = getattr(conv, '_lock', None)
+        if lock is not None:
+            with lock:
+                return conv.touched
+        return conv.touched
+
     def _prune(self, now: float) -> None:
-        expired = [sid for sid, c in self._data.items() if now - c.touched > self._ttl]
+        expired = [sid for sid, c in self._data.items() if now - self._touched(c) > self._ttl]
         for sid in expired:
             del self._data[sid]
         if len(self._data) > self._max_sessions:
-            oldest = sorted(self._data, key=lambda sid: self._data[sid].touched)
+            oldest = sorted(self._data, key=lambda sid: self._touched(self._data[sid]))
             for sid in oldest[: len(self._data) - self._max_sessions]:
                 del self._data[sid]
 
+    def _get_or_create(self, session_id: str, now: float) -> Conversation:
+        self._prune(now)
+        conv = self._data.get(session_id)
+        if conv is None:
+            conv = Conversation()
+            self._data[session_id] = conv
+        return conv
+
     def get(self, session_id: str) -> Conversation:
+        """Return the live conversation (back-compat). Callers must not mutate it
+        outside store methods; prefer `record`/`last`/`reset`."""
         with self._lock:
-            now = time.time()
-            self._prune(now)
-            conv = self._data.get(session_id)
-            if conv is None:
-                conv = Conversation()
-                self._data[session_id] = conv
-            return conv
+            return self._get_or_create(session_id, time.time())
 
     def last(self, session_id: str | None) -> Turn | None:
         if not session_id:
@@ -77,12 +96,16 @@ class ConversationStore:
         with self._lock:
             self._prune(time.time())
             conv = self._data.get(session_id)
-            return conv.last if conv else None
+            if not conv:
+                return None
+            return conv.snapshot_last()
 
     def record(self, session_id: str | None, turn: Turn) -> None:
         if not session_id:
             return
-        self.get(session_id).add(turn)
+        with self._lock:
+            conv = self._get_or_create(session_id, time.time())
+            conv.add(turn)
 
     def reset(self, session_id: str | None) -> None:
         if not session_id:
