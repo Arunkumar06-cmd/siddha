@@ -21,16 +21,23 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install dependencies
+      - name: Install pip-audit
         run: |
           python -m pip install --upgrade pip
-          pip install --extra-index-url https://download.pytorch.org/whl/cpu -r requirements.txt pip-audit
+          pip install pip-audit
 
       - name: Dependency vulnerability audit (pip-audit)
-        # Fail on any advisory that is not explicitly accepted below. The three
-        # ignores are tracked with their upgrade path in docs/decisions.md.
+        # The runtime installs torch 2.12.1+cpu from the PyTorch CPU index. That
+        # local-version suffix is not published on PyPI, so pip-audit cannot map
+        # the installed build to advisories. Audit the same source release
+        # (torch 2.12.1) resolved from PyPI instead: strip index overrides from
+        # the requirements file and keep every pin. The three ignores are
+        # tracked with their upgrade path in docs/decisions.md.
         run: |
-          pip-audit -r requirements.txt --strict --progress-spinner=off \
+          set -euo pipefail
+          grep -vE '^\s*(--extra-index-url|--index-url|--find-links|-f)(\s|=|$)' requirements.txt \
+            > "$RUNNER_TEMP/requirements-audit.txt"
+          pip-audit -r "$RUNNER_TEMP/requirements-audit.txt" --strict --progress-spinner=off \
             --ignore-vuln PYSEC-2025-194 \
             --ignore-vuln PYSEC-2026-3447 \
             --ignore-vuln GHSA-xmj3-9gf7-h52w
