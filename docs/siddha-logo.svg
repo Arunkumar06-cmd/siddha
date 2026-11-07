@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 220" width="720" height="220" role="img" aria-labelledby="title desc">
+  <title id="title">Siddha</title>
+  <desc id="desc">Siddha logo: a calm paper mark with a voice-and-record symbol and the word Siddha.</desc>
+  <rect width="720" height="220" fill="#f8f3e6"/>
+  <!-- mark: open record / page -->
+  <g transform="translate(72 44)">
+    <rect x="0" y="0" width="92" height="124" rx="6" fill="none" stroke="#20242a" stroke-width="3.5"/>
+    <path d="M46 0v124" stroke="#d3cab4" stroke-width="2"/>
+    <line x1="14" y1="28" x2="38" y2="28" stroke="#20242a" stroke-width="2.4" stroke-linecap="round"/>
+    <line x1="14" y1="40" x2="38" y2="40" stroke="#20242a" stroke-width="2.4" stroke-linecap="round" opacity="0.55"/>
+    <line x1="14" y1="52" x2="34" y2="52" stroke="#20242a" stroke-width="2.4" stroke-linecap="round" opacity="0.35"/>
+    <!-- voice cue -->
+    <circle cx="69" cy="68" r="5.2" fill="#0f4c5c"/>
+    <path d="M77 60a11 11 0 0 1 0 16M83 54a19 19 0 0 1 0 28" fill="none" stroke="#0f4c5c" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="69" cy="68" r="2.2" fill="#a34f2e"/>
+  </g>
+  <!-- wordmark -->
+  <g fill="#20242a">
+    <text x="196" y="128" font-size="86" font-family="Charter, 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Times New Roman', serif" font-weight="500" letter-spacing="0.5">Siddha</text>
+  </g>
+  <text x="198" y="158" font-size="18" font-family="Charter, 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Times New Roman', serif" fill="#0f4c5c" letter-spacing="1.1">grounded voice guide to scholarships</text>
+</svg>
