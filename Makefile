@@ -1,4 +1,4 @@
-.PHONY: build lint test audit clean
+.PHONY: build lint typecheck test coverage eval eval-check calibrate audit clean
 PY := python3
 
 build: lint typecheck test
@@ -15,6 +15,15 @@ test:
 
 coverage:
 	$(PY) -m pytest tests/ --cov=src --cov=server --cov-report=term-missing -q
+
+eval:
+	$(PY) scripts/eval_retrieval.py
+
+eval-check:
+	$(PY) scripts/eval_retrieval.py --check evals/baseline.json
+
+calibrate:
+	$(PY) scripts/calibrate_confidence.py
 
 clean:
 	find . -name '__pycache__' -type d -exec rm -rf {} + 2>/dev/null || true
