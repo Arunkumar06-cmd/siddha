@@ -1,10 +1,10 @@
 {
   "meta": {
-    "records": 1142,
+    "records": 1141,
     "model": "BAAI/bge-m3",
-    "min_dense": 0.5,
+    "min_dense": 0.545,
     "soft_dense": 0.58,
-    "seconds": 80.5
+    "seconds": 78.4
   },
   "hand": {
     "n": 30,
@@ -23,16 +23,16 @@
       0.6178,
       0.8837
     ],
-    "refused_share": 0.0,
-    "hedged_share": 0.2
+    "refused_share": 0.0333,
+    "hedged_share": 0.1667
   },
   "named": {
-    "n": 1142,
-    "recall@1": 0.9974,
+    "n": 1141,
+    "recall@1": 0.9991,
     "recall@5": 0.9991,
-    "mrr": 0.9979,
+    "mrr": 0.9992,
     "recall@1_ci": [
-      0.9939,
+      0.9974,
       1.0
     ],
     "recall@5_ci": [
@@ -40,35 +40,35 @@
       1.0
     ],
     "mrr_ci": [
-      0.9951,
+      0.9977,
       1.0
     ],
     "refused_share": 0.0009,
-    "hedged_share": 0.0517
+    "hedged_share": 0.0009
   },
   "noisy": {
     "n": 400,
-    "recall@1": 0.67,
-    "recall@5": 0.93,
-    "mrr": 0.7759,
+    "recall@1": 0.6825,
+    "recall@5": 0.925,
+    "mrr": 0.782,
     "recall@1_ci": [
-      0.625,
-      0.7125
+      0.6375,
+      0.7275
     ],
     "recall@5_ci": [
-      0.905,
-      0.9525
+      0.8975,
+      0.95
     ],
     "mrr_ci": [
-      0.7431,
-      0.807
+      0.75,
+      0.8133
     ],
-    "refused_share": 0.0425,
-    "hedged_share": 0.1775
+    "refused_share": 0.095,
+    "hedged_share": 0.0975
   },
   "ood": {
     "n": 30,
-    "refused_share": 0.9667,
-    "hedged_share": 0.0333
+    "refused_share": 1.0,
+    "hedged_share": 0.0
   }
 }
