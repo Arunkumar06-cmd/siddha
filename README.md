@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./docs/siddha-logo.svg" alt="Siddha" width="520" />
+  <img src="./docs/siddha-logo.svg" alt="Siddha" width="320" />
 </p>
 
 <p align="center">
