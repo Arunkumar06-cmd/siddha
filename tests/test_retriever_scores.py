@@ -81,3 +81,64 @@ def test_data_paths_do_not_depend_on_the_working_directory(tmp_path, monkeypatch
     monkeypatch.chdir(tmp_path)
     assert retriever.CORPUS.is_absolute() and retriever.CORPUS.exists()
     assert retriever.INDEX.is_absolute() and retriever.INDEX.exists()
+
+
+# -- exact-name lookup must beat the generic Central prior -------------------------------
+
+def _install_named(monkeypatch, recs, dense_ids):
+    monkeypatch.setattr(retriever, '_load', lambda: (
+        recs, [r['name'] for r in recs], FakeModel(),
+        FakeIndex([0.9 - 0.01 * k for k in range(len(dense_ids))], dense_ids),
+        FakeBM25([0.0] * len(recs))))
+
+
+def _rec(name, level):
+    return {'id': name, 'name': name, 'category': 'x', 'level': level}
+
+
+def test_a_state_scheme_asked_for_by_its_exact_name_beats_a_central_scheme(monkeypatch):
+    """No state is named, so every Central record gets x1.2 and the State scheme the user
+    named word for word used to lose to whatever Central scheme ranked just above it."""
+    recs = [_rec('Alpha Education Scheme', 'Central'), _rec('Beta Skill Training Subsidy', 'State')]
+    _install_named(monkeypatch, recs, dense_ids=[0, 1])      # the Central scheme is dense-rank 1
+    top = retriever.search('Beta Skill Training Subsidy kya hai', k=2)[0]['record']['name']
+    assert top == 'Beta Skill Training Subsidy'
+
+
+def test_without_a_name_in_the_query_the_central_prior_still_applies(monkeypatch):
+    recs = [_rec('Alpha Education Scheme', 'Central'), _rec('Beta Skill Training Subsidy', 'State')]
+    _install_named(monkeypatch, recs, dense_ids=[1, 0])      # the State scheme is dense-rank 1
+    top = retriever.search('koi scholarship batao', k=2)[0]['record']['name']
+    assert top == 'Alpha Education Scheme'
+
+
+def test_a_generic_name_shared_by_several_states_is_not_boosted(monkeypatch):
+    """"Post Matric Scholarship" exists once per state. Boosting them all would answer a state-less
+    question with an arbitrary state's scheme, the very problem the Central prior fixes."""
+    recs = [_rec('Alpha Education Scheme', 'Central'),
+            _rec('Post Matric Scholarship', 'State'), _rec('Post Matric Scholarship', 'State')]
+    _install_named(monkeypatch, recs, dense_ids=[0, 1, 2])
+    top = retriever.search('post matric scholarship kya hai', k=3)[0]['record']['name']
+    assert top == 'Alpha Education Scheme'
+
+
+def test_the_most_specific_contained_name_wins(monkeypatch):
+    recs = [_rec('Pre Matric Scholarship', 'Central'),
+            _rec('Pre Matric Scholarship for Backward Class Students', 'State')]
+    _install_named(monkeypatch, recs, dense_ids=[0, 1])
+    top = retriever.search('Pre-Matric Scholarship for Backward Class Students', k=2)[0]['record']['name']
+    assert top == 'Pre Matric Scholarship for Backward Class Students'
+
+
+def test_dash_and_punctuation_variants_still_match(monkeypatch):
+    recs = [_rec('Alpha Education Scheme', 'Central'), _rec('Merit·cum·Means Scholarship', 'State')]
+    _install_named(monkeypatch, recs, dense_ids=[0, 1])
+    top = retriever.search('merit-cum-means scholarship', k=2)[0]['record']['name']
+    assert top == 'Merit·cum·Means Scholarship'
+
+
+def test_one_word_names_are_too_generic_to_count_as_evidence(monkeypatch):
+    recs = [_rec('Alpha Education Scheme', 'Central'), _rec('Biponi', 'State')]
+    _install_named(monkeypatch, recs, dense_ids=[0, 1])
+    top = retriever.search('biponi', k=2)[0]['record']['name']
+    assert top == 'Alpha Education Scheme'
