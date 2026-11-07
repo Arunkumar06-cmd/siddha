@@ -1,4 +1,4 @@
-"""Multilingual RAG retriever over the myScheme scholarship corpus.
+"""Multilingual RAG retriever over the myScheme scheme corpus.
 Embeddings: BAAI/bge-m3 (100+ languages, code-mixed-friendly).
 Fusion: dense FAISS + BM25 via Reciprocal Rank Fusion."""
 import collections

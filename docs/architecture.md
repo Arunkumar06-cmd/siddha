@@ -22,7 +22,7 @@ flowchart TB
         TTS["Timbre v3.0<br/>Shivani · hi-en"]
     end
 
-    DATA[("1,141 myScheme<br/>scholarship records")]
+    DATA[("1,141 myScheme<br/>scheme records")]
     OUT["JSON + base64 WAV"]
 
     MIC -->|"webm/opus"| ROUTE

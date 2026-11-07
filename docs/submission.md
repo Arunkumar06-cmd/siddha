@@ -1,13 +1,13 @@
 # Submission — Siddha
 
-> Voice-first guide to 1,141 Indian government scholarships. Ask in Hinglish, Hindi or Tamil; hear the exact scheme, the documents you need, and where to check the current deadline.
+> Voice-first guide to 1,141 Indian government schemes, mostly education and welfare (236 are named scholarships). Ask in Hinglish, Hindi or Tamil; hear the exact scheme, the documents you need, and where to check the current deadline.
 
 ## Form-ready answers
 
 - **Project URL (one-page pitch):** https://github.com/Arunkumar06-cmd/siddha/blob/main/docs/pitch.md
 - **Demo video (139 s, two turns — fits X’s 140 s cap) — watch in browser:** https://arunkumar06-cmd.github.io/siddha/
   - Download master: https://github.com/Arunkumar06-cmd/siddha/releases/download/v2.2.0/demo.mp4
-- **Problem:** 1,141 official scholarships are published, but the students who need them most cannot find the right one through English, form-first portals. Siddha makes discovery voice-first in Hinglish, Hindi and Tamil — and keeps a follow-up on the same scheme.
+- **Problem:** 1,141 government schemes are published on myScheme (694 in education), but the students who need them most cannot find the right one through English, form-first portals. Siddha makes discovery voice-first in Hinglish, Hindi and Tamil — and keeps a follow-up on the same scheme.
 - **Gnani models/APIs:** Prisma v3.0 STT (`indic-auto`, `codemix`); Timbre v3.0 TTS (Shivani, `hi-en`).
 - **Who uses it:** students, first-generation families, school and college counsellors, scholarship helpdesks.
 - **Contribution:** solo — corpus, retrieval, grounded responder, context layer, voice loop, UI, tests, CI, docs, demo.
@@ -27,7 +27,7 @@ The final submission form is emailed to this registered address after registrati
 
 ## The problem
 
-India publishes 1,141 scholarship schemes on myScheme. The students who need them most are often the least served by an English, form-first web portal. Discovery is a language and interface problem, not only a data problem.
+India publishes 1,141 government schemes on myScheme, 694 of them in education. The students who need them most are often the least served by an English, form-first web portal. Discovery is a language and interface problem, not only a data problem.
 
 ## What Siddha does
 
@@ -96,7 +96,7 @@ Designed and built solo: corpus pipeline, retrieval, grounded responder, voice-s
 
 ### LinkedIn (attach `docs/demo.mp4`)
 
-> India has 1,141 scholarship schemes for students. Many students never hear which one fits them.
+> India's myScheme portal lists 1,141 government schemes, 694 of them for education. Many students never hear which one fits them.
 >
 > The rules exist, but they sit behind English forms, dropdowns, and PDFs that most students will not open. I built Siddha to make that search voice-first.
 >

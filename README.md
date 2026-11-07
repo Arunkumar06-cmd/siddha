@@ -138,7 +138,7 @@ curl -s -X POST http://127.0.0.1:8765/api/ask_audio \
 │   ├── config.py        # typed env config + logging
 │   └── prepare_corpus.py / build_index.py  # offline corpus tools
 ├── static/index.html    # mic UI
-├── data/scholarships.jsonl   # 1,141 schemes (extracted from myScheme)
+├── data/scholarships.jsonl   # 1,141 myScheme schemes (694 education, 236 named scholarships)
 ├── data/scholarships.faiss   # prebuilt FAISS index
 ├── specs/NFR.md         # non-functional requirements (explicit)
 ├── tests/               # unit, failure-mode and regression tests
