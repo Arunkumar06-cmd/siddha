@@ -72,12 +72,12 @@ The UI shows the transcript, the spoken answer, the carried scheme when context 
 
 Designed and built solo: corpus pipeline, retrieval, grounded responder, voice-safety layer, FastAPI service, mic UI, resilience layer, tests, CI/security, docs, and the demo video.
 
-## What I would build next
+## Roadmap
 
-- Live deadline/status refresh from official sources instead of pointing to the portal.
-- A public Hugging Face Space (Dockerfile is ready; needs a Space secret).
-- More languages, noisy-telephony evaluation, and a human study with students.
-- An IVR/telephony channel for students without smartphones.
+- **Shipped (v2.2):** grounded Hinglish voice loop, BGE-M3 hybrid FAISS + BM25 retrieval, state-aware routing, deterministic follow-up context, and the two-minute demo.
+- **v2.3:** live deadline/status refresh from official sources; voice-based eligibility parsing remains to be built.
+- **v2.4:** opt-in LLM phrasing grounded in retrieved records (requires a key) and streaming TTS.
+- **v3.0:** voice-based form filling to auto-populate NSP fields from speech.
 
 ## Links
 - One-page pitch (use this for the submission form's Project URL): https://github.com/Arunkumar06-cmd/siddha/blob/main/docs/pitch.md
