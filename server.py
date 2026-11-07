@@ -2,6 +2,7 @@
 NFR: specs/NFR.md — rate limit, circuit breakers, typed errors, no secrets logged."""
 import base64
 import collections
+import contextlib
 import os
 import pathlib
 import re
@@ -12,7 +13,7 @@ import time
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent / 'src'))
 
-from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Request, Response, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
@@ -49,10 +50,94 @@ _ip_lock = threading.Lock()
 # client-chosen id such as "12345678" was guessable.
 SID_RE = re.compile(r'^[A-Za-z0-9_-]{32,80}$')
 
-app = FastAPI(title='Siddha', version=VERSION, docs_url=None, redoc_url=None)
+@contextlib.asynccontextmanager
+async def _lifespan(app):
+    # Warm the embedding model and index in the background: the first user turn
+    # should not pay a multi-second load. /api/ready reports when it is done.
+    threading.Thread(target=retriever.warm_up, name='siddha-warm-up', daemon=True).start()
+    yield
+
+
+app = FastAPI(title='Siddha', version=VERSION, docs_url=None, redoc_url=None,
+              lifespan=_lifespan)
 STATIC = pathlib.Path(__file__).parent / 'static'
 app.mount('/static', StaticFiles(directory=STATIC), name='static')
 
+# Multipart framing (boundaries, part headers, the session_id field) on top of the
+# audio cap. The audio itself is capped at MAX_AUDIO_BYTES inside the route.
+MAX_UPLOAD_BYTES = MAX_AUDIO_BYTES + 512 * 1024
+_UPLOAD_PATH = '/api/ask_audio'
+
+
+class _BodyTooLarge(Exception):
+    pass
+
+
+async def _send_too_large(send):
+    body = b'{"error":"Audio too large (max 8 MB)"}'
+    await send({'type': 'http.response.start', 'status': 413,
+                'headers': [(b'content-type', b'application/json'),
+                            (b'content-length', str(len(body)).encode()),
+                            (b'cache-control', b'no-store')]})
+    await send({'type': 'http.response.body', 'body': body})
+
+
+class _UploadBodyLimit:
+    """Stop an oversized /api/ask_audio body while it is still streaming.
+
+    FastAPI parses the multipart body before the route runs and spools large parts
+    to disk, so the route's own MAX_AUDIO_BYTES check is too late: a client that
+    keeps sending can fill the disk. This middleware counts received bytes and
+    aborts the stream at MAX_UPLOAD_BYTES, then answers 413 itself.
+    """
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope['type'] != 'http' or scope.get('path') != _UPLOAD_PATH:
+            await self.app(scope, receive, send)
+            return
+
+        declared = None
+        for key, value in scope.get('headers') or ():
+            if key.lower() == b'content-length':
+                try:
+                    declared = int(value)
+                except ValueError:
+                    declared = None
+        if declared is not None and declared > MAX_UPLOAD_BYTES:
+            await _send_too_large(send)
+            return
+
+        received = 0
+        started = False
+
+        async def limited_receive():
+            nonlocal received
+            message = await receive()
+            if message['type'] == 'http.request':
+                received += len(message.get('body', b''))
+                if received > MAX_UPLOAD_BYTES:
+                    raise _BodyTooLarge
+            return message
+
+        async def tracking_send(message):
+            nonlocal started
+            if message['type'] == 'http.response.start':
+                started = True
+            await send(message)
+
+        try:
+            await self.app(scope, limited_receive, tracking_send)
+        except _BodyTooLarge:
+            if not started:
+                await _send_too_large(send)
+
+
+# Added before the request middleware below, so _global stays outermost and can
+# stamp X-Request-ID and Server-Timing on the 413 this middleware produces.
+app.add_middleware(_UploadBodyLimit)
 _IP_TABLE_SOFT_CAP = 10_000
 
 
@@ -80,6 +165,8 @@ async def _global(request: Request, call_next):
     # sent to Gnani. A well-formed inbound X-Request-ID is kept so a client can trace it.
     rid = reqid.accept_or_new(request.headers.get('x-request-id'))
     reqid.set_current(rid)
+    client = request.client.host if request.client else 'anon'
+    reqid.set_client(client)
     request.state.request_id = rid
     timings = timing.begin()
     t_start = time.perf_counter()
@@ -87,10 +174,11 @@ async def _global(request: Request, call_next):
     # /api/health is the container healthcheck: it must never spend a client's quota.
     if request.url.path.startswith('/api') and request.url.path != '/api/health':
         try:
-            _rate_limit(request.client.host if request.client else 'anon')
+            _rate_limit(client)
         except HTTPException as e:
-            logger.warning('rate_limited ip=%s', request.client.host if request.client else 'anon')
-            return JSONResponse(status_code=e.status_code, content={'error': e.detail}, headers=id_header)
+            logger.warning('rate_limited ip=%s', client)
+            return JSONResponse(status_code=e.status_code,
+                                content={'error': e.detail}, headers=id_header)
     response = await call_next(request)
     if request.url.path.startswith('/api/ask'):
         total = time.perf_counter() - t_start
@@ -178,8 +266,9 @@ def _session_id(value: str | None):
 
 
 @app.post('/api/session')
-def session_new():
+def session_new(response: Response):
     """Mint an unguessable session id (192 random bits, 32 URL-safe characters)."""
+    response.headers['Cache-Control'] = 'no-store'
     return {'session_id': secrets.token_urlsafe(24)}
 
 class TextQuery(BaseModel):
@@ -188,6 +277,7 @@ class TextQuery(BaseModel):
     speak: bool = True
 
 def _speak_or_none(reply: str):
+    _count('tts_attempted')
     try:
         return base64.b64encode(synthesize(reply)).decode()
     except HTTPException:
@@ -199,10 +289,15 @@ def _audio_fields(reply: str):
     """Audio plus a flag telling the client when the voice covers only the first part of the text."""
     audio = _speak_or_none(reply)
     truncated = bool(audio) and speakable(reply)[1]
+    if audio:
+        _count('audio_returned')
+        if truncated:
+            _count('audio_truncated')
     return {'audio_wav_b64': audio, 'audio_truncated': truncated}
 
 @app.post('/api/ask_text')
-def ask_text(q: TextQuery):
+def ask_text(q: TextQuery, response: Response):
+    response.headers['Cache-Control'] = 'no-store'
     sid = _session_id(q.session_id)
     reply, sources, meta = rag_answer(q.text, sid)
     _count('rag_answered')
@@ -211,7 +306,8 @@ def ask_text(q: TextQuery):
             'session_id': sid, **meta, **audio}
 
 @app.get('/api/session/{session_id}')
-def session_state(session_id: str):
+def session_state(session_id: str, response: Response):
+    response.headers['Cache-Control'] = 'no-store'
     session_id = _session_id(session_id)
     last = conversation.STORE.last(session_id)
     if last is None:
@@ -222,16 +318,18 @@ def session_state(session_id: str):
     }}
 
 @app.delete('/api/session/{session_id}')
-def session_reset(session_id: str):
+def session_reset(session_id: str, response: Response):
+    response.headers['Cache-Control'] = 'no-store'
     session_id = _session_id(session_id)
     conversation.STORE.reset(session_id)
     return {'session_id': session_id, 'reset': True}
 
 @app.post('/api/ask_audio')
-def ask_audio(audio: UploadFile = File(...), session_id: str = Form('')):
+def ask_audio(response: Response, audio: UploadFile = File(...), session_id: str = Form('')):
     # A plain `def` route: FastAPI runs it in the threadpool. ffmpeg, the provider
     # calls and the embedding model are all blocking, and as `async def` any one
     # slow turn would have frozen every other request, /api/health included.
+    response.headers['Cache-Control'] = 'no-store'
     sid = _session_id(session_id)  # reject a bad id before any STT credit is spent
     raw = audio.file.read(MAX_AUDIO_BYTES + 1)
     if len(raw) > MAX_AUDIO_BYTES:
@@ -240,7 +338,9 @@ def ask_audio(audio: UploadFile = File(...), session_id: str = Form('')):
     suffix = suffix if suffix in {'.webm', '.wav', '.mp3', '.ogg', '.m4a', '.flac', '.aac'} else '.webm'
     wav = to_wav(raw, suffix)
     query, lang = transcribe(wav)
+    _count('audio_turns')
     if not query.strip():
+        _count('empty_transcript')
         return {'transcript': '', 'reply': 'Suno, awaaz samajh nahi aayi. Thodi der phir se kahein.',
                 'detected_language_code': lang, 'sources': [], 'audio_wav_b64': None,
                 'audio_truncated': False, 'session_id': sid, 'follow_up': False,

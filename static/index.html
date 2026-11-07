@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="referrer" content="no-referrer" />
 <meta name="theme-color" content="#f8f3e6" />
 <meta name="color-scheme" content="light" />
 <title>Siddha — A Voice Guide to Indian Scholarships</title>
@@ -277,7 +278,6 @@ const contextRow = document.getElementById('context-row'), contextEl = document.
 const resetEl = document.getElementById('reset');
 const player = document.getElementById('player');
 const SESSION_KEY = 'siddha_session';
-const params = new URLSearchParams(location.search);
 // The server accepts only 32-80 URL-safe characters. randomUUID needs a secure context, so
 // fall back to 24 random bytes as hex (48 chars) rather than anything predictable.
 const SID_OK = /^[A-Za-z0-9_-]{32,80}$/;
@@ -286,8 +286,10 @@ function newSessionId() {
   const bytes = crypto.getRandomValues(new Uint8Array(24));
   return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
 }
-let sessionId = [params.get('session'), sessionStorage.getItem(SESSION_KEY)]
-  .find(v => v && SID_OK.test(v)) || newSessionId();
+// Never adopt a session id from the URL: a link with ?session=... would let its
+// author read this visitor's next transcript from the session endpoint.
+let sessionId = sessionStorage.getItem(SESSION_KEY);
+if (!sessionId || !SID_OK.test(sessionId)) sessionId = newSessionId();
 sessionStorage.setItem(SESSION_KEY, sessionId);
 const MIME = ['audio/webm','audio/mp4','audio/wav'].find(m => MediaRecorder.isTypeSupported(m)) || '';
 let recorder = null, chunks = [];

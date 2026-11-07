@@ -14,6 +14,9 @@ import uuid
 NO_REQUEST = '-'  # shown in log lines written outside any request (start-up, scripts)
 
 _current: contextvars.ContextVar[str] = contextvars.ContextVar('siddha_request_id', default=NO_REQUEST)
+# Client identity for the per-client Gnani credit budget. Set by the HTTP
+# middleware; direct pipeline calls (tests, scripts) fall back to 'anon'.
+_client: contextvars.ContextVar[str] = contextvars.ContextVar('siddha_client', default='anon')
 
 # Only a conservative charset is accepted from callers: the value lands in log lines.
 _VALID = re.compile(r'^[A-Za-z0-9._-]{8,64}$')
@@ -36,6 +39,15 @@ def set_current(request_id: str) -> None:
 
 def current() -> str:
     return _current.get()
+
+
+def set_client(client: str) -> None:
+    """Identify the caller for the per-client Gnani credit budget."""
+    _client.set(client)
+
+
+def client() -> str:
+    return _client.get()
 
 
 def upstream(stage: str) -> str:

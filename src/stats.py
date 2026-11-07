@@ -4,20 +4,38 @@ Counters answer: how often do turns come back empty, use context, get their audi
 or lose audio; how decisive is retrieval (top score and the gap to the runner-up); and
 how many Gnani calls have been spent against the credit budget.
 
-One Gnani call is counted per HTTP attempt, so a retry spends a second credit."""
+One Gnani call is counted per HTTP attempt, so a retry spends a second credit. Both
+budgets are hard stops: when either is spent, gnani_call() raises CreditExhausted and
+no further provider request is made. The per-client budget stops one visitor from
+burning the whole public demo's credits."""
 import os
 import threading
 
 CREDIT_BUDGET = int(os.getenv('SIDDHA_CREDIT_BUDGET', '5000'))
+CLIENT_CREDIT_BUDGET = int(os.getenv('SIDDHA_CLIENT_CREDIT_BUDGET', '250'))
+
+
+class CreditExhausted(Exception):
+    """The Gnani credit budget is spent; the call must not reach the provider."""
+
+    def __init__(self, scope: str):
+        self.scope = scope
+        super().__init__(f'{scope} credit budget exhausted')
+
 
 _lock = threading.Lock()
 _counters: dict[str, int] = {}
 _credits = {'stt': 0, 'tts': 0}
+_client_credits: dict[str, int] = {}
 _retrieval = {'n': 0, 'top_sum': 0.0, 'margin_sum': 0.0, 'margin_min': None, 'tie_n': 0}
 
-# Margin (top score minus runner-up) below which the top hit is treated as a coin flip.
-# Placeholder until item 7 derives the threshold from the eval set.
-TIE_MARGIN = 0.0010
+# RRF contributes 1/(60 + rank) to a record's score. One rank position is worth
+# 1/61 - 1/62 = 0.000264, so a top-2 margin below that is a dead tie between the
+# two retrievers: the order is decided by rounding, not evidence. Rounded up to
+# 0.0003. On the 30-query hand set this flags exactly the one exact tie (the
+# risk-taking/NUDI query); the smallest nonzero margin among correct top-1
+# queries is 0.0006, so the counter does not cry wolf on ordinary results.
+TIE_MARGIN = 0.0003
 
 
 def count(key: str, n: int = 1) -> None:
@@ -25,10 +43,20 @@ def count(key: str, n: int = 1) -> None:
         _counters[key] = _counters.get(key, 0) + n
 
 
-def gnani_call(service: str) -> None:
-    """Record one outbound Gnani call ('stt' or 'tts')."""
+def gnani_call(service: str, client: str = 'anon') -> None:
+    """Record one outbound Gnani call ('stt' or 'tts'), or refuse it.
+
+    The check and the increment happen under one lock, so two concurrent turns
+    cannot both spend the last credit. Raises CreditExhausted before the caller
+    issues the HTTP request."""
     with _lock:
+        if sum(_credits.values()) >= CREDIT_BUDGET:
+            raise CreditExhausted('global')
+        spent = _client_credits.get(client, 0)
+        if spent >= CLIENT_CREDIT_BUDGET:
+            raise CreditExhausted('client')
         _credits[service] = _credits.get(service, 0) + 1
+        _client_credits[client] = spent + 1
 
 
 def credits_used() -> int:
@@ -62,6 +90,7 @@ def snapshot() -> dict:
     with _lock:
         c = dict(_counters)
         credits = dict(_credits)
+        clients = len(_client_credits)
         r = dict(_retrieval)
     used = sum(credits.values())
     return {
@@ -81,6 +110,7 @@ def snapshot() -> dict:
             'tie_margin': TIE_MARGIN,
         },
         'gnani_credits': {**credits, 'used': used, 'budget': CREDIT_BUDGET,
+                          'client_budget': CLIENT_CREDIT_BUDGET, 'clients': clients,
                           'remaining': max(CREDIT_BUDGET - used, 0)},
     }
 
@@ -103,4 +133,5 @@ def reset() -> None:
     with _lock:
         _counters.clear()
         _credits.update({'stt': 0, 'tts': 0})
+        _client_credits.clear()
         _retrieval.update({'n': 0, 'top_sum': 0.0, 'margin_sum': 0.0, 'margin_min': None, 'tie_n': 0})

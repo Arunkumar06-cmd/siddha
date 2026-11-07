@@ -29,7 +29,11 @@ COPY --from=build /opt/hf /opt/hf
 COPY . .
 USER siddha
 EXPOSE 7860
-HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
-    CMD curl -fsS http://localhost:7860/api/health || exit 1
-# HF Spaces convention: port 7860
-CMD ["python", "-m", "uvicorn", "server:app", "--host", "0.0.0.0", "--port", "7860", "--workers", "1"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=180s --retries=3 \
+    CMD curl -fsS http://localhost:7860/api/ready || exit 1
+# HF Spaces convention: port 7860. The platform proxy is the only route in; trust
+# its X-Forwarded-For so the per-visitor credit budget sees the real client IP.
+# If the image is exposed directly, XFF is spoofable — the global budget remains
+# the hard cost cap.
+CMD ["python", "-m", "uvicorn", "server:app", "--host", "0.0.0.0", "--port", "7860", \
+     "--workers", "1", "--proxy-headers", "--forwarded-allow-ips", "*"]

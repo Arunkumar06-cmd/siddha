@@ -131,7 +131,7 @@ def transcribe(wav: pathlib.Path):
         t0 = time.time()
 
         def call():
-            stats.gnani_call('stt')
+            stats.gnani_call('stt', reqid.client())
             r = requests.post(f'{GNANI_BASE}/stt/v3',
                 headers={'X-API-Key-ID': GNANI_API_KEY, 'X-API-Request-ID': reqid.upstream('stt')},
                 files={'audio_file': ('q.wav', data, 'audio/wav')},
@@ -145,6 +145,10 @@ def transcribe(wav: pathlib.Path):
             with timing.stage('stt'):
                 r = retry(call, attempts=2, retryable=_retryable)
             payload = r.json() if r.status_code == 200 else None
+        except stats.CreditExhausted as e:
+            STT_BREAKER.abandon_probe()
+            logger.warning('stt_credit_exhausted scope=%s', e.scope)
+            raise HTTPException(503, 'Voice credit budget exhausted. Try again later, or use text.') from e
         except Exception as e:
             STT_BREAKER.record_failure()
             logger.exception('stt_exc err=%s', e)
@@ -183,7 +187,7 @@ def synthesize(text: str):
     t0 = time.time()
 
     def call():
-        stats.gnani_call('tts')
+        stats.gnani_call('tts', reqid.client())
         r = requests.post(f'{GNANI_BASE}/api/v1/tts/inference',
             headers={'X-API-Key-ID': GNANI_API_KEY, 'Content-Type': 'application/json',
                      'X-API-Request-ID': reqid.upstream('tts')},
@@ -200,6 +204,10 @@ def synthesize(text: str):
     try:
         with timing.stage('tts'):
             r = retry(call, attempts=2, retryable=_retryable)
+    except stats.CreditExhausted as e:
+        TTS_BREAKER.abandon_probe()
+        logger.warning('tts_credit_exhausted scope=%s', e.scope)
+        raise HTTPException(503, 'Voice credit budget exhausted. Try again later, or use text.') from e
     except Exception as e:
         TTS_BREAKER.record_failure()
         logger.exception('tts_exc err=%s', e)

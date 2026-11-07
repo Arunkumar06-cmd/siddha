@@ -67,6 +67,15 @@ class CircuitBreaker:
                 _log.warning('circuit_opened name=%s failures=%d cooldown_s=%s',
                              self.name, self._fails, self.cooldown)
 
+    def abandon_probe(self):
+        """Release a half-open probe slot without recording provider health.
+
+        Use when the request never reached the provider (for example, the credit
+        budget refused it). Recording that as a failure would wrongly re-open the
+        circuit and blame the provider for our own limit."""
+        with self._lock:
+            self._probing = False
+
     def state(self) -> str:
         with self._lock:
             if self._fails < self.threshold:
