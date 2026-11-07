@@ -9,12 +9,12 @@
 ## ADR-002: ECC-free offline corpus build vs live scrape
 **Date:** 2026-11-04
 **Context:** myScheme blocks scraping (CAPTCHA); but Kaggle hosts the April 2025 dump (updated 13 Jul 2025, 3,400 rows).
-**Decision:** Use the Kaggle dump → `scholarships.jsonl` (1,142 scholarship/education schemes, deterministic). No runtime dependency.
+**Decision:** Use the Kaggle dump → `scholarships.jsonl` (1,141 scholarship/education schemes, deterministic). No runtime dependency.
 **Consequences:** Corpus is a snapshot, update via `src/prepare_corpus.py` when upstream changes.
 
 ## ADR-003: embeddings (superseded by ADR-010)
 **Date:** 2026-11-04
-**Context:** Need multilingual (Hinglish/Hindi/Tamil) vectors that run on CPU in <1 s for 1,142 docs.
+**Context:** Need multilingual (Hinglish/Hindi/Tamil) vectors that run on CPU in <1 s for 1,141 docs.
 **Decision:** `paraphrase-multilingual-MiniLM-L12-v2` — 384d, ~118 MB, CPU. Superseded 2026-11-05 by ADR-010 (BGE-M3).
 **Consequences:** Fast & cached; no GPU requirement; retrieval quality good enough over a small corpus.
 
@@ -45,16 +45,22 @@
 ## ADR-008: torch 2.12.1 over 2.13.0 (PYSEC-2025-194)
 **Date:** 2026-11-04 · **Status:** accepted-risk
 **Context:** pip-audit flags torch 2.12.1 (fix: 2.13.0). This machine's toolkit hard-pins `torchvision==0.27.1 → torch==2.12.1`; upgrading torch breaks the resolver for the rest of the Anaconda env.
-**Decision:** Pin `torch==2.12.1`. Siddha feeds only a local, trusted corpus through the `BGE-M3 encoder; no untrusted tensor/model inputs reach torch ops at request time. Revisit when torchvision releases a 2.13-compatible pin.
+**Decision:** Pin `torch==2.12.1`. Siddha feeds only a local, trusted corpus through the BGE-M3 encoder; no untrusted tensor/model inputs reach torch ops at request time. Revisit when torchvision releases a 2.13-compatible pin. CI ignores this exact advisory (`PYSEC-2025-194`) and fails on any other.
 **Consequences:** One advisory accepted; re-audit on any torchvision bump.
 
-## ADR-009: setuptools 81.0.0 (env-level advisory)
+## ADR-009: setuptools 81.0.0 (env-level advisories)
 **Date:** 2026-11-04 · **Status:** accepted-risk
-**Context:** pip-audit flags setuptools 81.0.0 (fixes require ≥83). `torch==2.12.1` hard-requires `setuptools<82` — upgrading breaks torch. setuptools is a build/install tool, not a runtime path.
-**Decision:** Defer; not in request path. Re-check on the coordinated torch+torchvision bump.
-**Consequences:** Documented accepted-risk; silence CI does not — advisory visible in CI logs.
+**Context:** pip-audit flags setuptools 81.0.0 (`PYSEC-2026-3447` and `GHSA-xmj3-9gf7-h52w`; fixes require ≥83 and ≥84.1). `torch==2.12.1` hard-requires `setuptools<82` — upgrading breaks torch. setuptools is a build/install tool, not a runtime path.
+**Decision:** Defer; not in request path. Re-check on the coordinated torch+torchvision bump. CI ignores exactly these two IDs and fails on any other advisory.
+**Consequences:** Documented accepted-risk; a new advisory fails the security workflow instead of being buried.
 
 ## ADR-010: BGE-M3 multilingual embeddings (supersedes ADR-003)
 **Status:** accepted (2026-11-05)
 **Decision:** `BAAI/bge-m3` — 1024d, 100+ languages, multilingual code-mixed retrieval for Hinglish queries.
 **Evidence:** BGE-M3 with RRF alone put a State 11th–12th-class scheme above the Central SC post-matric on the demo question — the flat index favored short State names. Adding state-aware re-ranking (BM25 + RRF + 1.2 Central multiplier when no state is named, 0.15 via `central government` filter, 1.35/0.75 State boost/suppression) restores the Central scheme to #1 while Bihar-specific queries return Bihar's scheme #1. Trade-off: ~2.3 GB model download in CI (cached) vs 118 MB for MiniLM.
+
+## ADR-011: Hard limits before the provider, not after
+**Date:** 2026-11-07 · **Status:** accepted
+**Context:** A public demo with 5,000 programme credits can be drained by one visitor. FastAPI parses multipart bodies before the route's 8 MB check, so a streaming upload could fill the disk. A `?session=` link could hand its author the visitor's next transcript. A cold start could build the 2 GB model twice when two requests race.
+**Decision:** Enforce a global (`SIDDHA_CREDIT_BUDGET`, 5,000) and per-visitor (`SIDDHA_CLIENT_CREDIT_BUDGET`, 250) budget under one lock before each Gnani HTTP attempt; cap the whole multipart body at `MAX_AUDIO_BYTES + 512 KiB` in ASGI middleware; never adopt a session id from the URL, mark session responses `Cache-Control: no-store` and send `Referrer-Policy: no-referrer`; load the model once under a lock and warm it in the server lifespan, with `/api/ready` as the container healthcheck.
+**Consequences:** A refused credit returns 503 without touching the provider and releases a half-open probe; one visitor cannot spend more than 5% of the budget; oversized uploads are cut before disk spooling; the first user turn does not pay the model load. Behind the platform proxy the visitor is the forwarded IP (uvicorn trusts the proxy); if the image is exposed directly, that header is spoofable, so the global budget remains the hard cost cap.

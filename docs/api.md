@@ -1,17 +1,20 @@
 # API
 
 Base: `/api`. All requests: JSON. All errors: `{"error": "..."}` with typed status code.
+Session and answer responses carry `Cache-Control: no-store`; they can contain a transcript.
 
 ## POST /api/ask_text
 **Body:** `{"text": string (2–500 chars), "session_id": string | null, "speak": boolean = true}`
-**200:** `{transcript, reply, sources[], session_id, follow_up, context_used, context_name, audio_wav_b64}`
+**200:** `{transcript, reply, sources[], session_id, follow_up, context_used, context_name, audio_wav_b64, audio_truncated}`
 **422:** Invalid request (empty text / too long)
 **429:** Rate limit (30/min/IP)
 **502:** Provider failure (STT/TTS) — typed, no stack trace
+**503:** Gnani credit budget exhausted (global or per-visitor) — no provider call was made
 
 ## POST /api/ask_audio
 **Body:** `multipart/form-data` with field `audio` (WAV/MP3/OGG/M4A ≤ 8 MB) and optional `session_id`
-**200:** `{transcript, detected_language_code, reply, sources[], session_id, follow_up, context_used, context_name, audio_wav_b64}`
+**200:** `{transcript, detected_language_code, reply, sources[], session_id, follow_up, context_used, context_name, audio_wav_b64, audio_truncated}`
+**413:** Audio (or the whole multipart body) too large · **415:** Decode error · **502:** Provider failure · **503:** Credit budget exhausted
 
 ## POST /api/session
 **200:** `{session_id}` — a server-minted, unguessable id (32 URL-safe characters, 192 random bits). A browser `crypto.randomUUID()` is also accepted.
@@ -21,13 +24,16 @@ Base: `/api`. All requests: JSON. All errors: `{"error": "..."}` with typed stat
 
 ## DELETE /api/session/{session_id}
 **200:** `{session_id, reset: true}` — clears the conversation. Session IDs must match `^[A-Za-z0-9_-]{32,80}$`: the id is a bearer secret, so short client-chosen ids are rejected with 400.
-**413:** Audio too large · **415:** Decode error · **502:** Provider failure
 
 ## GET /api/health
-**200:** `{status: "ok", version}` · **503:** corpus missing / no key
+**200:** `{status: "ok", version}` · **503:** corpus missing / no key / no ffmpeg. Liveness only; it does not load the model.
+
+## GET /api/ready
+**200:** `{status: "ready", version}` once the embedding model and index are in memory and ffmpeg is present.
+**503:** `{status: "not_ready", waiting_for: [...]}` during warm-up. This is the container healthcheck.
 
 ## GET /api/metrics
-**200:** counters, `stt_circuit`, `tts_circuit`, `rate_limit_per_min`
+**200:** counters, quality rates (`empty_transcript`, `context_used`, `audio_truncated`, `tts_degraded`), retrieval decisiveness, Gnani credits (`used`, `budget`, `client_budget`, `remaining`), `stt_circuit`, `tts_circuit`, `rate_limit_per_min`, stage timings.
 
 ## Example
 ```bash

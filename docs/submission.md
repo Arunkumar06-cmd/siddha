@@ -1,13 +1,13 @@
 # Submission — Siddha
 
-> Voice-first guide to 1,142 Indian government scholarships. Ask in Hinglish, Hindi or Tamil; hear the exact scheme, the documents you need, and where to check the current deadline.
+> Voice-first guide to 1,141 Indian government scholarships. Ask in Hinglish, Hindi or Tamil; hear the exact scheme, the documents you need, and where to check the current deadline.
 
 ## Form-ready answers
 
 - **Project URL (one-page pitch):** https://github.com/Arunkumar06-cmd/siddha/blob/main/docs/pitch.md
 - **Demo video (139 s, two turns — fits X’s 140 s cap) — watch in browser:** https://arunkumar06-cmd.github.io/siddha/
   - Download master: https://github.com/Arunkumar06-cmd/siddha/releases/download/v2.2.0/demo.mp4
-- **Problem:** 1,142 official scholarships are published, but the students who need them most cannot find the right one through English, form-first portals. Siddha makes discovery voice-first in Hinglish, Hindi and Tamil — and keeps a follow-up on the same scheme.
+- **Problem:** 1,141 official scholarships are published, but the students who need them most cannot find the right one through English, form-first portals. Siddha makes discovery voice-first in Hinglish, Hindi and Tamil — and keeps a follow-up on the same scheme.
 - **Gnani models/APIs:** Prisma v3.0 STT (`indic-auto`, `codemix`); Timbre v3.0 TTS (Shivani, `hi-en`).
 - **Who uses it:** students, first-generation families, school and college counsellors, scholarship helpdesks.
 - **Contribution:** solo — corpus, retrieval, grounded responder, context layer, voice loop, UI, tests, CI, docs, demo.
@@ -27,7 +27,7 @@ The final submission form is emailed to this registered address after registrati
 
 ## The problem
 
-India publishes 1,142 scholarship schemes on myScheme. The students who need them most are often the least served by an English, form-first web portal. Discovery is a language and interface problem, not only a data problem.
+India publishes 1,141 scholarship schemes on myScheme. The students who need them most are often the least served by an English, form-first web portal. Discovery is a language and interface problem, not only a data problem.
 
 ## What Siddha does
 
@@ -55,15 +55,15 @@ The UI shows the transcript, the spoken answer, the carried scheme when context 
 - **Robustness (docs/eval-audio.md):** 12 Hinglish scholarship utterances × telemetry conditions. Prisma transcribed 100% of utterances; 11/12 kept every critical term even on band-passed 8 kHz telephony with traffic/fan noise (the misses are Devanagari-script transcripts of correct content).
 - **Serving:** single-process FastAPI, vanilla HTML/JS mic UI.
 - **Audio:** ffmpeg normalises browser webm/opus to 16 kHz mono WAV, deletes the temp file in `finally`.
-- **Retrieval:** prebuilt FAISS index + BM25 over `data/scholarships.jsonl` (1,142 records); RRF fusion; top-5 records.
+- **Retrieval:** prebuilt FAISS index + BM25 over `data/scholarships.jsonl` (1,141 records); RRF fusion; top-5 records.
 - **Answering:** aspect classification (documents / eligibility / benefit / apply / renewal / status / deadline) and template composition strictly from retrieved fields; aspect-only follow-ups reuse the last scheme and skip retrieval.
 - **Voice safety:** number, currency, URL, slash and bracket normalisation; comma-separated document lists; word-boundary truncation; dangling-preposition removal.
-- **Resilience:** retries with backoff + jitter on timeout/connection/5xx, circuit breakers for STT and TTS, per-IP rate limit, typed error envelope, `/api/health` corpus check, `/api/metrics`.
-- **Delivery:** multi-stage Docker image, non-root user, CI (ruff, compile, 63 tests, 86% coverage gate, gitleaks, Docker build) and a security workflow (`gitleaks`, `pip-audit`).
+- **Resilience:** retries with backoff + jitter on timeout/connection/5xx, circuit breakers for STT and TTS, per-IP rate limit, global and per-visitor Gnani credit budgets enforced before each provider call, a streaming cap on audio uploads, typed error envelope, `/api/health` corpus check, `/api/ready` warm-up probe, `/api/metrics`.
+- **Delivery:** multi-stage Docker image, non-root user, CI (ruff, compile, 218 tests, 90.6% coverage gate, four-set retrieval/confidence regression gate, gitleaks, Docker build + smoke run) and a security workflow (`gitleaks`, `pip-audit` with explicit, documented ignores).
 
 ## Why it is not a mockup
 
-- 63 tests, 86% coverage, ruff clean.
+- 218 tests, 90.6% coverage, ruff clean.
 - The demo is a screen recording of the running service: two questions are played into Chrome as microphone input, then the real Prisma STT → retrieval → grounded responder → Timbre TTS path produces each transcript and audio in the recording.
 - The two student questions (“SC students ke liye central government post matric scholarship ke documents kya chahiye?” and “Aur is scheme ki last date kya hai?”) are synthesized with Timbre (voice **Avinash**) so the recording is reproducible without a human caller; the answers use the product voice **Shivani**. Founder narration is **Devansh**. This is disclosed rather than presented as a human speaker.
 - The API key is never in the repo or the image; it is resolved from the environment or `~/.env`.
@@ -96,7 +96,7 @@ Designed and built solo: corpus pipeline, retrieval, grounded responder, voice-s
 
 ### LinkedIn (attach `docs/demo.mp4`)
 
-> India has 1,142 scholarship schemes for students. Almost nobody knows that number — and fewer still know which one fits them.
+> India has 1,141 scholarship schemes for students. Almost nobody knows that number — and fewer still know which one fits them.
 >
 > The rules aren't hard to find — they're stuck behind English forms, dropdowns and PDFs most students will never open. So I built Siddha.
 >
@@ -121,7 +121,7 @@ Designed and built solo: corpus pipeline, retrieval, grounded responder, voice-s
 
 > Millions of Indian students miss scholarships they qualify for — rules are buried in portals.
 >
-> Siddha: ask in Hinglish, Hindi or Tamil. Hear the scheme + documents, grounded in 1,142 records.
+> Siddha: ask in Hinglish, Hindi or Tamil. Hear the scheme + documents, grounded in 1,141 records.
 >
 > Built with @GnaniAi Prisma + Timbre.
 > #GnaniAI #GreatIndianAIInternshipChallenge

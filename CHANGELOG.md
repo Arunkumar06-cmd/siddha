@@ -2,9 +2,23 @@
 All notable changes to Siddha. Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Security / reliability hardening (pre-submission audit)
+- **Session fixation/PII:** the page no longer adopts `?session=` from the URL; session and answer responses are `Cache-Control: no-store`, and the page sends `Referrer-Policy: no-referrer`.
+- **Cost cap:** a global (`SIDDHA_CREDIT_BUDGET`, 5,000) and per-visitor (`SIDDHA_CLIENT_CREDIT_BUDGET`, 250) Gnani credit budget is checked and incremented under one lock before every provider HTTP attempt. Exhaustion returns 503 without touching the provider and releases a half-open breaker probe.
+- **Upload DoS:** ASGI middleware counts the `/api/ask_audio` body as it streams and aborts at `MAX_AUDIO_BYTES + 512 KiB`, before FastAPI can spool an unbounded multipart body to disk.
+- **Cold start:** the model and index load once under a lock (the old `lru_cache` could build the 2 GB model twice when two first requests raced) and warm in the server lifespan; the container healthcheck is `/api/ready`, which stays 503 until warm.
+- **Supply chain:** `pip-audit` now fails the security workflow on any new advisory, with three documented ignores (`PYSEC-2025-194`, `PYSEC-2026-3447`, `GHSA-xmj3-9gf7-h52w`); gitleaks is checksum-verified in both workflows.
+- **Eval guard:** `evals/baseline.json` is committed and `scripts/eval_retrieval.py --check` runs in CI; the Docker job now smoke-runs the image, waits for `/api/ready` and fetches the page.
+- **Dead quality metrics:** `audio_turns`, `empty_transcript`, `audio_returned`, `audio_truncated` and `tts_attempted` are now incremented, so the rates in `/api/metrics` have real denominators.
+
 ### Fixed (pre-submission review)
 - **No invented process.** The hard-coded NSP/PFMS "status" and "renewal" answers (which fired for any scheme, including State schemes not on NSP, and ran before retrieval) are removed. Status and renewal now quote the record or say it is silent.
 - **Never speak half a rule.** Eligibility and benefit text is clipped on whole sentences (`clip_sentences`, aware of "Rs. 2.5" and "No. 4"); an overlong first sentence is sent to the official page instead of being read in part. Document lists are clipped on item boundaries (`clip_items`).
+- **Deadlines are checked, not quoted blindly.** A concrete date in the past is reported as passed; a recurring phrase ("first week of April every year") is not turned into a date; only a current date is spoken as the last date.
+- **Status and renewal are grounded.** "Status Tracking"/"Check Application Status" lines are quoted when present; a renewal *document* ("Last Subscription Renewal Copy") is not mistaken for the renewal *process*.
+- **Eligibility quotes are verified.** The LLM classifier's quote must be a verbatim substring of the record; a paraphrased or invented line silently falls back to the grounded responder.
+- **Confidence gate recalibrated.** `MIN_DENSE=0.545` (just above the off-topic maximum 0.5439) and `SOFT_DENSE=0.58`; an exact, unique scheme name overrides the floor, and the exact-name lookup searches the whole corpus. "gym membership offers" is refused; "Mukhyamantri Matrupushti Uphar kya hai" is answered.
+- **Corpus deduplicated:** 1,142 rows → 1,141 unique schemes; FAISS index and embeddings rebuilt to match.
 - **Audio is cut on sentence boundaries**, never by string index. The old `[:600]` slice could split a sentence or a `<pauses>` tag; the API now also reports `audio_truncated`.
 - **STT retry resent an empty file** (the handle was already read to EOF); the upload is now held as bytes.
 - **Circuit breaker** now has a real half-open state (one probe), no longer counts provider 4xx as outages, and logs open/half-open/closed transitions.
@@ -21,12 +35,12 @@ All notable changes to Siddha. Format: [Keep a Changelog](https://keepachangelog
 - **Conversation memory** (`src/context.py`, `src/conversation.py`): deterministic follow-up resolution keyed by session. Aspect-only follow-ups answer from the last scheme with no new retrieval; state/category refinements re-retrieve with the prior scheme as an anchor; new scheme names bypass context. Sessions are text-only, in-memory, 30-minute TTL, 500-session cap, 8-turn cap.
 - Session endpoints `GET/DELETE /api/session/{id}`; page refresh restores the last turn; “Start a new conversation” resets it.
 - Demo re-recorded as a **two-turn conversation** (139 s, 1080×1080): documents question, then “Aur is scheme ki last date kya hai?” with the context row visible; male founder narration (Devansh), Avinash asking, Shivani answering.
-- 63 tests, 86% coverage.
+- 218 tests, 90.6% coverage.
 - Opt-in eligibility reasoner (`src/eligibility.py`, `src/llm.py`): profile extraction + record-coverage classification via any OpenAI-compatible endpoint (e.g. DeepSeek), answers the "am I eligible?" gap; strict fallback to grounded templates when unconfigured; fully mocked tests (`tests/test_eligibility.py`)
 
 - BGE-M3 index rebuilt (512-token max sequence, fp32/MPS) — replaces MiniLM-L12 for multilingual/code-mixed retrieval
 - `docs/eval-audio.md`: telephonic/noise robustness probe (8 kHz, traffic/fan) with critical-term preservation and honest caveats
-- `scripts/eval_retrieval.py`: 30-query labeled retrieval evaluation (recall@1, recall@5, MRR) for verifiable comparisons
+- `scripts/eval_retrieval.py`: four-set retrieval and confidence evaluation (hand, named, noisy, off-topic) with bootstrap intervals and a committed regression baseline (`evals/baseline.json`)
 - `scripts/eval_audio.py`: reproduces the telephonic/noise probe end to end
 
 ### Changed
