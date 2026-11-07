@@ -14,6 +14,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).parent))
 import requests
 from fastapi import HTTPException
 
+import confidence
 import context
 import conversation
 import reqid
@@ -267,7 +268,21 @@ def rag_answer(query: str, session_id: str | None = None):
         stats.count('context_used')
     if follow:
         stats.count('follow_ups')
-    meta = {'follow_up': follow, 'context_used': used, 'context_name': context_name}
+    # A carried-over scheme (focus) is already the user's topic; only fresh retrieval is judged.
+    verdict = confidence.OK if focus else confidence.tier(hits)
+    meta = {'follow_up': follow, 'context_used': used, 'context_name': context_name,
+            'confidence': verdict}
+
+    if verdict == confidence.LOW:
+        # Nothing in the records supports an answer. Say so rather than present the nearest
+        # unrelated scheme as the answer. Deliberately not remembered: an off-topic aside
+        # must not wipe the scheme the user was just discussing.
+        stats.count('low_confidence')
+        logger.info('rag_answer path=low_confidence best_dense=%s latency_s=%.2f',
+                    confidence.best_dense(hits), time.time() - t0)
+        return confidence.NOT_FOUND, [], meta
+    if verdict == confidence.SOFT:
+        stats.count('soft_confidence')
 
     if _eligibility_ready():
         try:
@@ -285,7 +300,9 @@ def rag_answer(query: str, session_id: str | None = None):
             logger.exception('eligibility_failed_fallback')
 
     with timing.stage('respond'):
-        reply, sources, is_canned = responder.answer(query, hits, follow_up=used)
+        # `hedge` is passed only when needed, so a responder that predates it still works.
+        hedge = {'hedge': True} if verdict == confidence.SOFT and not used else {}
+        reply, sources, is_canned = responder.answer(query, hits, follow_up=used, **hedge)
     scheme = None if is_canned else _scheme_from(sources, hits, focus)
     if is_canned:
         stats.count('canned_answers')

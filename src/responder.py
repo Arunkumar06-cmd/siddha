@@ -251,7 +251,11 @@ def compose(rec, aspects, overview=False):
         out.append("Is scheme ke baare mein portal pe poori jaankari milegi.")
     return ' '.join(out)
 
-def answer(query, hits, follow_up=False):
+HEDGE_HINT = "Agar yeh aapki scheme nahi hai, to scheme ka poora naam bol dijiye."
+
+
+def answer(query, hits, follow_up=False, hedge=False):
+    """`hedge` marks a shaky retrieval: say so instead of announcing the scheme as the answer."""
     aspects = classify_aspects(query)
     if not hits:
         spoken = ("Suno. Mujhe iss sawal ka jawab nahi mila. Scholarships.gov.in pe check kijiye, "
@@ -273,6 +277,8 @@ def answer(query, hits, follow_up=False):
             state_note = f" Yeh {state} ki scheme hai."
     if follow_up:
         lead = f"Suno. Usi scheme ke liye — {rec['name']}."
+    elif hedge:
+        lead = f"Suno. Pakka nahi hai, par sabse milti-julti scheme yeh lag rahi hai, {rec['name']}."
     else:
         lead = f"Suno. Sabse relevant scheme yeh hai, {rec['name']}."
     closing = "Official details scholarships.gov.in pe dekhiye, wahan current dates dikhengi."
@@ -281,6 +287,8 @@ def answer(query, hits, follow_up=False):
                    "Poori shartein official page pe dekhiye.")
     if aspects == ['deadline']:
         closing = ""  # the deadline line already points at the official page
+    if hedge and not follow_up:
+        closing = f"{HEDGE_HINT} {closing}".strip()
     spoken = f"{lead}{state_note} {body} {closing}".strip()
     sources = [{'name': h['record']['name'], 'score': h['rank_score'],
                 'level': h['record']['level']} for h in hits[:3]]
