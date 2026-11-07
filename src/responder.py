@@ -1,5 +1,7 @@
 """Siddha responder - grounded strictly in the myScheme corpus.
 Voice-safe output: short sentences with <pauses> tags for Timbre v3.0."""
+import calendar
+import datetime
 import re
 
 import places
@@ -120,7 +122,7 @@ _DOT = '\x00'
 
 
 def _tidy(raw):
-    t = re.sub(r'\s+', ' ', str(raw or '')).strip(' .,')
+    t = re.sub(r'\s+', ' ', str(raw or '').replace('\ufeff', '')).strip(' .,')
     return _PREFIX_RE.sub('', t).strip(' .,')
 
 
@@ -180,38 +182,144 @@ def clip_items(raw, budget=300, more=' Aur bhi documents hain, poori list offici
     return _end(', '.join(kept)) + (more if len(kept) < len(items) else '')
 
 
-def _grounded_sentence(rec, needle):
-    """First sentence of the record that mentions `needle`, else None."""
-    blob = ' '.join(str(rec.get(k) or '') for k in ('application', 'details', 'eligibility', 'documents', 'benefits'))
-    for sent in _sentences(re.sub(r'\s+', ' ', blob)):
-        if needle in sent.lower():
-            return sent
+def _sentences_in(rec, fields):
+    """Every sentence in the named fields, with whitespace normalised."""
+    for field in fields:
+        blob = re.sub(r'\s+', ' ', str(rec.get(field) or '').replace('\ufeff', ''))
+        yield from _sentences(blob)
+
+
+DEADLINE_WORDS = ('last date', 'closing date', 'deadline', 'last day', 'apply by', 'due date')
+
+# "Status Tracking", "Check Application Status", "track your application" are all
+# application-status instructions. The old responder ignored them and told every
+# student the record had no way to check status.
+STATUS_RE = re.compile(
+    r'(application\s+status|status\s+of\s+(?:the\s+)?application|'
+    r'track(?:ing)?\s+(?:the\s+|your\s+)?application|'
+    r'check\s+(?:the\s+|your\s+)?(?:application\s+)?status|'
+    r'application\s+tracking|know\s+your\s+status)',
+    re.IGNORECASE,
+)
+
+# In the documents field, "Last Subscription Renewal Copy" is a document, not a
+# renewal process. Only quote a documents sentence when it describes an action.
+RENEWAL_ACTION_RE = re.compile(
+    r'(renew(?:al)?\s+(?:request|application|process|through|on|at|via|must|is|will|can)|'
+    r'apply(?:ing)?\s+for\s+(?:a\s+)?renewal|renewed|renew\s+(?:every|annually))',
+    re.IGNORECASE,
+)
+
+_MONTHS = {
+    'jan': 1, 'january': 1, 'feb': 2, 'february': 2, 'mar': 3, 'march': 3,
+    'apr': 4, 'april': 4, 'may': 5, 'jun': 6, 'june': 6, 'jul': 7, 'july': 7,
+    'aug': 8, 'august': 8, 'sep': 9, 'sept': 9, 'september': 9, 'oct': 10,
+    'october': 10, 'nov': 11, 'november': 11, 'dec': 12, 'december': 12,
+}
+_MONTH_RE = (
+    r'(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|'
+    r'aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)'
+)
+
+
+def _parse_date(text):
+    """First concrete calendar date in `text`, or None.
+
+    Only full dates count. "first week of April every year", a bare year, or a
+    month without a year is not a date Siddha can verify, so it is not quoted.
+    Indian records write day-first; month-first is accepted only when day-first
+    is impossible, which keeps 03/31/2026 working without flipping 05/06/2026.
+    """
+    t = str(text or '')
+    m = re.search(r'\b(\d{4})-(\d{1,2})-(\d{1,2})\b', t)
+    if m:
+        try:
+            return datetime.date(int(m.group(1)), int(m.group(2)), int(m.group(3)))
+        except ValueError:
+            pass
+    for m in re.finditer(r'\b(\d{1,2})[./-](\d{1,2})[./-](\d{2,4})\b', t):
+        a, b, year = int(m.group(1)), int(m.group(2)), int(m.group(3))
+        year = 2000 + year if year < 100 else year
+        if a <= 12 and b > 12:
+            pairs = [(b, a)]          # 03/31/2026: month-first, because day-first is impossible
+        elif a <= 12 and b <= 12:
+            pairs = [(a, b), (b, a)]  # 05/06/2026: Indian records are day-first
+        else:
+            pairs = [(a, b)]
+        for day, month in pairs:
+            try:
+                return datetime.date(year, month, day)
+            except ValueError:
+                continue
+    m = re.search(rf'\b(\d{{1,2}})(?:st|nd|rd|th)?\s+({_MONTH_RE})[,\s]+(\d{{4}})\b', t, re.IGNORECASE)
+    if m:
+        try:
+            return datetime.date(int(m.group(3)), _MONTHS[m.group(2).lower()], int(m.group(1)))
+        except ValueError:
+            pass
+    m = re.search(rf'\b({_MONTH_RE})\s+(\d{{1,2}})(?:st|nd|rd|th)?[,\s]+(\d{{4}})\b', t, re.IGNORECASE)
+    if m:
+        try:
+            return datetime.date(int(m.group(3)), _MONTHS[m.group(1).lower()], int(m.group(2)))
+        except ValueError:
+            pass
+    m = re.search(rf'\b({_MONTH_RE})[,\s]+(\d{{4}})\b', t, re.IGNORECASE)
+    if m:
+        year, month = int(m.group(2)), _MONTHS[m.group(1).lower()]
+        return datetime.date(year, month, calendar.monthrange(year, month)[1])
     return None
 
 
+def _spoken_date(d):
+    return f"{d.day} {d.strftime('%B %Y')}"
+
+
 def renewal_line(rec):
-    sent = _grounded_sentence(rec, 'renew')
-    if sent:
-        return f"Record ke mutabik, {clip_sentences(sent, 200)}"
+    for field in ('application', 'details', 'benefits', 'eligibility', 'documents'):
+        for sent in _sentences_in(rec, (field,)):
+            if 'renew' not in sent.lower():
+                continue
+            if field == 'documents' and not RENEWAL_ACTION_RE.search(sent):
+                continue
+            clipped = clip_sentences(sent, 200)
+            if clipped and 'lambi hai' not in clipped:
+                return f"Record ke mutabik, {clipped}"
     return "Is record mein renewal ki jaankari nahi hai. Official page pe dekhiye."
 
 
 def status_line(rec):
+    for sent in _sentences_in(rec, ('application', 'details', 'benefits', 'eligibility', 'documents')):
+        if not STATUS_RE.search(sent):
+            continue
+        clipped = clip_sentences(sent, 220)
+        if clipped and 'lambi hai' not in clipped:
+            return f"Record ke mutabik, {clipped}"
     return ("Is record mein application status dekhne ka tareeka nahi diya gaya. "
             "Jis portal pe apply kiya, uska official page dekhiye.")
 
 
-DATE_RE = re.compile(
-    r'((?:last date|closing date|deadline|last day)[^.]{0,100})', re.IGNORECASE
-)
-
-
 def deadline_line(rec):
-    """Quote a date only when the record contains one; otherwise say so."""
-    blob = ' '.join(str(rec.get(k) or '') for k in ('application', 'details', 'benefits'))
-    match = DATE_RE.search(blob)
-    if match:
-        return f"Record ke mutabik, {clip_sentences(match.group(1), 130)}"
+    """Quote a date only when the record has one that is still current.
+
+    A 2022 date is not a current deadline. If every dated deadline in the record
+    has passed, say so; if the record only has a recurring phrase ("first week of
+    April every year"), do not turn it into a date.
+    """
+    dated = []
+    for sent in _sentences_in(rec, ('application', 'details', 'benefits')):
+        low = sent.lower()
+        if not any(word in low for word in DEADLINE_WORDS):
+            continue
+        found = _parse_date(sent)
+        if found:
+            dated.append(found)
+    if dated:
+        today = datetime.date.today()
+        future = [d for d in dated if d >= today]
+        if future:
+            return f"Record ke mutabik, last date {_spoken_date(min(future))} hai."
+        return (f"Record mein di gayi last date {_spoken_date(max(dated))} thi, "
+                "jo ab beet chuki hai. Current date scholarships.gov.in pe dekhiye.")
     return ("Is record mein last date nahi di gayi. Scheme ka official page "
             "scholarships.gov.in pe kholiye, wahan current date dikhegi.")
 

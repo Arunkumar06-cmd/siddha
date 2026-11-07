@@ -143,11 +143,13 @@ def test_deadline_is_honest_when_the_record_has_no_date():
 
 
 def test_deadline_quotes_a_date_that_is_in_the_record():
+    import datetime
+    future = datetime.date.today() + datetime.timedelta(days=45)
     rec = {'name': 'ICMR Fellowship', 'level': 'Central',
-           'application': 'Last Date of Application (30th June and 31st December Every Year)',
+           'application': f'Last Date of Application is {future.day} {future.strftime("%B %Y")}.',
            'benefits': 'Fellowship'}
     spoken, _, _ = answer('last date kya hai', [{'rank_score': 0.03, 'record': rec}])
-    assert '30th June' in spoken
+    assert f'{future.day} {future.strftime("%B %Y")}' in spoken
 
 
 def test_follow_up_lead_names_the_scheme_again():

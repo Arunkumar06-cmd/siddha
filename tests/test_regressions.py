@@ -144,3 +144,79 @@ def test_a_new_scheme_named_in_an_indic_script_is_not_forced_into_context(query)
     assert context.residual(query), 'the scheme name must survive tokenising'
     assert not context.is_aspect_only(query)
     assert context.rewrite(query, _last()) == query
+
+
+# -- deadlines, status and renewal are grounded, not guessed -----------------
+
+def test_a_past_deadline_is_not_presented_as_current():
+    """The old regex quoted any 'last date' phrase, including a 2022 date, as if it
+    were today's deadline."""
+    rec = dict(BARE, application='Last date for submission is 31/12/2022.')
+    spoken, _, _ = answer('last date kya hai', _hit(rec))
+    assert '31 December 2022' in spoken
+    assert 'beet chuki hai' in spoken
+    assert 'Record ke mutabik, Last date' not in spoken
+
+
+def test_a_deadline_phrase_without_a_concrete_date_is_not_turned_into_one():
+    rec = dict(BARE, application='The last date is generally the first week of April every year.')
+    spoken, _, _ = answer('last date kya hai', _hit(rec))
+    assert 'last date nahi di gayi' in spoken
+    assert 'April' not in spoken
+
+
+def test_a_current_deadline_is_quoted_without_claiming_a_past_one():
+    import datetime
+    future = datetime.date.today() + datetime.timedelta(days=30)
+    rec = dict(BARE, application=f'The last date for submission is {future.day:02d}/{future.month:02d}/{future.year}.')
+    spoken, _, _ = answer('last date kya hai', _hit(rec))
+    assert f'{future.day} {future.strftime("%B %Y")}' in spoken
+    assert 'beet chuki hai' not in spoken
+
+
+def test_status_is_quoted_when_the_record_has_a_tracking_line():
+    rec = dict(BARE, application=(
+        'Check Application Status: visit the official website and enter your application ID.'))
+    spoken, _, _ = answer('application status kaise dekhe', _hit(rec))
+    assert 'Check Application Status' in spoken
+    assert 'nahi diya gaya' not in spoken
+
+
+def test_status_falls_back_when_the_record_has_no_tracking_line():
+    spoken, _, _ = answer('application status kaise dekhe', _hit())
+    assert 'nahi diya gaya' in spoken
+
+
+def test_renewal_does_not_quote_a_renewal_document_as_the_process():
+    """'Last Subscription Renewal Copy' is a document in the documents list; quoting
+    it as the renewal process told the student nothing about how to renew."""
+    rec = dict(BARE, documents='Original ID Card. Last Subscription Renewal Copy. Death Certificate.')
+    spoken, _, _ = answer('renewal kaise karein', _hit(rec))
+    assert 'renewal ki jaankari nahi hai' in spoken
+    assert 'Renewal Copy' not in spoken
+
+
+def test_renewal_prefers_the_process_sentence_over_a_document_list():
+    rec = dict(BARE,
+               documents='Original ID Card. Renewal Copy. Death Certificate.',
+               application='Submit an annual renewal request through the portal with the previous mark sheet.')
+    spoken, _, _ = answer('renewal kaise karein', _hit(rec))
+    assert 'annual renewal request' in spoken
+    assert 'Renewal Copy' not in spoken
+
+
+@pytest.mark.parametrize('text, expected', [
+    ('Last date: 2026-11-10', (2026, 11, 10)),
+    ('Last date: 31/12/2026', (2026, 12, 31)),
+    ('Last date: 03/31/2026', (2026, 3, 31)),
+    ('Last date: 31st October 2026', (2026, 10, 31)),
+    ('Last date: October 31, 2026', (2026, 10, 31)),
+    ('Last date: April 2026', (2026, 4, 30)),
+    ('Last date: first week of April every year', None),
+    ('Launched in 2021 and open now', None),
+])
+def test_deadline_date_parser_accepts_only_concrete_dates(text, expected):
+    from responder import _parse_date
+    found = _parse_date(text)
+    actual = (found.year, found.month, found.day) if found else None
+    assert actual == expected
