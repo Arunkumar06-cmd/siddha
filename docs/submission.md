@@ -96,20 +96,20 @@ Designed and built solo: corpus pipeline, retrieval, grounded responder, voice-s
 
 ### LinkedIn (attach `docs/demo.mp4`)
 
-> India has 1,141 scholarship schemes for students. Almost nobody knows that number — and fewer still know which one fits them.
+> India has 1,141 scholarship schemes for students. Many students never hear which one fits them.
 >
-> The rules aren't hard to find — they're stuck behind English forms, dropdowns and PDFs most students will never open. So I built Siddha.
+> The rules exist, but they sit behind English forms, dropdowns, and PDFs that most students will not open. I built Siddha to make that search voice-first.
 >
-> Ask naturally: “SC students ke liye post matric scholarship ke documents kya chahiye?” Siddha replies with the exact scheme, the documents, and where the current deadline lives. It understands Hindi and Tamil input; replies today are in Hinglish.
+> Ask in plain speech: “SC students ke liye post matric scholarship ke documents kya chahiye?” Siddha replies with the matching scheme, the documents, and where the current deadline lives. It understands Hindi and Tamil input; replies today are in Hinglish.
 >
-> What's inside:
-> • Gnani Prisma v3.0 does STT on code-mixed speech (indic-auto, codemix)
-> • FAISS + BM25 over the official myScheme corpus, fused with RRF (BGE-M3 multilingual embeddings underneath)
-> • Every answer is assembled from official records — no invented eligibility, no made-up deadlines
-> • Follow-ups keep the scheme in context — ask “aur last date?” and Siddha stays on the same record
-> • Gnani Timbre v3.0 (Shivani) speaks the answer back
+> What it uses:
+> • Gnani Prisma v3.0 for STT on code-mixed speech (indic-auto, codemix)
+> • FAISS + BM25 over the official myScheme corpus, fused with RRF (BGE-M3 multilingual embeddings)
+> • Answers assembled from official records — no invented eligibility, no made-up deadlines
+> • Follow-up context — ask “aur last date?” and Siddha stays on the same record
+> • Gnani Timbre v3.0 (Shivani) for the spoken reply
 >
-> Built solo for the Great Indian AI Internship Challenge — I'm in the Mixed Vibes lane: code-mixed both directions. This is a two-minute recording of the real pipeline, with a live follow-up, not a staged demo.
+> Built solo for the Great Indian AI Internship Challenge — I'm in the Mixed Vibes lane: code-mixed both directions. This is a two-minute recording of the real pipeline, with a live follow-up.
 >
 > Tagging @gnani.ai. Code: https://github.com/Arunkumar06-cmd/siddha
 >
@@ -119,14 +119,14 @@ Designed and built solo: corpus pipeline, retrieval, grounded responder, voice-s
 
 ### X (attach `docs/demo.mp4`; repo link in the first reply)
 
-> Millions of Indian students miss scholarships they qualify for — rules are buried in portals.
+> Many Indian students miss scholarships they qualify for because the rules are buried in portals.
 >
-> Siddha: ask in Hinglish, Hindi or Tamil. Hear the scheme + documents, grounded in 1,141 records.
+> Siddha lets you ask in Hinglish, Hindi, or Tamil and hear the scheme and documents, grounded in 1,141 records.
 >
 > Built with @GnaniAi Prisma + Timbre.
 > #GnaniAI #GreatIndianAIInternshipChallenge
 
-**Reply:** Full code, architecture and a 2-minute walkthrough: https://github.com/Arunkumar06-cmd/siddha
+**Reply:** Full code, architecture, and a 2-minute walkthrough: https://github.com/Arunkumar06-cmd/siddha
 
 ---
 

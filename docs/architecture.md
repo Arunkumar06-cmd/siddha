@@ -36,11 +36,11 @@ flowchart TB
 ```
 
 ## Data flow
-1. Mic audio → webm/opus in browser → POST `/api/ask_audio`.
-2. `to_wav()` re-encodes to 16 kHz mono (Prisma requirement), deletes source in `finally`.
-3. `transcribe()` → Prisma; retries on Timeout/ConnectionError/5xx (2 attempts), circuit breaker trips after 5 failures (60 s cooldown).
-4. `rag_answer()` → resolves the session context, then loads prebuilt FAISS + BM25, RRF-fuses, picks ann-ready top-5; `responder` composes Hinglish, canned answers for status/renewal flows. Aspect-only follow-ups reuse the last record and skip retrieval.
-5. `synthesize()` → Timbre with voice-safe rendering (`spoken.render()` caps length, strips markup, inserts `<pauses>`).
+1. Browser mic audio (webm/opus) is sent to `POST /api/ask_audio`.
+2. `to_wav()` re-encodes it to 16 kHz mono (a Prisma requirement) and deletes the source file in `finally`.
+3. `transcribe()` calls Prisma. It retries on Timeout/ConnectionError/5xx (2 attempts); the circuit breaker opens after 5 failures (60 s cooldown).
+4. `rag_answer()` resolves session context, loads the prebuilt FAISS + BM25 index, fuses results with RRF, and selects the top 5. `responder` composes the Hinglish answer from record fields. Status and renewal questions are answered from the record text. Aspect-only follow-ups reuse the last record and skip retrieval.
+5. `synthesize()` calls Timbre. `spoken.render()` keeps the text voice-safe (caps length, strips markup, inserts `<pauses>`).
 6. `/api/ask_audio` returns `{transcript, detected_language_code, reply, sources[], session_id, follow_up, context_used, context_name, audio_wav_b64}`.
 
 ## Conversation context

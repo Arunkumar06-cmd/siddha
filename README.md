@@ -14,7 +14,7 @@
 </p>
 
 > [!IMPORTANT]
-> **Grounded, or silent.** Every statement about a scheme is composed from that scheme's myScheme record. Where the record has no deadline, amount or document list, Siddha says the record is silent and points to the official page instead of filling the gap. Rules are read whole or sent to the official page, never cut mid-condition.
+> **Grounded, or silent.** Every statement about a scheme comes from that scheme's myScheme record. If the record has no deadline, amount, or document list, Siddha says the record is silent and points to the official page. Rules are read in full or sent to the official page, never cut mid-condition.
 
 ![Siddha — ask by voice, get a grounded scholarship answer](docs/demo.webp)
 
@@ -40,15 +40,15 @@
 - [License](#license)
 
 ## Features
-- **Voice-in, voice-out.** Browser mic → Prisma STT → retrieval → Timbre TTS. No chat box required.
-- **Grounded answers, not generative ones.** The answer is assembled from 1,141 official myScheme records. If a fact isn't in the record, Siddha says so. The UI shows the sources it used. Status and renewal questions are answered only from what the record says; there is no hard-coded portal flow.
-- **Conversation, not cold starts.** A follow-up like “Aur last date kya hai?” resolves against the scheme already on the table; a new scheme name or a new state still retrieves fresh. Sessions are text-only, in-memory, and expire after 30 minutes. The UI shows the carried scheme, so context is visible, not guessed.
-- **States stay in their lane.** A state-specific question gets that state's schemes first; a national question gets Central schemes. When a State scheme is chosen for a state-less query, it's named as one.
-- **Eligibility questions work too.** Ask "qualify hun kya?" and Siddha checks your profile against the actual record text — the verdict includes the line it matched. Opt-in: it runs only when an OpenAI-compatible endpoint is configured, and then the text of the question (which may contain income or category) is sent to that provider. Without a key nothing leaves the server except the Gnani STT/TTS calls, and the grounded path answers unchanged.
+- **Voice in, voice out.** Browser mic → Prisma STT → retrieval → Timbre TTS. No chat box required.
+- **Grounded answers.** Each answer is built from 1,141 official myScheme records. If a fact is not in the record, Siddha says so. The UI shows the sources it used. Status and renewal questions are answered only from what the record says; there is no hard-coded portal flow.
+- **Follow-ups keep context.** A follow-up like “Aur last date kya hai?” is resolved against the scheme already on the table. A new scheme name or a new state retrieves fresh results. Sessions are text-only, in-memory, and expire after 30 minutes. The UI shows the carried scheme, so context is visible.
+- **State-aware routing.** A state-specific question gets that state's schemes first; a national question gets Central schemes. When a State scheme is chosen for a state-less query, Siddha names the state.
+- **Eligibility questions.** Ask "qualify hun kya?" and Siddha checks your profile against the record text, then includes the line it matched. This is opt-in: it runs only when an OpenAI-compatible endpoint is configured. With that setting, the question text (which may include income or category) is sent to that provider. Without a key, nothing leaves the server except the Gnani STT/TTS calls, and the grounded path answers unchanged.
 - **Call-quality audio probe.** A small probe (n = 12 code-mixed utterances, 8 kHz band-passed telephony with traffic and fan noise): Prisma transcribes all 12; 11/12 keep every critical term (`docs/eval-audio.md`). It shows the idea works; it is not a benchmark.
-- **Hindi and Tamil questions are understood.** A Tamil-script question is transcribed with `detected_language_code=ta-IN`, and Devanagari/Tamil follow-ups are resolved by the same context rules. The spoken answer is Hinglish for now (see Known limitations).
-- **Retrieval that mixes two signals.** BGE-M3 multilingual embeddings for semantic match, BM25 for exact keywords, fused with reciprocal rank fusion.
-- **Hinglish-first** — answers are shaped for Indian code-mixed speech, not translated English.
+- **Hindi and Tamil input.** A Tamil-script question is transcribed with `detected_language_code=ta-IN`, and Devanagari/Tamil follow-ups use the same context rules. The spoken answer is Hinglish for now (see Known limitations).
+- **Hybrid retrieval.** BGE-M3 multilingual embeddings handle semantic matches, BM25 handles exact keywords, and the results are fused with reciprocal rank fusion.
+- **Hinglish-first replies.** Answers are written for Indian code-mixed speech, not translated English.
 - **Cheap to run.** One turn = exactly 2 Gnani calls (one STT, one TTS). Roughly 2,500 full voice turns per 5,000 programme credits, with a hard global and per-visitor budget enforced before each provider call.
 - **Fails soft.** Circuit breakers with a single half-open probe, retry with backoff and jitter that resends the whole upload, per-IP rate limits, typed errors, and a text-only reply if voice synthesis is down.
 
