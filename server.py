@@ -5,6 +5,7 @@ import collections
 import os
 import pathlib
 import re
+import secrets
 import sys
 import threading
 import time
@@ -42,9 +43,13 @@ _lock = threading.Lock()
 _ip_calls = collections.defaultdict(list)
 _ip_lock = threading.Lock()
 
-SID_RE = re.compile(r'^[A-Za-z0-9_-]{8,80}$')
+# A session id is a bearer secret: whoever holds it can read the last turn and reset the
+# conversation. 32+ URL-safe characters (>= 128 bits when minted by the server, 122 for a
+# browser randomUUID) makes guessing another visitor's session infeasible. An 8-character,
+# client-chosen id such as "12345678" was guessable.
+SID_RE = re.compile(r'^[A-Za-z0-9_-]{32,80}$')
 
-app = FastAPI(title='Siddha', version='2.2.0', docs_url=None, redoc_url=None)
+app = FastAPI(title='Siddha', version=VERSION, docs_url=None, redoc_url=None)
 STATIC = pathlib.Path(__file__).parent / 'static'
 app.mount('/static', StaticFiles(directory=STATIC), name='static')
 
@@ -170,6 +175,12 @@ def _session_id(value: str | None):
     if not SID_RE.match(value):
         raise HTTPException(400, 'Invalid session id')
     return value
+
+
+@app.post('/api/session')
+def session_new():
+    """Mint an unguessable session id (192 random bits, 32 URL-safe characters)."""
+    return {'session_id': secrets.token_urlsafe(24)}
 
 class TextQuery(BaseModel):
     text: str = Field(min_length=2, max_length=500)

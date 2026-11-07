@@ -13,11 +13,14 @@ Base: `/api`. All requests: JSON. All errors: `{"error": "..."}` with typed stat
 **Body:** `multipart/form-data` with field `audio` (WAV/MP3/OGG/M4A ≤ 8 MB) and optional `session_id`
 **200:** `{transcript, detected_language_code, reply, sources[], session_id, follow_up, context_used, context_name, audio_wav_b64}`
 
+## POST /api/session
+**200:** `{session_id}` — a server-minted, unguessable id (32 URL-safe characters, 192 random bits). A browser `crypto.randomUUID()` is also accepted.
+
 ## GET /api/session/{session_id}
 **200:** `{session_id, turn: {transcript, reply, sources[], context_used, context_name} | null}` — restores the last turn after a page refresh.
 
 ## DELETE /api/session/{session_id}
-**200:** `{session_id, reset: true}` — clears the conversation. Session IDs must match `^[A-Za-z0-9_-]{8,80}$`.
+**200:** `{session_id, reset: true}` — clears the conversation. Session IDs must match `^[A-Za-z0-9_-]{32,80}$`: the id is a bearer secret, so short client-chosen ids are rejected with 400.
 **413:** Audio too large · **415:** Decode error · **502:** Provider failure
 
 ## GET /api/health

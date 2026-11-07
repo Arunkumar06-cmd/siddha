@@ -278,8 +278,16 @@ const resetEl = document.getElementById('reset');
 const player = document.getElementById('player');
 const SESSION_KEY = 'siddha_session';
 const params = new URLSearchParams(location.search);
-let sessionId = params.get('session') || sessionStorage.getItem(SESSION_KEY)
-  || (crypto.randomUUID ? crypto.randomUUID() : 's' + Date.now());
+// The server accepts only 32-80 URL-safe characters. randomUUID needs a secure context, so
+// fall back to 24 random bytes as hex (48 chars) rather than anything predictable.
+const SID_OK = /^[A-Za-z0-9_-]{32,80}$/;
+function newSessionId() {
+  if (crypto.randomUUID) return crypto.randomUUID();
+  const bytes = crypto.getRandomValues(new Uint8Array(24));
+  return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+}
+let sessionId = [params.get('session'), sessionStorage.getItem(SESSION_KEY)]
+  .find(v => v && SID_OK.test(v)) || newSessionId();
 sessionStorage.setItem(SESSION_KEY, sessionId);
 const MIME = ['audio/webm','audio/mp4','audio/wav'].find(m => MediaRecorder.isTypeSupported(m)) || '';
 let recorder = null, chunks = [];
@@ -345,7 +353,7 @@ function renderSources(sources) {
 
 resetEl.addEventListener('click', async () => {
   try { await fetch('/api/session/' + encodeURIComponent(sessionId), { method: 'DELETE' }); } catch (e) {}
-  sessionId = crypto.randomUUID ? crypto.randomUUID() : 's' + Date.now();
+  sessionId = newSessionId();
   sessionStorage.setItem(SESSION_KEY, sessionId);
   resetUI();
 });

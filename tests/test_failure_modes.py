@@ -111,7 +111,7 @@ def test_concurrent_text_requests_all_succeed(monkeypatch):
 def test_rate_limit(monkeypatch):
     import server
 
-    server.RATE_LIMIT = 3
+    monkeypatch.setattr(server, 'RATE_LIMIT', 3)  # restored on teardown; a bare assignment leaked into every later test
     server._ip_calls.clear()
     monkeypatch.setattr('retriever.search', fake_search)
     monkeypatch.setattr('responder.answer', fake_answer)
