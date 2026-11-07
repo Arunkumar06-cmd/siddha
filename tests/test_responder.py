@@ -142,6 +142,32 @@ def test_deadline_is_honest_when_the_record_has_no_date():
     assert not any(ch.isdigit() for ch in spoken), 'must never invent a date'
 
 
+def test_month_and_year_are_not_promoted_to_an_invented_last_day():
+    rec = {'name': 'ICMR Fellowship', 'level': 'Central',
+           'application': 'Last date is April 2026.'}
+    spoken, _, _ = answer('last date kya hai', [{'rank_score': 0.03, 'record': rec}])
+    assert '30 April 2026' not in spoken
+    assert 'last date nahi di gayi' in spoken
+
+
+def test_deadline_uses_india_calendar_date(monkeypatch):
+    import datetime
+    from zoneinfo import ZoneInfo
+
+    import responder
+
+    class FrozenDateTime(datetime.datetime):
+        @classmethod
+        def now(cls, tz=None):
+            assert str(tz) == 'Asia/Kolkata'
+            return cls(2026, 11, 7, 0, 1, tzinfo=ZoneInfo('Asia/Kolkata'))
+    monkeypatch.setattr(responder.datetime, 'datetime', FrozenDateTime)
+    rec = {'name': 'ICMR Fellowship', 'level': 'Central',
+           'application': 'Last date is 7 November 2026.'}
+    spoken, _, _ = answer('last date kya hai', [{'rank_score': 0.03, 'record': rec}])
+    assert 'last date 7 November 2026 hai' in spoken
+
+
 def test_deadline_quotes_a_date_that_is_in_the_record():
     import datetime
     future = datetime.date.today() + datetime.timedelta(days=45)

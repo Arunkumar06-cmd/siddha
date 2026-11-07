@@ -211,7 +211,7 @@ def test_renewal_prefers_the_process_sentence_over_a_document_list():
     ('Last date: 03/31/2026', (2026, 3, 31)),
     ('Last date: 31st October 2026', (2026, 10, 31)),
     ('Last date: October 31, 2026', (2026, 10, 31)),
-    ('Last date: April 2026', (2026, 4, 30)),
+    ('Last date: April 2026', None),
     ('Last date: first week of April every year', None),
     ('Launched in 2021 and open now', None),
 ])

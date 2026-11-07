@@ -17,7 +17,7 @@
 
 **What it is.** Siddha is not a form-filler, an eligibility automator, or a lawyer. It is a grounded, voice-accessible front door to 1,141 government scholarships. Eligibility answers are assembled from official records, not from a language model's memory.
 
-**Tech.** Python, FastAPI, FAISS + BM25 retriever (BGE-M3 embeddings), RRF fusion, Docker, GitHub Actions, 218 tests, 90.6% coverage. Voice path: Prisma STT → retrieval → grounded responder → Timbre TTS.
+**Tech.** Python, FastAPI, FAISS + BM25 retriever (BGE-M3 embeddings), RRF fusion, Docker, GitHub Actions, 227 tests in the suite (224 locally passed; three model-backed retrieval checks need the BGE-M3 cache), 90.26% coverage on the runnable suite. Voice path: Prisma STT → retrieval → grounded responder → Timbre TTS.
 
 **Target lane.** Mixed Vibes (best code-mixed Hinglish build) with a Real Deal framing (real impact for students who rarely get told).
 

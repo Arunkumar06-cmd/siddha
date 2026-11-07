@@ -1,8 +1,8 @@
 """Siddha responder - grounded strictly in the myScheme corpus.
 Voice-safe output: short sentences with <pauses> tags for Timbre v3.0."""
-import calendar
 import datetime
 import re
+from zoneinfo import ZoneInfo
 
 import places
 
@@ -263,10 +263,6 @@ def _parse_date(text):
             return datetime.date(int(m.group(3)), _MONTHS[m.group(1).lower()], int(m.group(2)))
         except ValueError:
             pass
-    m = re.search(rf'\b({_MONTH_RE})[,\s]+(\d{{4}})\b', t, re.IGNORECASE)
-    if m:
-        year, month = int(m.group(2)), _MONTHS[m.group(1).lower()]
-        return datetime.date(year, month, calendar.monthrange(year, month)[1])
     return None
 
 
@@ -314,7 +310,7 @@ def deadline_line(rec):
         if found:
             dated.append(found)
     if dated:
-        today = datetime.date.today()
+        today = datetime.datetime.now(ZoneInfo('Asia/Kolkata')).date()
         future = [d for d in dated if d >= today]
         if future:
             return f"Record ke mutabik, last date {_spoken_date(min(future))} hai."

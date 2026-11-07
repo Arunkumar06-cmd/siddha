@@ -2,7 +2,7 @@
 As of 2026-11-04 | Goal: strongest problem → strongest solution, with papers & repos
 
 ## 1. Problem evidence (V)
-- **NSP 2025-26 live dashboard** (scholarships.gov.in/nsp dashboard): 26.01 lakh applications received; ~22.5L verified; **₹2,081 crore disbursed**. OBC = 10.17L (received) this AY; SC 6.15L; ST 6.02L; General 3.67L. Female post-matric = 11.05L of applications.
+- **NSP 2025-26 live dashboard** (NSP dashboard: [scholarships.gov.in](https://scholarships.gov.in/)): 26.01 lakh applications received; ~22.5L verified; **₹2,081 crore disbursed**. OBC = 10.17L (received) this AY; SC 6.15L; ST 6.02L; General 3.67L. Female post-matric = 11.05L of applications.
 - **Haryana committee report (Feb 2026)**: thousands of post-matric applications pending *per district*; top reasons = **Aadhaar-bank not linked**, student/institute verification pending.
 - **IDR (Jun 2025)**: marginalized students can't access scholarships — cluttered sites, low digital literacy, language barrier; small mistakes cost the money.
 - **IJFMR (Aug 2025)**: ST students face language + digital-literacy barriers; ventures in English-only platforms exclude vernacular-medium students.
@@ -44,7 +44,7 @@ As of 2026-11-04 | Goal: strongest problem → strongest solution, with papers &
 - Embeddings: multilingual — `BAAI/bge-m3` (100+ languages, code-mixed-friendly)
 - Vector store: FAISS (in-process) — 700k myScheme chunks ≤ few GB RAM
 - Reranker: BM25 + dense, RRF fusion (per Voice-Enabled-RAG pattern)
-- Guardrail: refuse when out-of-scope; system prompt "I don't know, visit scholarships.gov.in"
+- Guardrail: refuse when out-of-scope; system prompt "I don't know, visit [scholarships.gov.in](https://scholarships.gov.in/)"
 - Latency: streaming TTS (SSE/WebSocket); VAD via Silero; turn-taking
 
 **Frontend/backend**

@@ -31,7 +31,7 @@ def _env(name, default):
     value = (os.getenv(name) or '').strip()
     if value:
         return value
-    for candidate in (pathlib.Path.home() / '.env', pathlib.Path('.env')):
+    for candidate in (pathlib.Path.home() / '.env',):
         value = _load_env_file(candidate).get(name, '').strip()
         if value:
             return value

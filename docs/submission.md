@@ -59,11 +59,11 @@ The UI shows the transcript, the spoken answer, the carried scheme when context 
 - **Answering:** aspect classification (documents / eligibility / benefit / apply / renewal / status / deadline) and template composition strictly from retrieved fields; aspect-only follow-ups reuse the last scheme and skip retrieval.
 - **Voice safety:** number, currency, URL, slash and bracket normalisation; comma-separated document lists; word-boundary truncation; dangling-preposition removal.
 - **Resilience:** retries with backoff + jitter on timeout/connection/5xx, circuit breakers for STT and TTS, per-IP rate limit, global and per-visitor Gnani credit budgets enforced before each provider call, a streaming cap on audio uploads, typed error envelope, `/api/health` corpus check, `/api/ready` warm-up probe, `/api/metrics`.
-- **Delivery:** multi-stage Docker image, non-root user, CI (ruff, compile, 218 tests, 90.6% coverage gate, four-set retrieval/confidence regression gate, gitleaks, Docker build + smoke run) and a security workflow (`gitleaks`, `pip-audit` with explicit, documented ignores).
+- **Delivery:** multi-stage Docker image, non-root user, CI (ruff, compile, 227-test suite, 80% coverage gate, four-set retrieval/confidence regression gate, gitleaks, Docker build + smoke run) and a security workflow (`gitleaks`, `pip-audit` with explicit, documented ignores).
 
 ## Why it is not a mockup
 
-- 218 tests, 90.6% coverage, ruff clean.
+- 227 tests in the suite; 224 passed locally, with three model-backed retrieval tests blocked by the unavailable BGE-M3 cache. The runnable suite measured 90.26% coverage; ruff is clean.
 - The demo is a screen recording of the running service: two questions are played into Chrome as microphone input, then the real Prisma STT → retrieval → grounded responder → Timbre TTS path produces each transcript and audio in the recording.
 - The two student questions (“SC students ke liye central government post matric scholarship ke documents kya chahiye?” and “Aur is scheme ki last date kya hai?”) are synthesized with Timbre (voice **Avinash**) so the recording is reproducible without a human caller; the answers use the product voice **Shivani**. Founder narration is **Devansh**. This is disclosed rather than presented as a human speaker.
 - The API key is never in the repo or the image; it is resolved from the environment or `~/.env`.

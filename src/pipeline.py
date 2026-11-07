@@ -159,10 +159,20 @@ def transcribe(wav: pathlib.Path):
         if r.status_code != 200:
             logger.error('stt_failed status=%s body=%s', r.status_code, r.text[:200])
             raise HTTPException(_client_status(r.status_code), 'Transcription service unavailable')
+        if not isinstance(payload, dict):
+            logger.warning('stt_invalid_payload type=%s', type(payload).__name__)
+            raise HTTPException(502, 'Transcription service returned invalid data')
         if not payload.get('success'):
             logger.error('stt_unsuccessful body=%s', str(payload)[:200])
             raise HTTPException(422, 'Could not transcribe this audio')
-        return payload.get('transcript', ''), payload.get('detected_language_code', 'unknown')
+        transcript = payload.get('transcript')
+        if not isinstance(transcript, str):
+            logger.warning('stt_invalid_transcript type=%s', type(transcript).__name__)
+            raise HTTPException(502, 'Transcription service returned invalid data')
+        language = payload.get('detected_language_code', 'unknown')
+        if not isinstance(language, str):
+            language = 'unknown'
+        return transcript, language
     finally:
         with contextlib.suppress(OSError):
             os.unlink(wav)

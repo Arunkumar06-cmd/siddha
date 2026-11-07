@@ -121,6 +121,20 @@ def test_a_refused_credit_does_not_hold_the_half_open_probe(monkeypatch, tmp_pat
 
 # -- upload body limit -------------------------------------------------------
 
+def test_rate_limit_client_table_has_a_hard_capacity(monkeypatch):
+    import time
+
+    import server
+
+    server._ip_calls.clear()
+    monkeypatch.setattr(server, '_IP_TABLE_SOFT_CAP', 1)
+    server._ip_calls['active-client'] = [time.time()]
+    with pytest.raises(HTTPException) as exc:
+        server._rate_limit('new-client')
+    assert exc.value.status_code == 429
+    assert list(server._ip_calls) == ['active-client']
+
+
 def test_declared_oversized_body_is_rejected_before_multipart_parsing(monkeypatch):
     import server
 
@@ -208,6 +222,8 @@ def test_the_page_never_adopts_a_session_id_from_the_url():
     page = (pathlib.Path(__file__).resolve().parent.parent / 'static' / 'index.html').read_text()
     assert "params.get('session')" not in page
     assert 'name="referrer"' in page
+    assert '<audio id="player" autoplay controls hidden' in page
+    assert 'href="https://scholarships.gov.in/"' in page
 
 
 # -- quality counters --------------------------------------------------------

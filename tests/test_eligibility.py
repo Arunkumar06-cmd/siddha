@@ -82,6 +82,17 @@ def test_advise_negative_case_names_blocker(monkeypatch):
     assert 'qualify nahi' in reply
 
 
+def test_advise_ignores_best_pointer_with_non_eligible_verdict(monkeypatch):
+    def contradictory(messages, **kw):
+        return json.dumps({'verdicts': [
+            {'record': 1, 'verdict': 'unsure', 'decisive': None, 'quote': 'SC students'},
+            {'record': 2, 'verdict': 'unsure', 'decisive': None, 'quote': None},
+            {'record': 3, 'verdict': 'unsure', 'decisive': None, 'quote': None},
+        ], 'best': 1})
+    monkeypatch.setattr(llm, 'complete', contradictory)
+    assert eligibility.advise('GEN student eligible hai?', _hits()) is None
+
+
 def test_advise_returns_none_on_bad_json(monkeypatch):
     monkeypatch.setattr(llm, 'complete', lambda messages, **kw: 'not json at all')
     assert eligibility.advise('eligible hai?', _hits()) is None

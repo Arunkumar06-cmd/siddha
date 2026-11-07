@@ -26,6 +26,8 @@
   <a href="./docs/demo.mp4">Download master</a>
   &nbsp;·&nbsp;
   <a href="./docs/architecture.md">Architecture</a>
+  &nbsp;·&nbsp;
+  <a href="https://scholarships.gov.in/">Official scholarship portal</a>
   <br/>
   <sub>Real UI, two live Gnani Prisma + Timbre turns; the second is a follow-up with no scheme name repeated.</sub>
 </p>
@@ -179,7 +181,7 @@ Stated up front so nobody has to find them.
 
 - **Answers are Hinglish.** Hindi and Tamil questions are understood, but the reply text and voice (`hi-en`) are always Hinglish templates.
 - **Retrieval is measured, not perfect.** On the 30-query hand-written Hinglish set (`scripts/eval_retrieval.py`) recall@1 is **0.733** and recall@5 is **0.767** (95% CI 0.57–0.87 and 0.60–0.90: the set is small). The 1,141-query name set scores 0.999 recall@1, and the 400-query ASR-damaged set scores 0.682 recall@1 / 0.925 recall@5. The confidence gate refuses 30/30 off-topic queries. The state-routing multipliers were set with the hand set in view and there is no held-out split yet, so treat the intent numbers as optimistic. Siddha always answers from the top hit; it does not yet ask "did you mean A or B?" when two schemes are close.
-- **Deadlines are not in most records.** Only 60 of the 1,141 records (5.3%) contain a last-date or deadline phrase, and the corpus has no "as of" date. For the rest, the answer to "last date?" is "the record has none, check scholarships.gov.in".
+- **Deadlines are not in most records.** Only 60 of the 1,141 records (5.3%) contain a last-date or deadline phrase, and the corpus has no "as of" date. For the rest, the answer to "last date?" is "the record has none, check [scholarships.gov.in](https://scholarships.gov.in/)".
 - **Long rules are summarised, not read in full.** Eligibility and benefit text is spoken as whole sentences up to a length budget; the rest is sent to the official page. The voice may cover less than the on-screen text (the API reports `audio_truncated`).
 - **Single process, in-memory sessions.** A restart clears conversations. One worker, one machine.
 - **Audio may cover less than the text.** Long replies are spoken as whole sentences up to the Timbre cap; the API reports `audio_truncated`.

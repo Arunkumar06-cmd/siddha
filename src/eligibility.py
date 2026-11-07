@@ -192,7 +192,9 @@ def advise(query, hits):
 
     def _pick():
         best = payload.get('best')
-        if isinstance(best, int) and 1 <= best <= len(top):
+        if (isinstance(best, int) and not isinstance(best, bool)
+                and 1 <= best <= len(top)
+                and verdicts.get(best, {}).get('verdict') == 'eligible'):
             return best
         for i in range(1, len(top) + 1):
             if verdicts.get(i, {}).get('verdict') == 'eligible':

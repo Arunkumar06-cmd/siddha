@@ -70,6 +70,24 @@ def test_temp_wav_is_deleted(monkeypatch):
     assert not wav.exists(), 'wav must be deleted after transcribe'
 
 
+@pytest.mark.parametrize('body', [
+    [1],
+    {'success': True, 'transcript': None},
+    {'success': True, 'transcript': 42},
+])
+def test_malformed_stt_success_payload_returns_typed_error_and_cleans_audio(monkeypatch, tmp_path, body):
+    import pipeline
+
+    pipeline.STT_BREAKER.record_success()
+    monkeypatch.setattr('requests.post', lambda url, **kw: FakeResp(200, body=body))
+    wav = tmp_path / 'malformed-provider.wav'
+    wav.write_bytes(b'RIFF')
+    with pytest.raises(HTTPException) as exc:
+        pipeline.transcribe(wav)
+    assert exc.value.status_code == 502
+    assert not wav.exists()
+
+
 def test_stt_retries_on_timeout_then_circuit_opens(monkeypatch):
     import server
 

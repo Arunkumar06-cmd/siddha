@@ -39,8 +39,6 @@ from version import VERSION
 
 BASE_DIR = pathlib.Path(__file__).parent
 RATE_LIMIT = int(os.getenv('SIDDHA_RATE_LIMIT', '30'))
-_metrics = collections.Counter()
-_lock = threading.Lock()
 _ip_calls = collections.defaultdict(list)
 _ip_lock = threading.Lock()
 
@@ -150,9 +148,14 @@ def _evict_idle_ips(now: float):
 def _rate_limit(ip: str):
     now = time.time()
     with _ip_lock:
-        if len(_ip_calls) > _IP_TABLE_SOFT_CAP:
+        if len(_ip_calls) >= _IP_TABLE_SOFT_CAP:
             _evict_idle_ips(now)
-        calls = [t for t in _ip_calls[ip] if now - t < 60]
+        calls = _ip_calls.get(ip)
+        if calls is None:
+            if len(_ip_calls) >= _IP_TABLE_SOFT_CAP:
+                raise HTTPException(429, 'Too many active client addresses')
+            calls = []
+        calls = [t for t in calls if now - t < 60]
         if len(calls) >= RATE_LIMIT:
             _ip_calls[ip] = calls
             raise HTTPException(429, f'Too many requests — max {RATE_LIMIT} per minute')

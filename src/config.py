@@ -44,7 +44,7 @@ def _resolve_api_key(environ: dict | None = None,
     if key:
         return key
     if search_paths is None:
-        search_paths = (pathlib.Path.home() / '.env', pathlib.Path('.env'))
+        search_paths = (pathlib.Path.home() / '.env',)
     for candidate in search_paths:
         env = _load_env_file(candidate)
         key = env.get('GNANI_API_KEY', '').strip()
@@ -52,7 +52,7 @@ def _resolve_api_key(environ: dict | None = None,
             logger.info('GNANI_API_KEY loaded from %s', candidate)
             return key
     raise RuntimeError(
-        'GNANI_API_KEY not found. Set it in ~/.env, in ./.env, or as an environment '
+        'GNANI_API_KEY not found. Set it in ~/.env or as an environment '
         'variable (CI: use a placeholder — tests mock all external calls).'
     )
 
