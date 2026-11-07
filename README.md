@@ -1,4 +1,6 @@
-<h1 align="center">Siddha</h1>
+<p align="center">
+  <img src="./docs/siddha-logo.svg" alt="Siddha" width="520" />
+</p>
 
 <p align="center">
   <b>A voice-first scholarship guide for India.</b><br/>
