@@ -15,9 +15,9 @@
 
 ## Personal details (from registration)
 
-- **Full name:** _paste from registration_
-- **Registered email ID:** _paste the email used at registration_
-- **Institution:** _paste college name_
+- **Full name:** Arunkumar K
+- **Registered email ID:** 127156014@sastra.ac.in
+- **Institution:** Sastra Deemed University
 
 The final submission form is emailed to this registered address after registration; check that inbox and spam.
 
