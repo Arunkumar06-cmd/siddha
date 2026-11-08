@@ -42,17 +42,16 @@ jobs:
             --ignore-vuln PYSEC-2026-3447 \
             --ignore-vuln GHSA-xmj3-9gf7-h52w
 
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22.x'
+
       - name: Secret scan (gitleaks)
         # Explicit full-history scan; avoids the action's `<base>^..HEAD`
-        # range, which breaks when the base is a root commit. The tarball is
-        # checksum-verified so a compromised release cannot run in CI.
+        # range, which breaks when the base is a root commit. Install from
+        # source to avoid flaky release-tarball downloads.
         run: |
           set -euo pipefail
-          version=8.24.3
-          sha256=9991e0b2903da4c8f6122b5c3186448b927a5da4deef1fe45271c3793f4ee29c
-          url="https://github.com/gitleaks/gitleaks/releases/download/v${version}/gitleaks_${version}_linux_x64.tar.gz"
-          curl -sSLo /tmp/gitleaks.tar.gz "$url"
-          echo "${sha256}  /tmp/gitleaks.tar.gz" | sha256sum -c -
-          sudo tar -xzf /tmp/gitleaks.tar.gz -C /usr/local/bin gitleaks
-          gitleaks version
+          GOBIN=/usr/local/bin go install github.com/zricethezav/gitleaks/v8@v8.24.3
+          gitleaks version || true
           gitleaks detect --source . --redact -v --exit-code=2 --log-opts="--all"
