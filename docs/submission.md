@@ -5,7 +5,7 @@
 ## Form-ready answers
 
 - **Project URL (one-page pitch):** https://github.com/Arunkumar06-cmd/siddha/blob/main/docs/pitch.md
-- **Demo video (139 s, two turns — fits X’s 140 s cap) — watch in browser:** https://arunkumar06-cmd.github.io/siddha/
+- **Demo video (114 s, two turns — fits X’s 140 s cap) — watch in browser:** https://arunkumar06-cmd.github.io/siddha/
   - Download current master: https://raw.githubusercontent.com/Arunkumar06-cmd/siddha/main/docs/demo.mp4
 - **Problem:** 1,141 government schemes are published on myScheme (694 in education), but the students who need them most cannot find the right one through English, form-first portals. Siddha makes discovery voice-first in Hinglish, Hindi and Tamil — and keeps a follow-up on the same scheme.
 - **Gnani models/APIs:** Prisma v3.0 STT (`indic-auto`, `codemix`); Timbre v3.0 TTS (Shivani, `hi-en`).
@@ -63,9 +63,9 @@ The UI shows the transcript, the spoken answer, the carried scheme when context 
 
 ## Why it is not a mockup
 
-- 227 tests in the suite; 224 passed locally, with three model-backed retrieval tests blocked by the unavailable BGE-M3 cache. The runnable suite measured 90.26% coverage; ruff is clean.
-- The demo is a screen recording of the running service: two questions are played into Chrome as microphone input, then the real Prisma STT → retrieval → grounded responder → Timbre TTS path produces each transcript and audio in the recording.
-- The two student questions (“SC students ke liye central government post matric scholarship ke documents kya chahiye?” and “Aur is scheme ki last date kya hai?”) are synthesized with Timbre (voice **Avinash**) so the recording is reproducible without a human caller; the answers use the product voice **Shivani**. The corrected opening and evaluation narration were also generated with Gnani Timbre v3.0 (voice **Shivani**). All spoken parts are synthetic.
+- 227 tests in the suite, all 227 passing locally. The runnable suite measured 89.73% coverage; ruff is clean.
+- The demo is an explainer built from real service outputs, not a screen recording. Two questions were played into the running service, and the real Prisma STT → retrieval → grounded responder → Timbre TTS path produced the transcripts and audio used here. The visuals are enlarged, chaptered, and captioned for legibility; the second answer is trimmed to its date-answer span. No answer text or product audio was re-generated for the video.
+- The two student questions (“SC students ke liye central government post matric scholarship ke documents kya chahiye?” and “Aur is scheme ki last date kya hai?”) are synthesized with Timbre (voice **Avinash**), and the answers use the product voice **Shivani**. The founder narration is Timbre voice **Devansh**. All spoken parts are synthetic.
 - The API key is never in the repo or the image; it is resolved from the environment or `~/.env`.
 
 ## Solo contribution
@@ -74,7 +74,7 @@ Designed and built solo: corpus pipeline, retrieval, grounded responder, voice-s
 
 ## Roadmap
 
-- **Shipped (v2.2):** grounded Hinglish voice loop, BGE-M3 hybrid FAISS + BM25 retrieval, state-aware routing, deterministic follow-up context, and the two-minute demo.
+- **Shipped (v2.2):** grounded Hinglish voice loop, BGE-M3 hybrid FAISS + BM25 retrieval, state-aware routing, deterministic follow-up context, and the 114-second demo.
 - **v2.3:** live deadline/status refresh from official sources; voice-based eligibility parsing remains to be built.
 - **v2.4:** opt-in LLM phrasing grounded in retrieved records (requires a key) and streaming TTS.
 - **v3.0:** voice-based form filling to auto-populate NSP fields from speech.
@@ -84,7 +84,7 @@ Designed and built solo: corpus pipeline, retrieval, grounded responder, voice-s
 
 - Repository: https://github.com/Arunkumar06-cmd/siddha
 - Code release v2.2.0: https://github.com/Arunkumar06-cmd/siddha/releases/tag/v2.2.0
-- Current demo video (139 s, two turns — watch in browser): https://arunkumar06-cmd.github.io/siddha/ (download the current main-branch file: https://raw.githubusercontent.com/Arunkumar06-cmd/siddha/main/docs/demo.mp4)
+- Current demo video (114 s, two turns — watch in browser): https://arunkumar06-cmd.github.io/siddha/ (download the current main-branch file: https://raw.githubusercontent.com/Arunkumar06-cmd/siddha/main/docs/demo.mp4)
 - Architecture: https://github.com/Arunkumar06-cmd/siddha/blob/main/docs/architecture.md
 - API reference: https://github.com/Arunkumar06-cmd/siddha/blob/main/docs/api.md
 - LinkedIn post: _add after posting_
@@ -109,7 +109,7 @@ Designed and built solo: corpus pipeline, retrieval, grounded responder, voice-s
 > • Follow-up context — ask “aur last date?” and Siddha stays on the same record
 > • Gnani Timbre v3.0 (Shivani) for the spoken reply
 >
-> Built solo for the Great Indian AI Internship Challenge — I'm in the Mixed Vibes lane: code-mixed both directions. This is a two-minute recording of the real pipeline, with a live follow-up.
+> Built solo for the Great Indian AI Internship Challenge — I'm in the Mixed Vibes lane: code-mixed both directions. This is a 114-second explainer built from the real pipeline, with a follow-up that keeps the scheme in context.
 >
 > Tagging @gnani.ai. Code: https://github.com/Arunkumar06-cmd/siddha
 >
@@ -126,7 +126,7 @@ Designed and built solo: corpus pipeline, retrieval, grounded responder, voice-s
 > Built with @GnaniAi Prisma + Timbre.
 > #GnaniAI #GreatIndianAIInternshipChallenge
 
-**Reply:** Full code, architecture, and a 2-minute walkthrough: https://github.com/Arunkumar06-cmd/siddha
+**Reply:** Full code, architecture, and a 114-second walkthrough: https://github.com/Arunkumar06-cmd/siddha
 
 ---
 
@@ -135,7 +135,7 @@ Designed and built solo: corpus pipeline, retrieval, grounded responder, voice-s
 - [x] Register — done (email from Team Gnani AI, Nov 4; registration confirmed, 5,000 programme credits, 3 free API keys, closing date Nov 10, 23:59 IST).
 - [x] Working app + release cut — Siddha v2.2.0 published with demo attached
 - [x] Keys claimed and usage confirmed — live Prisma STT and Timbre TTS calls return 200
-- [ ] Attach `docs/demo.mp4` (1080×1080, 139 s, 6.4 MB; also fits X’s free-account 140 s cap).
+- [ ] Attach `docs/demo.mp4` (1080×1080, 114 s, 3.8 MB; also fits X’s free-account 140 s cap).
 - [ ] Tag the official account: **gnani.ai** on LinkedIn, **@GnaniAi** on X.
 - [ ] Include both hashtags exactly: `#GnaniAI` `#GreatIndianAIInternshipChallenge`.
 - [ ] Post publicly **as early as possible** — shortlisting verifies reactions, comments and reshares, and only engagement before the cutoff counts.

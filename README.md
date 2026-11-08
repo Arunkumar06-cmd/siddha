@@ -21,7 +21,7 @@
 ![Siddha — ask by voice, get a grounded scholarship answer](docs/demo.webp)
 
 <p align="center">
-  <a href="https://arunkumar06-cmd.github.io/siddha/"><b>▶ Watch the 2-minute demo (streams inline)</b></a>
+  <a href="https://arunkumar06-cmd.github.io/siddha/"><b>▶ Watch the 114-second demo (streams inline)</b></a>
   &nbsp;·&nbsp;
   <a href="./docs/demo.mp4">Download master</a>
   &nbsp;·&nbsp;
@@ -29,7 +29,7 @@
   &nbsp;·&nbsp;
   <a href="https://scholarships.gov.in/">Official scholarship portal</a>
   <br/>
-  <sub>Real UI, two live Gnani Prisma + Timbre turns; the second is a follow-up with no scheme name repeated.</sub>
+  <sub>Real Gnani Prisma + Timbre service outputs, two turns; the second is a follow-up with no scheme name repeated. Enlarged and captioned for legibility.</sub>
 </p>
 
 ## Table of contents
@@ -190,7 +190,7 @@ Stated up front so nobody has to find them.
 Fork → branch → `make lint test` → PR → CI green → 1 review. See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ## Roadmap
-- **Shipped (v2.2)** — grounded Hinglish voice loop, BGE-M3 hybrid FAISS + BM25 retrieval, state-aware routing, deterministic follow-up context, 2-minute demo
+- **Shipped (v2.2)** — grounded Hinglish voice loop, BGE-M3 hybrid FAISS + BM25 retrieval, state-aware routing, deterministic follow-up context, 114-second demo
 - **v2.3** — live deadline/status refresh from official sources; eligibility parsing from voice remains
 - **v2.4** — opt-in LLM phrasing (grounded in retrieved records, requires a key); streaming TTS
 - **v3.0** — voice-based form filling (auto-populate NSP fields from speech)

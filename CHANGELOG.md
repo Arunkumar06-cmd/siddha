@@ -34,8 +34,8 @@ All notable changes to Siddha. Format: [Keep a Changelog](https://keepachangelog
 ### Added
 - **Conversation memory** (`src/context.py`, `src/conversation.py`): deterministic follow-up resolution keyed by session. Aspect-only follow-ups answer from the last scheme with no new retrieval; state/category refinements re-retrieve with the prior scheme as an anchor; new scheme names bypass context. Sessions are text-only, in-memory, 30-minute TTL, 500-session cap, 8-turn cap.
 - Session endpoints `GET/DELETE /api/session/{id}`; page refresh restores the last turn; “Start a new conversation” resets it.
-- Demo re-recorded as a **two-turn conversation** (139 s, 1080×1080): documents question, then “Aur is scheme ki last date kya hai?” with the context row visible; male founder narration (Devansh), Avinash asking, Shivani answering.
-- 218 tests, 90.6% coverage.
+- Demo rebuilt as a **114 s captioned explainer** from the real two-turn service audio (1080×1080): documents question, then “Aur is scheme ki last date kya hai?” with the context row visible; male founder narration (Devansh), Avinash asking, Shivani answering.
+- 227 tests, 89.73% coverage.
 - Opt-in eligibility reasoner (`src/eligibility.py`, `src/llm.py`): profile extraction + record-coverage classification via any OpenAI-compatible endpoint (e.g. DeepSeek), answers the "am I eligible?" gap; strict fallback to grounded templates when unconfigured; fully mocked tests (`tests/test_eligibility.py`)
 
 - BGE-M3 index rebuilt (512-token max sequence, fp32/MPS) — replaces MiniLM-L12 for multilingual/code-mixed retrieval
@@ -48,7 +48,8 @@ All notable changes to Siddha. Format: [Keep a Changelog](https://keepachangelog
 - Frontend rebuilt as a **paper-and-ink LaTeX look**: warm ivory background, deep-ink serif type (Iowan/Palatino stack), deep-petrol-teal accents, masthead rules, small-caps speaker labels — high contrast and calm to read
 - Reply text is now `SIDDHA` small-caps with the transcript set as an ink-on-tan note and sources as hairline-bordered chips
 - Demo and intro/outro cards re-recorded on the new theme (Georgia serif, ivory, teal) so the submission video matches the product
-- Demo screenshot recaptured on the new theme (42 KB WebP)
+- Demo rebuilt as a **114 s** captioned explainer from the real two-turn service audio; the hook now says **1,141 schemes** (not scholarships), the founder narration is **Devansh**, and the answer path is shown with a source footer and a no-date-invented moment
+- Demo poster and README hero regenerated from the 114 s cut
 - Product name unified as **Siddha** across app, docs, env vars (`SIDDHA_*`), Docker user, and repo
 - README now shows a real UI screenshot instead of the hand-drawn SVG diagram
 - README hero: centred title and positioning line, logo badges with `logoColor=white`, native GitHub alerts, Mermaid architecture in a collapsible block
@@ -66,7 +67,7 @@ All notable changes to Siddha. Format: [Keep a Changelog](https://keepachangelog
 - Opt-in eligibility reasoner (`src/eligibility.py`, `src/llm.py`): profile extraction + record-coverage classification via any OpenAI-compatible endpoint (e.g. DeepSeek), answers the "am I eligible?" gap; strict fallback to grounded templates when unconfigured; fully mocked tests (`tests/test_eligibility.py`)
 
 - GitHub release **v2.2.0** with the demo video attached: https://github.com/Arunkumar06-cmd/siddha/releases/tag/v2.2.0
-- 139 s demo video (`docs/demo.mp4`, 1080×1080): two real Prisma STT → hybrid retrieval → Timbre TTS turns, with Avinash asking and Shivani answering; the second turn is a follow-up that keeps the scheme in context. Founder narration by Devansh.
+- 114 s demo video (`docs/demo.mp4`, 1080×1080): built from two real Prisma STT → hybrid retrieval → Timbre TTS turns, with Avinash asking and Shivani answering; the second turn is a follow-up that keeps the scheme in context. Founder narration by Devansh.
 - State/UT detection (`src/places.py`) with canonical names and common spellings, used by the grounded responder
 - `docs/research-inventory.md`: the problem and source research behind the corpus
 - `docs/submission.md`: project explanation, Gnani model/API list, LinkedIn and X copy, posting checklist

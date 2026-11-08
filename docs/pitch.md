@@ -17,8 +17,8 @@
 
 **What it is.** Siddha is not a form-filler, an eligibility automator, or a lawyer. It is a grounded, voice-accessible front door to 1,141 government schemes, mostly education and welfare. Eligibility answers are assembled from official records, not from a language model's memory.
 
-**Tech.** Python, FastAPI, FAISS + BM25 retriever (BGE-M3 embeddings), RRF fusion, Docker, GitHub Actions, 227 tests in the suite (224 locally passed; three model-backed retrieval checks need the BGE-M3 cache), 90.26% coverage on the runnable suite. Voice path: Prisma STT → retrieval → grounded responder → Timbre TTS.
+**Tech.** Python, FastAPI, FAISS + BM25 retriever (BGE-M3 embeddings), RRF fusion, Docker, GitHub Actions, 227 tests in the suite, all passing locally, 89.73% coverage on the runnable suite. Voice path: Prisma STT → retrieval → grounded responder → Timbre TTS.
 
 **Target lane.** Mixed Vibes (best code-mixed Hinglish build) with a Real Deal framing (real impact for students who rarely get told).
 
-**Links.** Repo: https://github.com/Arunkumar06-cmd/siddha — Demo (139 s, two live turns, streams inline): https://arunkumar06-cmd.github.io/siddha/ — Download master: https://github.com/Arunkumar06-cmd/siddha/releases/download/v2.2.0/demo.mp4 — Release: https://github.com/Arunkumar06-cmd/siddha/releases/tag/v2.2.0
+**Links.** Repo: https://github.com/Arunkumar06-cmd/siddha — Demo (114 s, two real service turns, streams inline): https://arunkumar06-cmd.github.io/siddha/ — Download master: https://github.com/Arunkumar06-cmd/siddha/releases/download/v2.2.0/demo.mp4 — Release: https://github.com/Arunkumar06-cmd/siddha/releases/tag/v2.2.0
